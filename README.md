@@ -25,11 +25,11 @@ If you already have both [docker](https://docs.docker.com/engine/reference/comma
 
    ![installation_process_output](./img/screenshots/installation_process_output.png)
 
-   5.  MedTAG installation has completed and you can access it on your browser at http://0.0.0.0:8000/.
+5.  MedTAG installation has completed and you can access it on your browser at http://0.0.0.0:8000/.
 
-   **NOTE**: If you want to shut down MedTAG, open a new terminal window and navigate to the project folder. Finally type `docker-compose down`
+**NOTE**: If you want to shut down MedTAG, open a new terminal window and navigate to the project folder. Finally type `docker-compose down`
 
-   **NOTE**: If you want to redo the whole installation process and run MedTAG in *Test Mode* (i.e., with the provided sample data) open a new terminal and, inside the project folder, run the following commands: 
+**NOTE**: If you want to redo the whole installation process and run MedTAG in *Test Mode* (i.e., with the provided sample data) open a new terminal and, inside the project folder, run the following commands: 
 
    1. `docker-compose down`
    2. `sudo rm -rf data`
@@ -83,7 +83,7 @@ In order to customize MedTAG with your own data, you need to provide three CSV f
 
      **NOTE:** In addition to the previous mandatory columns, you need to provide a set of additional columns to describe the actual textual content of your reports (e.g. the diagnosis text, the patient information and so on). You can specify as many columns as you want.
 
-  - **concepts_file**: this file contains the concepts used for annotating the clinical reports. All the concepts must be identified with a *concept_url* which uniquely identifies the concept according to a reference ontology. The csv header must contain the following columns:
+- **concepts_file**: this file contains the concepts used for annotating the clinical reports. All the concepts must be identified with a *concept_url* which uniquely identifies the concept according to a reference ontology. The csv header must contain the following columns:
 
   1. **concepts_url**: the URL of the concept in the reference ontology.
 
