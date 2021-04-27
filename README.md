@@ -57,7 +57,7 @@ The following procedure describe how to start using MedTAG in _Test Mode_, which
 
    3. **Institute**: this is the medical institute which provides the diagnostic reports.
 
-      **NOTE**:  In  _Test Mode_ only one combination is possible (i.e., English, Colon, AOEC )
+      **NOTE**:  In  _Test Mode_ only one combination is possible (i.e., English, Colon, default_hospital )
 
 ![initial_test_conf](./img/screenshots/initial_test_conf_2.PNG)
 
