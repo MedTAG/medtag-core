@@ -1,5 +1,5 @@
 # MedTAG full source code
-![medTAG_logo_462x132](/home/fabio/repositories/github/medtag-core/img/screenshots/medTAG_logo_462x132.png)
+![medTAG_logo_462x132](./img/screenshots/medTAG_logo_462x132.png)
 
 MedTAG: An open-source biomedical annotation tool for diagnostic reports.
 
@@ -23,7 +23,7 @@ If you already have both [docker](https://docs.docker.com/engine/reference/comma
 
 4. Open the [medtag-core](https://github.com/MedTAG/medtag-core) project folder and, on a new terminal session, type ```docker-compose up```. After running the latter command the installation of MedTAG dependencies is performed and the following output will be generated:
 
-   ![installation_process_output](/home/fabio/repositories/github/medtag-core/img/screenshots/installation_process_output.png)
+   ![installation_process_output](./img/screenshots/installation_process_output.png)
 
    5.  MedTAG installation has completed and you can access it on your browser at http://0.0.0.0:8000/.
 
@@ -47,7 +47,7 @@ The following procedure describe how to start using MedTAG in _Test Mode_, which
 
 2. Log into MedTAG using "Test" both as username and password. In this way, you will enter in MedTAG using the _Test Mode_ that allows you to try MedTAG features using a sample of data we provided.
 
-   ![login_test](/home/fabio/repositories/github/medtag-core/img/screenshots/login_test.png)
+   ![login_test](./img/screenshots/login_test.png)
 
 3. Once you have logged in, you will be asked to provide a first reports configuration. In particular, you have to provide:
 
@@ -59,7 +59,7 @@ The following procedure describe how to start using MedTAG in _Test Mode_, which
 
       **NOTE**:  In  _Test Mode_ only one combination is possible (i.e., English, Colon, AOEC )
 
-![initial_test_conf](/home/fabio/repositories/github/medtag-core/img/screenshots/initial_test_conf_2.PNG)
+![initial_test_conf](./img/screenshots/initial_test_conf_2.PNG)
 
 ## Customize MedTAG
 
@@ -79,7 +79,7 @@ In order to customize MedTAG with your own data, you need to provide three CSV f
 
      **NOTE**: if you are not interested in providing either the *institute* or the *usecase* you can assign them a default value of your choice, that holds for all the rows of the *reports_file*.
 
-     ![report_file](/home/fabio/repositories/github/medtag-core/img/screenshots/report_file.PNG)
+     ![report_file](./img/screenshots/report_file.PNG)
 
      **NOTE:** In addition to the previous mandatory columns, you need to provide a set of additional columns to describe the actual textual content of your reports (e.g. the diagnosis text, the patient information and so on). You can specify as many columns as you want.
 
@@ -95,7 +95,7 @@ In order to customize MedTAG with your own data, you need to provide three CSV f
 
      **NOTE**: if you are not interested in providing either the _area_ or the *usecase* you can assign them a default value of your choice, that holds for all the rows of the *concepts_file*. It is worth noting that the _usecase_ provided for the concepts should be coherent with the one provided for the reports.
 
-     ![concept_file](/home/fabio/repositories/github/medtag-core/img/screenshots/concept_file.PNG)
+     ![concept_file](./img/screenshots/concept_file.PNG)
 
 - **labels_file**: this file contains the labels used for annotating the clinical reports. The labels describe a diagnostic property of a clinical report. For instance,  the "Cancer" label describe the presence of a cancer-related disease. The csv header must contain the following columns:
 
@@ -105,7 +105,7 @@ In order to customize MedTAG with your own data, you need to provide three CSV f
 
      **NOTE**: if you are not interested in providing the *usecase* you can assign it a default value of your choice, that holds for all the rows of the _labels_file_.
 
-     ![label_ex](/home/fabio/repositories/github/medtag-core/img/screenshots/label_ex.PNG)
+     ![label_ex](./img/screenshots/label_ex.PNG)
 
 ### Data configuration
 
@@ -115,13 +115,13 @@ To start a new configuration follow the instructions below:
 
 1. Open the Menu from the _Test Mode_ and go to _Configure_.
 
-   ![menu_main_interface](/home/fabio/repositories/github/medtag-core/img/screenshots/menu_main_interface.PNG)
+   ![menu_main_interface](./img/screenshots/menu_main_interface.PNG)
 
-   ![configure](/home/fabio/repositories/github/medtag-core/img/screenshots/configure.PNG)
+   ![configure](./img/screenshots/configure.PNG)
 
 2. Read and follow the instructions of the guided procedure.
 
-   ![](/home/fabio/repositories/github/medtag-core/img/screenshots/update_data_conf.png)
+   ![](./img/screenshots/update_data_conf.png)
 
 3. Provide the CSV files.
 
@@ -131,7 +131,7 @@ To start a new configuration follow the instructions below:
 
    **NOTE**: The *concepts_file* and _labels_file_ and are not mandatory. This means that if you are not interested in labels annotation and/or concepts identification you can avoid to provide them. By the way,  you must provide either the _labels_file_ or the *concepts_file* or set at least one field to *Display* and *Annotate*.
 
-   ![reportsfields](/home/fabio/repositories/github/medtag-core/img/screenshots/reportsfields.PNG)
+   ![reportsfields](./img/screenshots/reportsfields.PNG)
 
 4. Check the format of the provided CSV files, by clicking on the *Check* button. Then, the automatic procedure will produce some state messages in different colors:
 
@@ -141,11 +141,11 @@ To start a new configuration follow the instructions below:
 
      - Red: messages in red color (i.e., error messages) mean that you **must revise the format of the provided CSV files**, since they are not well-formatted. Error messages provide information about the errors occurred and suggest the user how to fix the issues.
 
-       ![examplemessages](/home/fabio/repositories/github/medtag-core/img/screenshots/examplemessages.PNG)
+       ![examplemessages](./img/screenshots/examplemessages.PNG)
 
 5. The procedure has ended, a notification of success or error will be provided. In case of successful configuration of MedTAG, the login page will look like the screenshot below. 
 
-   ![loginnew](/home/fabio/repositories/github/medtag-core/img/screenshots/loginnew.PNG)
+   ![loginnew](./img/screenshots/loginnew.PNG)
 
 ### Update data configuration
 
@@ -157,4 +157,4 @@ The following procedure describe how to provide additional data to the current c
 
    **NOTE**: If you decide to add reports having columns that MedTAG has never detected before, you will be asked to choose what columns to display, hide or annotate.
 
-   ![update](/home/fabio/repositories/github/medtag-core/img/screenshots/update.PNG)
+   ![update](./img/screenshots/update.PNG)
