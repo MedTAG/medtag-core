@@ -5,6 +5,8 @@ MedTAG: An open-source biomedical annotation tool for diagnostic reports.
 
 This repository contatins the full source code of MedTAG, a biomedical annotation tool for tagging biomedical concepts in clinical reports.
 
+The full source code of MedTAG is contained inside the *MedTAG_Dockerized* directory.
+
 # Requirements
 
 Since MedTAG is provided as a Docker container, both [docker](https://docs.docker.com/engine/reference/commandline/docker/) and [docker-compose](https://docs.docker.com/compose/) are required. To this aim, check out the [installation procedure](https://docs.docker.com/get-docker/) for your platform. Moreover, the MedTAG docker container instantiates a [PostgreSQL](https://www.postgresql.org/) database, so if you plan to insert a large amount of data make sure you have enough disk space. For what concerns the browser choice, Chrome would be the best browser to work with MedTAG. Nevertheless, both Safari and Firefox are supported as well.
@@ -24,6 +26,8 @@ If you already have both [docker](https://docs.docker.com/engine/reference/comma
 4. Open the [medtag-core](https://github.com/MedTAG/medtag-core) project folder and, on a new terminal session, type ```docker-compose up```. After running the latter command the installation of MedTAG dependencies is performed and the following output will be generated:
 
    ![installation_process_output](./img/screenshots/installation_process_output.png)
+
+   **NOTE**: In Unix-like systems `docker-compose` should be run  without using `sudo` in a directory owned by the user.
 
 5.  MedTAG installation has completed and you can access it on your browser at http://0.0.0.0:8000/.
 
