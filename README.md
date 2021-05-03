@@ -3,9 +3,16 @@
 
 MedTAG: An open-source biomedical annotation tool for diagnostic reports.
 
-This repository contatins the full source code of MedTAG, a biomedical annotation tool for tagging biomedical concepts in clinical reports.
+This repository contains the full source code of MedTAG, a biomedical annotation tool for tagging biomedical concepts in clinical reports.
 
-The full source code of MedTAG is contained inside the *MedTAG_Dockerized* directory.
+The directory tree is organized as follows:
+
+- The *MedTAG_Dockerized* directory contains the full source code of MedTAG.
+- The *example* directory contains some instances of CSV files to work with.
+- The *templates* directory contains some instances of CSV files with only the list of columns.  
+- The *img* directory contains the project images such as the screeenshots of MedTAG. 
+
+ 
 
 # Requirements
 
