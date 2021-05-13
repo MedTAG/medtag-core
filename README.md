@@ -5,7 +5,7 @@ MedTAG: An open-source biomedical annotation tool for diagnostic reports.
 
 
 
-![](/home/fabio/repositories/github/medtag-core/img/screenshots/screenshot_medtag_1_539x344.png)
+![](./img/screenshots/screenshot_medtag_1_539x344.png)
 
 This repository contains the full source code of MedTAG, a biomedical annotation tool for tagging biomedical concepts in clinical reports.
 
@@ -208,9 +208,7 @@ The following procedure describe how to provide additional data to the current c
 
 MedTAG has been developed by the [Intelligent Interactive Information Access Hub (IIIA)](http://iiia.dei.unipd.it/) of the  [Department of Information Engineering](https://www.dei.unipd.it/en/), [University of Padua](https://www.unipd.it/en/), Italy.
 
-
-
-![](/home/fabio/repositories/github/medtag-core/img/logos/merge_logo.png)
+![](./img/logos/merge_logo.png)
 
 
 
