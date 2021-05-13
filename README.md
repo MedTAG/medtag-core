@@ -3,7 +3,39 @@
 
 MedTAG: An open-source biomedical annotation tool for diagnostic reports.
 
+
+
+![](/home/fabio/repositories/github/medtag-core/img/screenshots/screenshot_medtag_1_539x344.png)
+
 This repository contains the full source code of MedTAG, a biomedical annotation tool for tagging biomedical concepts in clinical reports.
+
+MedTAG provides four annotation modes:
+
+- *Concepts*: allows the user to specify which concepts are relevant for a document. Users can take advantage of auto-complete functionalities for searching the relevant concepts to assign to each document. 
+
+- *Labels*: allows the user to assign, by clicking on the check-boxes, one or more labels to a document. The labels indicate some reports' properties (e.g. "*Cancer*" label indicates the presence of a cancer related disease).
+- *Mentions*: shows the list of the mentions identified by the user in the report text. 
+- *Linking*: allows the user to link the mentions identified with the corresponding concepts. Users can link the same mention to multiple concepts.
+
+## Functionalities
+
+MedTAG provides the following functionalities:
+
+- a web-based collaborative annotation platform with support for users and roles 
+- support for click-away mention annotation
+- support for mentions highlighting in different colors
+- automatic saving every time an action is performed
+- sorting of medical reports according to two different strategies: lexicographic order
+  and “unannotated-first” policy
+- web responsive design to support mobile devices
+- download of annotations and ground truths in several formats (i.e., BioC/XML, CSV, JSON)
+- support for multi-label annotation
+- support for document-level annotations
+- multilingual support
+- support for ontologies/concepts to use for the annotation process
+- support for schema configuration, so that users can easily import data (i.e., reports, labels and concepts), as CSV files, and choose which report fields to annotate.
+
+## Files
 
 The directory tree is organized as follows:
 
@@ -171,3 +203,21 @@ The following procedure describe how to provide additional data to the current c
    **NOTE**: If you decide to add reports having columns that MedTAG has never detected before, you will be asked to choose what columns to display, hide or annotate.
 
    ![update](./img/screenshots/update.PNG)
+
+# Credits
+
+MedTAG has been developed by the [Intelligent Interactive Information Access Hub (IIIA)](http://iiia.dei.unipd.it/) of the  [Department of Information Engineering](https://www.dei.unipd.it/en/), [University of Padua](https://www.unipd.it/en/), Italy.
+
+
+
+![](/home/fabio/repositories/github/medtag-core/img/logos/merge_logo.png)
+
+
+
+### Contacts
+
+Any questions? The authors are glad to answer your questions and receive your feedback or suggestions to further improve MedTAG. 
+
+- Fabio Giachelle · fabio.giachelle AT unipd.it
+- Ornella Irrera · ornella.irrera AT unipd.it
+- Gianmaria Silvello · gianmaria.silvello AT unipd.it
