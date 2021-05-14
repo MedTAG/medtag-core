@@ -92,7 +92,7 @@ The following procedure describe how to start using MedTAG in _Test Mode_, which
 
 2. Log into MedTAG using "Test" both as username and password. In this way, you will enter in MedTAG using the _Test Mode_ that allows you to try MedTAG features using a sample of data we provided.
 
-   ![login_test](./img/screenshots/login_test.png)
+   ![login_test](./img/screenshots/login_test_425x344.png)
 
 3. Once you have logged in, you will be asked to provide a first reports configuration. In particular, you have to provide:
 
@@ -104,7 +104,7 @@ The following procedure describe how to start using MedTAG in _Test Mode_, which
 
       **NOTE**:  In  _Test Mode_ only one combination is possible (i.e., English, Colon, default_hospital )
 
-![initial_test_conf](./img/screenshots/initial_test_conf_2.PNG)
+![initial_test_conf](./img/screenshots/initial_test_conf_2_539x344.png)
 
 ## Customize MedTAG
 
@@ -160,13 +160,13 @@ To start a new configuration follow the instructions below:
 
 1. Open the Menu from the _Test Mode_ and go to _Configure_.
 
-   ![menu_main_interface](./img/screenshots/menu_main_interface.PNG)
+   ![menu_main_interface](./img/screenshots/menu_main_interface_539x345.png)
 
-   ![configure](./img/screenshots/configure.PNG)
+   ![configure](./img/screenshots/configure_609x344.png)
 
 2. Read and follow the instructions of the guided procedure.
 
-   ![](./img/screenshots/update_data_conf.png)
+   ![](./img/screenshots/update_data_conf_445x500.png)
 
 3. Provide the CSV files.
 
@@ -176,7 +176,7 @@ To start a new configuration follow the instructions below:
 
    **NOTE**: The *concepts_file* and _labels_file_ and are not mandatory. This means that if you are not interested in labels annotation and/or concepts identification you can avoid to provide them. By the way,  you must provide either the _labels_file_ or the *concepts_file* or set at least one field to *Display* and *Annotate*.
 
-   ![reportsfields](./img/screenshots/reportsfields.PNG)
+   ![reportsfields](./img/screenshots/reportsfields_857x500.png)
 
 4. Check the format of the provided CSV files, by clicking on the *Check* button. Then, the automatic procedure will produce some state messages in different colors:
 
@@ -186,11 +186,11 @@ To start a new configuration follow the instructions below:
 
      - Red: messages in red color (i.e., error messages) mean that you **must revise the format of the provided CSV files**, since they are not well-formatted. Error messages provide information about the errors occurred and suggest the user how to fix the issues.
 
-       ![examplemessages](./img/screenshots/examplemessages.PNG)
+       ![examplemessages](./img/screenshots/examplemessages_771x500.png)
 
 5. The procedure has ended, a notification of success or error will be provided. In case of successful configuration of MedTAG, the login page will look like the screenshot below. 
 
-   ![loginnew](./img/screenshots/loginnew.PNG)
+   ![loginnew](./img/screenshots/loginnew_296x344.png)
 
 ### Update data configuration
 
@@ -202,13 +202,13 @@ The following procedure describe how to provide additional data to the current c
 
    **NOTE**: If you decide to add reports having columns that MedTAG has never detected before, you will be asked to choose what columns to display, hide or annotate.
 
-   ![update](./img/screenshots/update.PNG)
+   ![update](./img/screenshots/update_676x344.png)
 
 # Credits
 
 MedTAG has been developed by the [Intelligent Interactive Information Access Hub (IIIA)](http://iiia.dei.unipd.it/) of the  [Department of Information Engineering](https://www.dei.unipd.it/en/), [University of Padua](https://www.unipd.it/en/), Italy.
 
-![](./img/logos/merge_logo.png)
+![](./img/logos/merge_logo_580x130.png)
 
 
 
@@ -216,6 +216,6 @@ MedTAG has been developed by the [Intelligent Interactive Information Access Hub
 
 Any questions? The authors are glad to answer your questions and receive your feedback or suggestions to further improve MedTAG. 
 
-- Fabio Giachelle · fabio.giachelle AT unipd.it
-- Ornella Irrera · ornella.irrera AT unipd.it
-- Gianmaria Silvello · gianmaria.silvello AT unipd.it
+- [Fabio Giachelle](http://www.dei.unipd.it/~giachell) · fabio.giachelle AT unipd.it
+- [Ornella Irrera](http://www.dei.unipd.it/~irreraorne) · ornella.irrera AT unipd.it
+- [Gianmaria Silvello](http://www.dei.unipd.it/~silvello) · gianmaria.silvello AT unipd.it
