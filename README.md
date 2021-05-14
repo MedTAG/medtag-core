@@ -3,10 +3,6 @@
 
 MedTAG: An open-source biomedical annotation tool for diagnostic reports.
 
-
-
-![](./img/screenshots/screenshot_medtag_1_539x344.png)
-
 This repository contains the full source code of MedTAG, a biomedical annotation tool for tagging biomedical concepts in clinical reports.
 
 MedTAG provides four annotation modes:
@@ -16,6 +12,8 @@ MedTAG provides four annotation modes:
 - *Labels*: allows the user to assign, by clicking on the check-boxes, one or more labels to a document. The labels indicate some reports' properties (e.g. "*Cancer*" label indicates the presence of a cancer related disease).
 - *Mentions*: shows the list of the mentions identified by the user in the report text. 
 - *Linking*: allows the user to link the mentions identified with the corresponding concepts. Users can link the same mention to multiple concepts.
+
+![](./img/screenshots/screenshot_medtag_1_539x344.png)
 
 ## Functionalities
 
@@ -216,6 +214,12 @@ MedTAG has been developed by the [Intelligent Interactive Information Access Hub
 
 Any questions? The authors are glad to answer your questions and receive your feedback or suggestions to further improve MedTAG. 
 
+<<<<<<< HEAD
 - [Fabio Giachelle](http://www.dei.unipd.it/~giachell) · fabio.giachelle AT unipd.it
 - [Ornella Irrera](http://www.dei.unipd.it/~irreraorne) · ornella.irrera AT unipd.it
 - [Gianmaria Silvello](http://www.dei.unipd.it/~silvello) · gianmaria.silvello AT unipd.it
+=======
+- Fabio Giachelle · fabio.giachelle AT unipd.it
+- Ornella Irrera · ornella.irrera AT unipd.it
+- [Gianmaria Silvello] (http://www.dei.unipd.it/~silvello/) · gianmaria.silvello AT unipd.it
+>>>>>>> a5872191e948504bcb5fcc5ea5063b7a59184f9e
