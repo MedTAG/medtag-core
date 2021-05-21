@@ -214,12 +214,6 @@ MedTAG has been developed by the [Intelligent Interactive Information Access Hub
 
 Any questions? The authors are glad to answer your questions and receive your feedback or suggestions to further improve MedTAG. 
 
-<<<<<<< HEAD
 - [Fabio Giachelle](http://www.dei.unipd.it/~giachell) · fabio.giachelle AT unipd.it
 - [Ornella Irrera](http://www.dei.unipd.it/~irreraorne) · ornella.irrera AT unipd.it
-- [Gianmaria Silvello](http://www.dei.unipd.it/~silvello) · gianmaria.silvello AT unipd.it
-=======
-- Fabio Giachelle · fabio.giachelle AT unipd.it
-- Ornella Irrera · ornella.irrera AT unipd.it
-- [Gianmaria Silvello] (http://www.dei.unipd.it/~silvello/) · gianmaria.silvello AT unipd.it
->>>>>>> a5872191e948504bcb5fcc5ea5063b7a59184f9e
+- [Gianmaria Silvello](http://www.dei.unipd.it/~silvello/) · gianmaria.silvello AT unipd.it
