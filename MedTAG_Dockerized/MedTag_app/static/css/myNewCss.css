@@ -114,6 +114,7 @@ code {
 }
 .site-branding{
     margin:0 !important;
+    text-align: center;
     background-color: #0093c4;
     /*background-image: url(https://www.examode.eu/wp-content/uploads/2018/11/cropped-Screenshot-2018-11-14-at-18.00.17-3.png);*/
     /*background-image: url(https://microbiologysociety.org/static/2b0dc12a-bcb6-4c70-9a5c11ad744c6317/800x200_highestperformance_/SLIC-main.jpg) !important;*/

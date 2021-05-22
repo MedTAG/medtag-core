@@ -1,4 +1,0 @@
-{
-  "fields": ["internalid","age","gender","materials","target_diagnosis","raw_diagnoses"],
-  "fields_to_ann": ["materials","target_diagnosis"]
-}

@@ -3,12 +3,15 @@ from django.http import HttpResponseRedirect
 from django.shortcuts import redirect
 from django.contrib.auth import login as auth_login,authenticate,logout as auth_logout
 from django.contrib.auth.models import User as User1
-from MedTag_app.utils_ornella import *
-from MedTag_app.utils_fabio import *
+from MedTag_app.utils import *
+from MedTag_app.utils_download import *
 from django.contrib.auth.decorators import login_required
 import hashlib
+from django.db import transaction
+from django.http import JsonResponse
 from MedTag_app.decorators import *
 from MedTag_app.data import *
+
 
 
 # ExaMode Ground Truth views here.
@@ -30,15 +33,17 @@ def new_credentials(request):
         request_body_json = json.loads(request.body)
         usecase = request_body_json['usecase']
         request.session['usecase'] = usecase
-
-        json_resp =  get_fields_from_json_usecase(usecase)
-        request.session['fields'] = json_resp['fields']
-        request.session['fields_to_ann'] = json_resp['fields_to_ann']
-
         language = request_body_json['language']
         request.session['language'] = language
         institute = request_body_json['institute']
         request.session['institute'] = institute
+
+        #json_resp = get_fields_from_json_configuration(usecase,institute,language)
+        json_resp = get_fields_from_json()
+        request.session['fields'] = json_resp['fields']
+        request.session['fields_to_ann'] = json_resp['fields_to_ann']
+
+
         # print('new_cred')
         json_resp ={'message':'ok'}
         return JsonResponse(json_resp)
@@ -113,7 +118,8 @@ def select_options(request):
             # institute = 'AOEC - Azienda Ospedaliera Cannizzaro'
             if language is not None and usecase is not None and institute is not None:
                 request.session['usecase'] = usecase
-                json_resp = get_fields_from_json_usecase(usecase)
+                #json_resp = get_fields_from_json_configuration(usecase,institute,language)
+                json_resp = get_fields_from_json()
                 request.session['fields'] = json_resp['fields']
                 request.session['fields_to_ann'] = json_resp['fields_to_ann']
                 request.session['language'] = language
@@ -1345,15 +1351,103 @@ def check_input_files(request):
     return JsonResponse(jsonResp)
 
 def get_gt_list(request):
-    groundTruths = []
+    groundTruths = 0
     json_resp = {}
-    list_gt = GroundTruthLogFile.objects.all()
-    for el in list_gt:
-        groundTruths.append(el.gt_json)
+    ins = request.GET.get('inst',None)
+    lang = request.GET.get('lang',None)
+    use = request.GET.get('use',None)
+    action = request.GET.get('action',None)
+    token = request.GET.get('token',None)
+    if ins == '':
+        ins = None
+    if use == '':
+        use = None
+    if lang == '':
+        lang = None
+    if token == 'all':
+        list_gt = GroundTruthLogFile.objects.all().count()
+        groundTruths = list_gt
+        # for el in list_gt:
+        #     groundTruths.append(el.gt_json)
+
+    else:
+        if ins is None and use is None and lang is None:
+            list_gt = GroundTruthLogFile.objects.filter(username = request.session['username'], gt_type = action).count()
+            groundTruths = list_gt
+            # for el in list_gt:
+            #     groundTruths.append(el.gt_json)
+        elif ins is not None and use is not None and lang is not None:
+            with connection.cursor() as cursor:
+                cursor.execute(
+                    "SELECT COUNT(*) FROM report AS r INNER JOIN ground_truth_log_file AS g ON g.id_report = r.id_report WHERE r.institute = %s AND r.name = %s AND r.language = %s AND g.gt_type = %s",
+                    [ins, use, lang,action])
+                groundTruths = cursor.fetchone()[0]
+                # rows = cursor.fetchall()
+                # for el in rows:
+                #     groundTruths.append(el[0])
+        elif ins is not None and use is not None and lang is None:
+            with connection.cursor() as cursor:
+                cursor.execute(
+                    "SELECT COUNT(*) FROM report AS r INNER JOIN ground_truth_log_file AS g ON g.id_report = r.id_report WHERE r.institute = %s AND r.name = %s AND g.gt_type = %s",
+                    [ins, use,action])
+                groundTruths = cursor.fetchone()[0]
+                # rows = cursor.fetchall()
+                # for el in rows:
+                #     groundTruths.append(el[0])
+        elif ins is not None and use is None and lang is not None:
+            with connection.cursor() as cursor:
+                cursor.execute(
+                    "SELECT COUNT(*) FROM report AS r INNER JOIN ground_truth_log_file AS g ON g.id_report = r.id_report WHERE r.institute = %s AND r.language = %s AND g.gt_type = %s",
+                    [ins, lang,action])
+                groundTruths = cursor.fetchone()[0]
+                # rows = cursor.fetchall()
+                # for el in rows:
+                #     groundTruths.append(el[0])
+        elif ins is None and use is not None and lang is not None:
+            with connection.cursor() as cursor:
+                cursor.execute(
+                    "SELECT COUNT(*) FROM report AS r INNER JOIN ground_truth_log_file AS g ON g.id_report = r.id_report WHERE r.name = %s AND r.language = %s AND g.gt_type = %s",
+                    [use, lang,action])
+                groundTruths = cursor.fetchone()[0]
+                # rows = cursor.fetchall()
+                # for el in rows:
+                #     groundTruths.append(el[0])
+        elif ins is not None and use is None and lang is None:
+            with connection.cursor() as cursor:
+                cursor.execute(
+                    "SELECT COUNT(*) FROM report AS r INNER JOIN ground_truth_log_file AS g ON g.id_report = r.id_report WHERE r.institute = %s AND g.gt_type = %s",
+                    [ins,action])
+                groundTruths = cursor.fetchone()[0]
+                # rows = cursor.fetchall()
+                # for el in rows:
+                #     groundTruths.append(el[0])
+        elif ins is None and use is not None and lang is None:
+            with connection.cursor() as cursor:
+                cursor.execute(
+                    "SELECT COUNT(*) FROM report AS r INNER JOIN ground_truth_log_file AS g ON g.id_report = r.id_report WHERE r.name = %s AND g.gt_type = %s",
+                    [use,action])
+                groundTruths = cursor.fetchone()[0]
+                # rows = cursor.fetchall()
+                # for el in rows:
+                #     groundTruths.append(el[0])
+        elif ins is None and use is None and lang is not None:
+            with connection.cursor() as cursor:
+                cursor.execute(
+                    "SELECT COUNT(*) FROM report AS r INNER JOIN ground_truth_log_file AS g ON g.id_report = r.id_report WHERE r.language = %s AND g.gt_type = %s",
+                    [lang,action])
+                groundTruths = cursor.fetchone()[0]
+                # rows = cursor.fetchall()
+                # for el in rows:
+                #     groundTruths.append(el[0])
+
+
     json_resp['ground_truths'] = groundTruths
     return JsonResponse(json_resp)
 
+
+
 def check_files_for_update(request):
+    jsonResp = {}
     reports = []
     usecase = []
     areas = []
@@ -1376,20 +1470,10 @@ def check_files_for_update(request):
     jsonAnn = request.POST.get('json_ann',None)
     jsonDispUp = request.POST.get('json_disp_update',None)
     jsonAnnUp = request.POST.get('json_ann_update',None)
-    # print('ciao')
-    # a = jsonDisp
-    # print(type(a))
-    # print(jsonDisp)
-    # print(jsonAnn)
-    json_keys,msg = check_for_update(type1,reports,labels,concepts,areas,usecase,jsonDisp,jsonAnn,jsonDispUp,jsonAnnUp)
-    if  len(json_keys) > 0:
-        jsonResp = {'message': msg,'keys':json_keys}
-        print(json_keys)
-    else:
-        jsonResp = {'message':msg}
-
-
+    msg = check_for_update(type1,reports,labels,concepts,areas,usecase,jsonDisp,jsonAnn,jsonDispUp,jsonAnnUp)
+    jsonResp = {'message':msg}
     return JsonResponse(jsonResp)
+
 from django.db import connection
 def update_db(request):
 
@@ -1415,10 +1499,12 @@ def update_db(request):
 
     jsonDispUp = request.POST.get('json_disp_update', '')
     jsonAnnUp = request.POST.get('json_ann_update', '')
-
-    msg = update_db_util(type1,reports,labels,concepts,areas,usecase,jsonDisp,jsonAnn,jsonDispUp,jsonAnnUp)
+    jsonAll = request.POST.get('json_all_update', '')
+    print(jsonAll)
+    msg = update_db_util(reports,labels,concepts,jsonDisp,jsonAnn,jsonDispUp,jsonAnnUp,jsonAll)
     if msg['message'] == 'Ok':
         keys = get_fields_from_json()
+        #keys = get_fields_from_json_configuration(request.session['usecase'],request.session['institute'],request.session['language'])
         request.session['fields'] = keys['fields']
         request.session['fields_to_ann'] = keys['fields_to_ann']
     return JsonResponse(msg)
@@ -1453,7 +1539,7 @@ def configure_db(request):
     username = request.POST.get('username',None)
     password = request.POST.get('password',None)
 
-    msg = configure_data(reports,labels,areas,usecase,concepts,jsonDisp,jsonAnn,jsonAll,username,password)
+    msg = configure_data(reports,labels,concepts,jsonDisp,jsonAnn,jsonAll,username,password)
 
     return JsonResponse(msg)
 
@@ -1468,11 +1554,17 @@ def get_keys(request):
     json_resp = {'keys':keys}
     return JsonResponse(json_resp)
 
+
 def download_ground_truths(request):
     workpath = os.path.dirname(os.path.abspath(__file__))  # Returns the Path your .py file is in
     path1 = os.path.join(workpath, './static/temp/temp.csv')
+    path2 = os.path.join(workpath, './static/BioC/temp_files/to_download.csv')
     if os.path.exists(path1):
         os.remove(path1)
+    if os.path.exists(path2):
+        os.remove(path2)
+
+
     username = request.session['username']
     inst = request.GET.get('institute',None)
     if inst == '':
@@ -1493,14 +1585,36 @@ def download_ground_truths(request):
         return JsonResponse(json_resp)
 
     elif format == 'csv':
-        content = create_csv_to_download(username,use,inst,lang,action)
-        if content:
-            workpath = os.path.dirname(os.path.abspath(__file__))  # Returns the Path your .py file is in
-            path = os.path.join(workpath, './static/temp/temp.csv')
-            path = open(path,'r')
-            return HttpResponse(path, content_type='text/csv')
+        response = HttpResponse(content_type='text/csv')
+        resp = create_csv_to_download1(username,use,inst,lang,action,response)
+        return resp
 
+        # if content:
+        #     workpath = os.path.dirname(os.path.abspath(__file__))  # Returns the Path your .py file is in
+        #     path = os.path.join(workpath, './static/temp/temp.csv')
+        #     path = open(path,'r')
+        #     return HttpResponse(path, content_type='text/csv')
 
+    elif format == 'biocxml':
+        json_keys_to_display = request.session['fields']
+        json_keys_to_ann = request.session['fields_to_ann']
+        print(json_keys_to_ann)
+        print(json_keys_to_display)
+        json_keys = json_keys_to_display + json_keys_to_ann
+        resp = generate_bioc(json_keys,json_keys_to_ann,username,action,lang,use,inst,'xml')
+        return HttpResponse(resp,content_type='application/xml')
+
+        # if content:
+        #     workpath = os.path.dirname(os.path.abspath(__file__))  # Returns the Path your .py file is in
+        #     path = os.path.join(workpath, './static/BioC/temp_files/to_download.csv')
+        #     path = open(path,'r')
+        #     return HttpResponse(path, content_type='application/xml')
+    elif format == 'biocjson':
+        json_keys_to_display = request.session['fields']
+        json_keys_to_ann = request.session['fields_to_ann']
+        json_keys = json_keys_to_display + json_keys_to_ann
+        resp = generate_bioc(json_keys,json_keys_to_ann,username,action,lang,use,inst,'json')
+        return HttpResponse(resp,content_type='application/xml')
 
 def download_all_ground_truths(request):
     json_resp = {}
@@ -1508,10 +1622,24 @@ def download_all_ground_truths(request):
     gt = GroundTruthLogFile.objects.all()
     for el in gt:
         gt_json = el.gt_json
+        if gt_json['gt_type'] == 'concept-mention':
+            gt_json['gt_type'] = 'linking'
         json_resp['ground_truth'].append(gt_json)
 
 
     return JsonResponse(json_resp)
+
+def download_key_files(request):
+    workpath = os.path.dirname(os.path.abspath(__file__))  # Returns the Path your .py file is in
+    path = os.path.join(workpath, './static/BioC/linking.key')
+    path1 = os.path.join(workpath, './static/BioC/mention.key')
+    ment = request.GET.get('type_key',None)
+    if ment == 'mentions':
+        path = open(path1, 'r')
+        return HttpResponse(path, content_type='text/plain')
+    elif ment == 'linking':
+        path1 = open(path, 'r')
+        return HttpResponse(path1, content_type='text/plain')
 
 
 # Ritorno un array di true e false: per ogni report viene tornato TRUE se l'utente ha annotato, false se non ha annotato
@@ -1654,73 +1782,15 @@ def report_start_end(request):
     report = request.GET.get('report_id')
     usecase = request.session['usecase']
 
-    #json_resp = get_fields_from_json_usecase(usecase)
-
-
     json_keys_to_display = request.session['fields']
     json_keys_to_ann = request.session['fields_to_ann']
-
+    # print('toann' , json_keys_to_ann)
     json_keys = json_keys_to_display + json_keys_to_ann
    # print(json_keys_to_display)
     language = request.session['language']
 
-    json_dict = {}
-    json_dict['rep_string'] = {}
-    report_json = Report.objects.get(id_report = report, language = language)
-    report_json = report_json.report_json
-   # print(report_json)
-    #convert to string
-    report_string = json.dumps(report_json)
-   # print(report_string)
-    try:
-        for key in json_keys:
-            # print(report_json[key])
-            if(report_json.get(key) is not None and report_json.get(key) != ""):
-                element = report_json[key]
-                element_1 = json.dumps(element)
-                if element_1.startswith('"') and element_1.endswith('"'):
-                    element_1 = element_1.replace('"','')
-                # if not isinstance(element, int):
-                #     count = element.split(' ')
-                #     if key in json_keys_to_ann:
-                #         print(key +' : '+str(len(count)))
-                #         count_words = count_words + len(count)
-                #
-                # else:
-                #     if key in json_keys_to_ann:
-                #         count = [1]
-                #         count_words = count_words + 1
-                before_element = report_string.split(key)[0]
-                after_element = report_string.split(key)[1]
-                until_element_value = len(before_element) + len(key) + len(after_element.split(str(element_1))[0])
-                start_element = until_element_value + 1
-                end_element = start_element + len(str(element_1)) - 1
-                element = {'text':element, 'start':start_element,'end':end_element}
-                json_dict['rep_string'][key] = element
-                # if key in json_keys_to_ann:
-                #     print(key)
-                #     print(report_json[key])
-                #     count_words = count_words + len(count)
-                #     print(count_words)
+    json_dict = report_get_start_end(json_keys,json_keys_to_ann,report,language)
 
-        for key in json_dict['rep_string'].keys():
-            if key in json_keys_to_ann:
-                element = json_dict['rep_string'][key]
-                # print(element)
-                text = str(element['text'])
-                count = text.split(' ')
-                count_words = count_words + len(count)
-
-        # print(count_words)
-
-    except Exception as error:
-        print(error)
-        pass
-
-
-    json_dict['final_count'] = count_words
-    # print(count_words)
-    # print(json_dict)
     return JsonResponse(json_dict)
 
 def get_usecase_inst_lang(request):
@@ -1738,8 +1808,8 @@ def get_fields(request):
     json_resp = {}
     json_resp['fields'] = []
     json_resp['fields_to_ann'] = []
-    json_resp = get_fields_from_json_usecase(request.session['usecase'])
-
+    json_resp = get_fields_from_json()
+    print(json_resp)
 
     return JsonResponse(json_resp)
 
@@ -1758,8 +1828,6 @@ def download_examples(request):
 
     elif file_required == 'labels':
         path = os.path.join(workpath, './static/examples/labels.csv')
-
-
 
     content = open(path,'r')
     return HttpResponse(content, content_type='text/csv')
@@ -1791,7 +1859,7 @@ def get_keys_from_csv(request):
             reports.append(file)
 
     json_resp['keys'] = get_keys_csv(reports)
-    print(json_resp['keys'])
+    # print(json_resp['keys'])
     return JsonResponse(json_resp)
 
 def get_keys_from_csv_update(request):
@@ -1804,8 +1872,9 @@ def get_keys_from_csv_update(request):
 
     json_resp['keys'] = get_keys_csv_update(reports)
 
-    print(json_resp['keys'])
+    # print(json_resp['keys'])
     return JsonResponse(json_resp)
+
 #----------------------------------------------------------------------------------------------------------
 
 
