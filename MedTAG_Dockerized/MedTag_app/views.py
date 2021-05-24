@@ -1808,11 +1808,14 @@ def get_fields(request):
     json_resp = {}
     json_resp['fields'] = []
     json_resp['fields_to_ann'] = []
-    json_resp = get_fields_from_json()
-    print(json_resp)
+    all = request.GET.get('all',None)
+    if all == 'all':
+        json_resp = get_fields_from_json()
+    else:
+        json_resp = get_fields_from_json_configuration(request.session['usecase'],request.session['institute'],request.session['language'])
+
 
     return JsonResponse(json_resp)
-
 import csv
 from django.http import HttpResponse
 def download_examples(request):

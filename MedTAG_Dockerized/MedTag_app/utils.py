@@ -1697,24 +1697,24 @@ def get_fields_from_json():
     json_resp['all_fields'] = data['all_fields']
     return json_resp
 
-# def get_fields_from_json_configuration(usecase,institute,language):
-#     json_resp1 = get_fields_from_json()
-#     json_resp = {}
-#     json_resp['fields'] = []
-#     json_resp['fields_to_ann'] = []
-#     reports = Report.objects.filter(name=usecase,institute = institute, language = language)
-#     for report in reports:
-#         rep = (report.report_json)
-#         for key in rep.keys():
-#             if key in json_resp1['fields']:
-#                 if key not in json_resp['fields']:
-#                     json_resp['fields'].append(key)
-#             if key in json_resp1['fields_to_ann']:
-#                 if key not in json_resp['fields_to_ann']:
-#                     json_resp['fields_to_ann'].append(key)
-#
-#     # print(json_resp)
-#     return json_resp
+def get_fields_from_json_configuration(usecase,institute,language):
+     json_resp1 = get_fields_from_json()
+     json_resp = {}
+     json_resp['fields'] = []
+     json_resp['fields_to_ann'] = []
+     reports = Report.objects.filter(name=usecase,institute = institute, language = language)
+     for report in reports:
+         rep = (report.report_json)
+         for key in rep.keys():
+             if key in json_resp1['fields']:
+                 if key not in json_resp['fields']:
+                     json_resp['fields'].append(key)
+             if key in json_resp1['fields_to_ann']:
+                 if key not in json_resp['fields_to_ann']:
+                     json_resp['fields_to_ann'].append(key)
+
+     # print(json_resp)
+     return json_resp
 
 def check_for_update(type_req,reports,labels,concepts,areas,usecase,jsonDisp,jsonAnn,jsonDispUp,jsonAnnUp):
     usecases = []
