@@ -102,7 +102,7 @@ The following procedure describe how to start using MedTAG in _Test Mode_, which
 
       **NOTE**:  In  _Test Mode_ only one combination is possible (i.e., English, Colon, default_hospital )
 
-![initial_test_conf](./img/screenshots/initial_test_conf_2_539x344.png)
+![initial_test_conf](./img/screenshots/select_configuration_550.PNG)
 
 ## Customize MedTAG
 
@@ -122,7 +122,7 @@ In order to customize MedTAG with your own data, you need to provide three CSV f
 
      **NOTE**: if you are not interested in providing either the *institute* or the *usecase* you can assign them a default value of your choice, that holds for all the rows of the *reports_file*.
 
-     ![report_file](./img/screenshots/report_file.PNG)
+     ![report_file](./img/screenshots/report_csv_1000.PNG)
 
      **NOTE:** In addition to the previous mandatory columns, you need to provide a set of additional columns to describe the actual textual content of your reports (e.g. the diagnosis text, the patient information and so on). You can specify as many columns as you want.
 
@@ -158,9 +158,9 @@ To start a new configuration follow the instructions below:
 
 1. Open the Menu from the _Test Mode_ and go to _Configure_.
 
-   ![menu_main_interface](./img/screenshots/menu_main_interface_539x345.png)
+   ![menu_main_interface](./img/screenshots/new_conf1_550.png)
 
-   ![configure](./img/screenshots/configure_609x344.png)
+   ![configure](./img/screenshots/new_conf2_550.png)
 
 2. Read and follow the instructions of the guided procedure.
 
@@ -200,7 +200,7 @@ The following procedure describe how to provide additional data to the current c
 
    **NOTE**: If you decide to add reports having columns that MedTAG has never detected before, you will be asked to choose what columns to display, hide or annotate.
 
-   ![update](./img/screenshots/update_676x344.png)
+   ![update](./img/screenshots/update_conf_676x344.PNG)
 
 # Credits
 
