@@ -208,9 +208,13 @@ MedTAG has been developed by the [Intelligent Interactive Information Access Hub
 
 ![](./img/logos/merge_logo_580x130.png)
 
+## Acknowledgements 
 
+![](./img/logos/ExaModeLogo.png)
 
-### Contacts
+This work was partially supported by [ExaMode](https://www.examode.eu/), European Union Horizon 2020 program under Grant Agreement no. 825292.
+
+## Contacts
 
 Any questions? The authors are glad to answer your questions and receive your feedback or suggestions to further improve MedTAG. 
 
