@@ -38,11 +38,11 @@ The experiment results are summarized in the following tables:
 
 ### Datasets
 
-The datasets considered for the benchmark experiments consist of a sample of one hundred documents from the digital pathology domain (i.e. colon cancer clinical reports anonymized). The datasets are available inside the folder datasets. 
+The datasets considered for the benchmark experiments consist of a sample of one hundred documents from the digital pathology domain (i.e. colon cancer clinical reports anonymized). The datasets are available inside the folder [datasets](https://github.com/MedTAG/medtag-core/tree/main/benchmark/datasets)
 
 ### Source code
 
-The benchmark experiments have been conducted using the Python Web automation library [Selenium](https://www.selenium.dev/). The full source code of the automated agents implemented is available inside the folder automated_agents_selenium. 
+The benchmark experiments have been conducted using the Python Web automation library [Selenium](https://www.selenium.dev/). The full source code of the automated agents implemented is available inside the folder [automated_agents_selenium](https://github.com/MedTAG/medtag-core/tree/main/benchmark/automated_agents_selenium). 
 
 
 
