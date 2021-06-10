@@ -1,0 +1,1116 @@
+{
+  "mentions_list": [
+    {
+      "id_report": "a0cfefaaf64c9504189e58808b0d76b6",
+      "mentions": [
+        "mild dysplasia",
+        "glandular epithelium."
+      ],
+      "start": [
+        297,
+        312
+      ]
+    },
+    {
+      "id_report": "a67858b81f3edee7db268e04511a5121",
+      "mentions": [
+        "tubular adenoma"
+      ],
+      "start": [
+        276
+      ]
+    },
+    {
+      "id_report": "a5897bd9216057afe228e41c88816994",
+      "mentions": [
+        "cooing adenoma",
+        "mild dysplasia",
+        "glandular epithelium."
+      ],
+      "start": [
+        276,
+        296,
+        311
+      ]
+    },
+    {
+      "id_report": "b2ef1da0e878ac8bbe3da06e76d41a54",
+      "mentions": [
+        "tubular adenoma",
+        "mild-to-moderate dysplasia."
+      ],
+      "start": [
+        277,
+        298
+      ]
+    },
+    {
+      "id_report": "b891367f71d047c08bab7ccdd89a7a35",
+      "mentions": [
+        "tubular adenoma",
+        "moderate dysplasia"
+      ],
+      "start": [
+        283,
+        312
+      ]
+    },
+    {
+      "id_report": "f776a7fedd8f1014c001b34c3fea39dd",
+      "mentions": [
+        "tubulo-villous adenoma",
+        "low-grade dysplasia"
+      ],
+      "start": [
+        304,
+        332
+      ]
+    },
+    {
+      "id_report": "e5aa21acf832c5a48c4fe778defb9313",
+      "mentions": [
+        "tubular adenoma",
+        "mild dysplasia."
+      ],
+      "start": [
+        261,
+        282
+      ]
+    },
+    {
+      "id_report": "af5a869abf568ce83719a5641a4fda8c",
+      "mentions": [
+        "villous adenoma",
+        "dysplasia."
+      ],
+      "start": [
+        260,
+        292
+      ]
+    },
+    {
+      "id_report": "768c6e343e92d8da0d4fe86b3ebcdc3b",
+      "mentions": [
+        "tubular adenoma",
+        "low-grade dysplasia."
+      ],
+      "start": [
+        262,
+        283
+      ]
+    },
+    {
+      "id_report": "809b5bc8e2593a356ab47aea6bb023bd",
+      "mentions": [
+        "tubular adenoma",
+        "low-grade dysplasia.",
+        "resection margin."
+      ],
+      "start": [
+        289,
+        310,
+        344
+      ]
+    },
+    {
+      "id_report": "c30685f9e468d1ea109d49ddbb229805",
+      "mentions": [
+        "hyperplastic polyp",
+        "tubular adenoma",
+        "low-grade dysplasia."
+      ],
+      "start": [
+        294,
+        319,
+        340
+      ]
+    },
+    {
+      "id_report": "79b5134ccfda275eebb21bfe96c5c3dc",
+      "mentions": [
+        "tubular adenoma",
+        "moderate dysplasia",
+        "(fragments)."
+      ],
+      "start": [
+        283,
+        313,
+        332
+      ]
+    },
+    {
+      "id_report": "665f1dba74488a064cb6caba04cacb93",
+      "mentions": [
+        "tubular adenoma",
+        "low-grade dysplasia."
+      ],
+      "start": [
+        268,
+        289
+      ]
+    },
+    {
+      "id_report": "7213be298db51ebc954d8a22d9006614",
+      "mentions": [
+        "tubular adenoma",
+        "moderate dysplasia.",
+        "resection margin."
+      ],
+      "start": [
+        308,
+        337,
+        381
+      ]
+    },
+    {
+      "id_report": "6a4ddfd3601ac336371e90dfb59425fc",
+      "mentions": [
+        "tubular adenoma",
+        "moderate dysplasia"
+      ],
+      "start": [
+        288,
+        317
+      ]
+    },
+    {
+      "id_report": "eda3d72d85f9224c103b69ab3e64e8bf",
+      "mentions": [
+        "tubular adenoma"
+      ],
+      "start": [
+        266
+      ]
+    },
+    {
+      "id_report": "6eb209760544eb3d07945accd0453359",
+      "mentions": [
+        "villous adenoma",
+        "moderate dysplasia.",
+        "resection margin"
+      ],
+      "start": [
+        302,
+        323,
+        343
+      ]
+    },
+    {
+      "id_report": "9f5a97eeffc1e6f72f8b377616c45e61",
+      "mentions": [
+        "tubular adenoma",
+        "low-grade dysplasia"
+      ],
+      "start": [
+        304,
+        325
+      ]
+    },
+    {
+      "id_report": "354e63b48b0cb3f2c8af29a1ecda1d64",
+      "mentions": [
+        "tubular adenoma",
+        "mild dysplasia."
+      ],
+      "start": [
+        258,
+        279
+      ]
+    },
+    {
+      "id_report": "1720a26d55de317242e5488cce3a2aaa",
+      "mentions": [
+        "tubular adenoma",
+        "low-grade dysplasia."
+      ],
+      "start": [
+        261,
+        282
+      ]
+    },
+    {
+      "id_report": "0b59f7c2a68f662ab33baa4ac13e509f",
+      "mentions": [
+        "villous adenoma",
+        "severe dysplasia."
+      ],
+      "start": [
+        275,
+        315
+      ]
+    },
+    {
+      "id_report": "3d11b8efa9e0b71427a006de8748750f",
+      "mentions": [
+        "tubular adenoma",
+        "low-grade dysplasia",
+        "epithelium."
+      ],
+      "start": [
+        276,
+        297,
+        324
+      ]
+    },
+    {
+      "id_report": "3008697c64784ef5ab092351b8c56e04",
+      "mentions": [
+        "tubular adenoma",
+        "mild dysplasia."
+      ],
+      "start": [
+        258,
+        279
+      ]
+    },
+    {
+      "id_report": "8092927e72d676c677316e0faef0cdc5",
+      "mentions": [
+        "tubular adenoma",
+        "moderate dysplasia."
+      ],
+      "start": [
+        258,
+        279
+      ]
+    },
+    {
+      "id_report": "8b11d51283a121e926514dfebe4416a5",
+      "mentions": [
+        "villous adenoma-tubule",
+        "moderate and severe dysplasia.",
+        "resection margin,"
+      ],
+      "start": [
+        322,
+        350,
+        381
+      ]
+    },
+    {
+      "id_report": "ee0f77e06d25f3f5e4b962d1d5dba061",
+      "mentions": [
+        "tubular adenoma",
+        "low-grade dysplasia."
+      ],
+      "start": [
+        264,
+        285
+      ]
+    },
+    {
+      "id_report": "cc6ede95ed76ba6d0b51db4750a635be",
+      "mentions": [
+        "tubular adenoma",
+        "mild dysplasia,"
+      ],
+      "start": [
+        279,
+        300
+      ]
+    },
+    {
+      "id_report": "1551798ca26134523cd93ae79e07f941",
+      "mentions": [
+        "tubular adenoma",
+        "mild dysplasia."
+      ],
+      "start": [
+        260,
+        281
+      ]
+    },
+    {
+      "id_report": "e2b7198565b7044022ac9fd60b807970",
+      "mentions": [
+        "tubular adenoma",
+        "low-grade dysplasia."
+      ],
+      "start": [
+        263,
+        284
+      ]
+    },
+    {
+      "id_report": "c73d59c44e1c03cff111a6931624e4dd",
+      "mentions": [
+        "tubular adenoma",
+        "mild and moderate dysplasia.",
+        "resection margin."
+      ],
+      "start": [
+        297,
+        318,
+        360
+      ]
+    },
+    {
+      "id_report": "81054b667bfca6c2958410804eccf264",
+      "mentions": [
+        "villous adenoma-tubule",
+        "moderate dysplasia."
+      ],
+      "start": [
+        294,
+        330
+      ]
+    },
+    {
+      "id_report": "b41424b4da7565e4dd7825cef2b8c7a6",
+      "mentions": [
+        "tubular adenoma",
+        "low-grade dysplasia"
+      ],
+      "start": [
+        270,
+        291
+      ]
+    },
+    {
+      "id_report": "cc5a01d2808423147b334bdbf8139d2e",
+      "mentions": [
+        "tubular adenoma",
+        "low-grade dysplasia",
+        "resection margin."
+      ],
+      "start": [
+        313,
+        334,
+        387
+      ]
+    },
+    {
+      "id_report": "b51eaf7e43c2ffd38efd5c96a674ba85",
+      "mentions": [
+        "tubular adenoma",
+        "low-grade dysplasia",
+        "resection margin."
+      ],
+      "start": [
+        301,
+        322,
+        375
+      ]
+    },
+    {
+      "id_report": "fc3f45a8c15e72b9f9fb35acb7b58e49",
+      "mentions": [
+        "adenocarcinoma"
+      ],
+      "start": [
+        290
+      ]
+    },
+    {
+      "id_report": "df37ff92ca0ee5dcc6220267b7ceb6c2",
+      "mentions": [
+        "tubular adenoma",
+        "moderate dysplasia,",
+        "severe glandular epithelium."
+      ],
+      "start": [
+        324,
+        345,
+        373
+      ]
+    },
+    {
+      "id_report": "bbf9af569cca829fe13822571070d243",
+      "mentions": [
+        "tubular adenoma",
+        "moderate dysplasia,"
+      ],
+      "start": [
+        324,
+        345
+      ]
+    },
+    {
+      "id_report": "19d0111bafefe37f70862da77cf6bbd4",
+      "mentions": [
+        "tubular adenoma",
+        "low-grade dysplasia"
+      ],
+      "start": [
+        305,
+        326
+      ]
+    },
+    {
+      "id_report": "8c5e649d6f7c3b22057ea1142ec13218",
+      "mentions": [
+        "hyperplastic polyp-focal adenomatous",
+        "low-grade dysplasia"
+      ],
+      "start": [
+        283,
+        325
+      ]
+    },
+    {
+      "id_report": "8a3d6844a054038fd4393bf684abf21b",
+      "mentions": [
+        "tubular adenoma",
+        "moderate dysplasia",
+        "hyperplastic adenomatous polyp"
+      ],
+      "start": [
+        450,
+        471,
+        496
+      ]
+    },
+    {
+      "id_report": "d03654b3d55463998999cf7d73a6f574",
+      "mentions": [
+        "tubular adenoma",
+        "moderate dysplasia."
+      ],
+      "start": [
+        253,
+        274
+      ]
+    },
+    {
+      "id_report": "40a078a849ffc479343b8cc48dc7d973",
+      "mentions": [
+        "tubular adenoma",
+        "moderate dysplasia."
+      ],
+      "start": [
+        286,
+        307
+      ]
+    },
+    {
+      "id_report": "0b7d30ad70f68e389187495f96643a27",
+      "mentions": [
+        "hyperplastic polyp-adenomatous",
+        "mild-to-moderate dysplasia."
+      ],
+      "start": [
+        276,
+        312
+      ]
+    },
+    {
+      "id_report": "e03ac6086389ef8360d4d146e8f8e833",
+      "mentions": [
+        "tubular adenoma",
+        "moderate dysplasia."
+      ],
+      "start": [
+        297,
+        318
+      ]
+    },
+    {
+      "id_report": "95530b2b25742838d7b1d5e5b9e1a9c1",
+      "mentions": [
+        "villous adenoma",
+        "mild-to-moderate dysplasia."
+      ],
+      "start": [
+        261,
+        282
+      ]
+    },
+    {
+      "id_report": "03d7bd1c5063aa2d7e1811f1cd2394c4",
+      "mentions": [
+        "tubular adenoma",
+        "low-grade dysplasia."
+      ],
+      "start": [
+        330,
+        351
+      ]
+    },
+    {
+      "id_report": "4be6225810f1afd28e5d889da0ae9dc5",
+      "mentions": [
+        "tubular adenoma",
+        "low-grade dysplasia."
+      ],
+      "start": [
+        319,
+        340
+      ]
+    },
+    {
+      "id_report": "21af1231c449f8f3ec07708a914e939a",
+      "mentions": [
+        "tubular adenoma",
+        "mild-to-moderate dysplasia.",
+        "resection margin"
+      ],
+      "start": [
+        341,
+        362,
+        410
+      ]
+    },
+    {
+      "id_report": "97cd684cb49d9a99ae99a05a02c7515e",
+      "mentions": [
+        "tubular adenoma",
+        "mild and moderate dysplasia.",
+        "resection margin."
+      ],
+      "start": [
+        311,
+        332,
+        374
+      ]
+    },
+    {
+      "id_report": "61be79bcaa3dbb2c5a5508e49ba3f57e",
+      "mentions": [
+        "tubular adenoma",
+        "mild and moderate dysplasia."
+      ],
+      "start": [
+        290,
+        311
+      ]
+    },
+    {
+      "id_report": "de8e15465c183ff0008380b1320acffb",
+      "mentions": [
+        "ulcerated adenocarcinoma"
+      ],
+      "start": [
+        268
+      ]
+    },
+    {
+      "id_report": "cc5762b3d0d84a3b82d0a7e1f4bca378",
+      "mentions": [
+        "tubular adenoma",
+        "mild dysplasia,",
+        "glandular epithelium."
+      ],
+      "start": [
+        309,
+        330,
+        364
+      ]
+    },
+    {
+      "id_report": "a672ce71a099651ad3c221d2f5512e84",
+      "mentions": [
+        "adenocarcinoma"
+      ],
+      "start": [
+        279
+      ]
+    },
+    {
+      "id_report": "b05a20c13c869c36e47fb93b1b529413",
+      "mentions": [
+        "neoplasia adenomatous villosa",
+        "low-grade dysplasia",
+        "(surface fragments)."
+      ],
+      "start": [
+        541,
+        601,
+        667
+      ]
+    },
+    {
+      "id_report": "e5f5218f59b3a10c038acfe91b626e85",
+      "mentions": [
+        "tubular adenoma",
+        "low-grade dysplasia"
+      ],
+      "start": [
+        292,
+        313
+      ]
+    },
+    {
+      "id_report": "a82c8e0b9c73ce662f39b8ca14ed42fe",
+      "mentions": [
+        "hyperplastic polyp-adenomatous",
+        "low-grade dysplasia",
+        "resection margin"
+      ],
+      "start": [
+        534,
+        586,
+        614
+      ]
+    },
+    {
+      "id_report": "e96f827a0c145131626bc06f8e114d49",
+      "mentions": [
+        "tubular adenoma",
+        "low-grade dysplasia"
+      ],
+      "start": [
+        411,
+        432
+      ]
+    },
+    {
+      "id_report": "2a80037552e14cd94f1fd7543dfa6651",
+      "mentions": [
+        "adenocarcinoma"
+      ],
+      "start": [
+        260
+      ]
+    },
+    {
+      "id_report": "d0e1286dc595a458c933ca3adb830bc8",
+      "mentions": [
+        "ascending colon biopsy:",
+        "tubular adenoma",
+        "mild epithelial dysplasia."
+      ],
+      "start": [
+        581,
+        605,
+        626
+      ]
+    },
+    {
+      "id_report": "4bd63d5d39edb86e6ac6ef278d5cdb48",
+      "mentions": [
+        "blind biopsy",
+        "tubular adenoma",
+        "moderate dysplasia",
+        "glandular epithelium."
+      ],
+      "start": [
+        573,
+        589,
+        610,
+        629
+      ]
+    },
+    {
+      "id_report": "d565197526cfeec8e2b560e16253104f",
+      "mentions": [
+        "tubular adenoma",
+        "moderate dysplasia",
+        "glandular epithelium."
+      ],
+      "start": [
+        589,
+        610,
+        629
+      ]
+    },
+    {
+      "id_report": "6775c01ef2fef7611840c3063085dc74",
+      "mentions": [
+        "inflammatory polyp."
+      ],
+      "start": [
+        379
+      ]
+    },
+    {
+      "id_report": "545a3cd510c3d842b0b919ea3a721f1f",
+      "mentions": [
+        "tubular adenoma",
+        "low-grade dysplasia."
+      ],
+      "start": [
+        380,
+        401
+      ]
+    },
+    {
+      "id_report": "cdae0e6cda725519506738cd6451e17e",
+      "mentions": [
+        "inflammatory polyp"
+      ],
+      "start": [
+        377
+      ]
+    },
+    {
+      "id_report": "09a91c35a4401046010e96682aaa7e1b",
+      "mentions": [
+        "tubular adenoma",
+        "severe dysplasia."
+      ],
+      "start": [
+        324,
+        345
+      ]
+    },
+    {
+      "id_report": "848237c924a7d542ffc87fd5c26e7997",
+      "mentions": [
+        "ulcerated adenocarcinoma"
+      ],
+      "start": [
+        338
+      ]
+    },
+    {
+      "id_report": "4729f468a04092bc7d719852094f71dd",
+      "mentions": [
+        "superficial adenocarcinoma."
+      ],
+      "start": [
+        303
+      ]
+    },
+    {
+      "id_report": "90f6a331a908f94f914a2d33abae3183",
+      "mentions": [
+        "fragments",
+        "superficial adenocarcinoma."
+      ],
+      "start": [
+        273,
+        286
+      ]
+    },
+    {
+      "id_report": "3658a7e1904b3aaf9c4fca2c75ccefef",
+      "mentions": [
+        "tubular adenoma",
+        "low-grade dysplasia"
+      ],
+      "start": [
+        313,
+        334
+      ]
+    },
+    {
+      "id_report": "5d8e40422248526cda1e047e62f55502",
+      "mentions": [
+        "tubular adenoma",
+        "low-grade dysplasia"
+      ],
+      "start": [
+        281,
+        302
+      ]
+    },
+    {
+      "id_report": "a1439e2ffa31a19273709679e501e9c6",
+      "mentions": [
+        "tubulo-villous adenoma",
+        "low-grade dysplasia",
+        "resection margin",
+        "hyperplastic polyp-adenomatous"
+      ],
+      "start": [
+        674,
+        702
+      ]
+    },
+    {
+      "id_report": "4b6c85edecf16438f71e856d5b654b3f",
+      "mentions": [
+        "villous adenoma",
+        "high grade dysplasia"
+      ],
+      "start": [
+        510,
+        546
+      ]
+    },
+    {
+      "id_report": "8a4fbf20cde33ee1e3cbded587400f44",
+      "mentions": [
+        "low and high grade dysplasia"
+      ],
+      "start": [
+        538
+      ]
+    },
+    {
+      "id_report": "07c61b7f499320d6fca670d24e847cc2",
+      "mentions": [
+        "adenoma tubulo-villous",
+        "low dysplasia"
+      ],
+      "start": [
+        521,
+        549
+      ]
+    },
+    {
+      "id_report": "eddca22cee59f507b98c365d72cd613c",
+      "mentions": [
+        "adenoma tubulo-villous",
+        "resection margin,"
+      ],
+      "start": [
+        521,
+        607
+      ]
+    },
+    {
+      "id_report": "cd984a23cef4d95015839324bd83f456",
+      "mentions": [
+        "tubular adenoma",
+        "low-grade dysplasia"
+      ],
+      "start": [
+        290,
+        311
+      ]
+    },
+    {
+      "id_report": "f564db7277527a42ffa1b820d634a54a",
+      "mentions": [
+        "ulcerated adenocarcinoma"
+      ],
+      "start": [
+        284
+      ]
+    },
+    {
+      "id_report": "a5eb2aff2413b38f705a7cfc69e4bc6d",
+      "mentions": [
+        "adenocarcinoma"
+      ],
+      "start": [
+        278
+      ]
+    },
+    {
+      "id_report": "f8e4690d5b7c06d316eb362f27560cdd",
+      "mentions": [
+        "tubular adenoma",
+        "mild epithelial dysplasia."
+      ],
+      "start": [
+        291,
+        312
+      ]
+    },
+    {
+      "id_report": "c2c7a56e0a4ad67748e433889c6efe52",
+      "mentions": [
+        "tubulo-villous adenoma",
+        "low-grade dysplasia"
+      ],
+      "start": [
+        311,
+        339
+      ]
+    },
+    {
+      "id_report": "bcff0ee5f29d2534280c5e2124bcc7fc",
+      "mentions": [
+        "tubular adenoma",
+        "low-grade dysplasia"
+      ],
+      "start": [
+        308,
+        329
+      ]
+    },
+    {
+      "id_report": "975362be36764a7457ce0ee8391d02c6",
+      "mentions": [
+        "adenocarcinoma",
+        "(ulcerated fragments)."
+      ],
+      "start": [
+        269,
+        284
+      ]
+    },
+    {
+      "id_report": "b89bd366fb56369fc4a6b01ee52162cf",
+      "mentions": [
+        "tubular adenoma",
+        "low-grade dysplasia"
+      ],
+      "start": [
+        292,
+        313
+      ]
+    },
+    {
+      "id_report": "c4d7d435d1ef83aeb861948b9e8cb4aa",
+      "mentions": [
+        "adenocarcinoma."
+      ],
+      "start": [
+        255
+      ]
+    },
+    {
+      "id_report": "19e585a4143c67aba27875f7f18cba5c",
+      "mentions": [
+        "adenocarcinoma"
+      ],
+      "start": [
+        259
+      ]
+    },
+    {
+      "id_report": "16a778af89c2b54642cc0d8d34eb6681",
+      "mentions": [
+        "ulcerated adenocarcinoma"
+      ],
+      "start": [
+        284
+      ]
+    },
+    {
+      "id_report": "fb7881e63269388e1ffc60100c6bf0c1",
+      "mentions": [
+        "adenocarcinoma."
+      ],
+      "start": [
+        254
+      ]
+    },
+    {
+      "id_report": "37c042e5ce27b1bb8133bff854b31c3f",
+      "mentions": [
+        "tubular adenoma",
+        "low-grade dysplasia",
+        "resection margin"
+      ],
+      "start": [
+        333,
+        354,
+        386
+      ]
+    },
+    {
+      "id_report": "a03a45cb41fb6f1210f8e1797b9f6e42",
+      "mentions": [
+        "invasive adenocarcinoma"
+      ],
+      "start": [
+        268
+      ]
+    },
+    {
+      "id_report": "35051e8c30225646d75825fc2036d67c",
+      "mentions": [
+        "tubular adenoma",
+        "low-grade dysplasia"
+      ],
+      "start": [
+        314,
+        335
+      ]
+    },
+    {
+      "id_report": "01568771fd1645c090a6d6088259b9f1",
+      "mentions": [
+        "adenocarcinoma."
+      ],
+      "start": [
+        259
+      ]
+    },
+    {
+      "id_report": "69145b8f9f947f1102f07afbfa313759",
+      "mentions": [
+        "tubular adenoma",
+        "low-grade dysplasia"
+      ],
+      "start": [
+        286,
+        307
+      ]
+    },
+    {
+      "id_report": "cc128326f90a8a8bfeacfb82a68b41b2",
+      "mentions": [
+        "adenocarcinoma"
+      ],
+      "start": [
+        274
+      ]
+    },
+    {
+      "id_report": "9b3a8c8f5cfe271a7914b79b037fb00d",
+      "mentions": [
+        "adenoma tightened",
+        "low-grade dysplasia"
+      ],
+      "start": [
+        352,
+        375
+      ]
+    },
+    {
+      "id_report": "8b7fb2786de52e17c591b946a31904b0",
+      "mentions": [
+        "adenoma",
+        "low-grade dysplasia"
+      ],
+      "start": [
+        352,
+        375
+      ]
+    },
+    {
+      "id_report": "760aa59861eca9d3590f5cafc6281185",
+      "mentions": [
+        "adenoma tightened"
+      ],
+      "start": [
+        352
+      ]
+    },
+    {
+      "id_report": "6927478a41ef15bf735b29f6e88b35c3",
+      "mentions": [
+        "tubular adenoma",
+        "mild dysplasia."
+      ],
+      "start": [
+        363,
+        384
+      ]
+    },
+    {
+      "id_report": "a41500f5552abde7bc25eb1f9b814d45",
+      "mentions": [
+        "villous adenoma",
+        "low dysplasia",
+        "moderate dysplasia"
+      ],
+      "start": [
+        525,
+        546,
+        613
+      ]
+    },
+    {
+      "id_report": "be46fd19526b94ff8f70ef7a9d90b29f",
+      "mentions": [
+        "adenoma",
+        "dysplasia",
+        "moderate dysplasia"
+      ],
+      "start": [
+        533,
+        550,
+        613
+      ]
+    },
+    {
+      "id_report": "7a88196fabb8e6bbc6a59c8dc078d614",
+      "mentions": [
+        "villous adenoma",
+        "low dysplasia",
+        "moderate dysplasia"
+      ],
+      "start": [
+        525,
+        546,
+        613
+      ]
+    }
+  ]
+}
