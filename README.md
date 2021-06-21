@@ -1,4 +1,4 @@
-# MedTAG full source code
+# MedTAG version 1.0.5
 ![medTAG_logo_462x132](./img/screenshots/medTAG_logo_462x132.png)
 
 MedTAG: An open-source biomedical annotation tool for diagnostic reports.
@@ -214,27 +214,27 @@ The annotation process performance has been evaluated in terms of:
 1. **number of actions**: number of user-required actions (e.g. clicks and keys pressed) to annotate documents according to the use-cases specified.
 2. **time elapsed**: the amount of time required to perform the whole annotation process (i.e. all the sample documents considered get annotated).
 
-The analysis we conducted considers a sample of one hundred documents, randomly chosen from a real dataset concerning the digital pathology domain (i.e. colon cancer clinical reports). We assessed the performances of MedTAG and other annotation tools including [ezTag](https://eztag.bioqrator.org/), [MyMiner](https://myminer.armi.monash.edu.au/) and [tagtog](https://www.tagtog.net/). We measured the number of actions and the time elapsed forty times for each annotation tool, then we computed the mean and the standard deviation. 
+The analysis we conducted considers a sample of one hundred documents, randomly chosen from a real dataset concerning the digital pathology domain (i.e. colon cancer clinical reports). We assessed the performances of MedTAG and other annotation tools including [ezTag](https://eztag.bioqrator.org/), [MyMiner](https://myminer.armi.monash.edu.au/) and [tagtog](https://www.tagtog.net/). We measured the number of actions and the time elapsed for each annotation tool. We computed the mean and the standard deviation over forty trials.
 
 The experiment results are summarized in the following tables:
 
 **Table 1**: **document-level annotation** performance analysis
 
-|                                 Annotation tool | Number of actions | Time elapsed (mean) in seconds | Time elapsed (standard deviation) in seconds |
-| ----------------------------------------------: | :---------------: | :----------------------------: | :------------------------------------------: |
-| [MedTAG](https://github.com/MedTAG/medtag-core) |        200        |             46.84              |                    0.803                     |
-|  [MyMiner](https://myminer.armi.monash.edu.au/) |        100        |             56.677             |                    0.416                     |
-|               [tagtog](https://www.tagtog.net/) |        400        |             205.74             |                    5.471                     |
+|                                            Tool | #Actions | Elapsed time in seconds (mean) | Standard deviation in seconds |
+| ----------------------------------------------: | :------: | :----------------------------: | :---------------------------: |
+| [MedTAG](https://github.com/MedTAG/medtag-core) |   200    |             46.84              |             0.803             |
+|  [MyMiner](https://myminer.armi.monash.edu.au/) |   100    |             56.677             |             0.416             |
+|               [tagtog](https://www.tagtog.net/) |   400    |             205.74             |             5.471             |
 
 
 
 **Table 2**: **mention-level annotation** performance analysis
 
-|                                 Annotation tool | Number of actions | Time elapsed (mean) in seconds | Time elapsed (standard deviation) in seconds |
-| ----------------------------------------------: | :---------------: | :----------------------------: | :------------------------------------------: |
-| [MedTAG](https://github.com/MedTAG/medtag-core) |        419        |            159.337             |                    0.479                     |
-|           [ezTag](https://eztag.bioqrator.org/) |        307        |             260.34             |                    0.576                     |
-|               [tagtog](https://www.tagtog.net/) |        404        |            304.692             |                    10.067                    |
+|                                            Tool | #Actions | Elapsed time in seconds (mean) | Standard deviation in seconds |
+| ----------------------------------------------: | :------: | :----------------------------: | :---------------------------: |
+| [MedTAG](https://github.com/MedTAG/medtag-core) |   419    |            159.337             |             0.479             |
+|           [ezTag](https://eztag.bioqrator.org/) |   307    |             260.34             |             0.576             |
+|               [tagtog](https://www.tagtog.net/) |   404    |            304.692             |            10.067             |
 
 
 
