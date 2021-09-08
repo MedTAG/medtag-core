@@ -97,15 +97,17 @@ The following procedure describe how to start using MedTAG in _Test Mode_, which
 
 3. Once you have logged in, you will be asked to provide a first reports configuration. In particular, you have to provide:
 
-   1. **Language**: this is the language of the reports you will annotate.
+   1. **Report type**: this is can be *MedTAG Reports* and it indicates the reports the administrator uploaded or *PubMed articles* and it indicates the PubMed articles you uploaded giving their ID.
 
-   2. **Use case**: this is the use case of the clinical reports (e.g. Colon cancer and Lung cancer).
+   2. **Language**: this is the language of the reports you will annotate.
 
-   3. **Institute**: this is the medical institute which provides the diagnostic reports.
+   3. **Use case**: this is the use case of the clinical reports (e.g. Colon cancer and Lung cancer).
 
-   4. **Annotation mode**: This can be _Manual_ if the user creates the ground truths from scratch, or _Automatic_ if the user edits the ground truths automatically created. _Automatic_ option is available if there are some automatically created ground truths.
+   4. **Institute**: this is the medical institute which provides the diagnostic reports.
 
-      **NOTE**:  In  _Test Mode_ only one combination is possible (i.e., English, Colon, default_hospital, Manual)
+   5. **Annotation mode**: This can be _Manual_ if the user creates the ground truths from scratch, or _Automatic_ if the user edits the ground truths automatically created. _Automatic_ option is available if there are some automatically created ground truths.
+
+      **NOTE**:  In  _Test Mode_ you can annotate a set of reports about colon we provided (this corresponds to the following combination: MedTAG reports, English, colon, default_hospital, Manual), or a set of PubMed articles (this corresponds to: PubMed articles, colon, Manual). Note that if you select PubMed articles you do not need to set *language* or *institute* because they are set by default.
 
 ![initial_test_conf](./img/screenshots/select_configuration_550.PNG)
 
