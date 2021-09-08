@@ -5,7 +5,7 @@ MedTAG: An open-source biomedical annotation tool for diagnostic reports.
 
 This repository contains the full source code of MedTAG, a biomedical annotation tool for tagging biomedical concepts in clinical reports.
 
-MedTAG provides four annotation modes:
+MedTAG provides four annotation types:
 
 - *Concepts*: allows the user to specify which concepts are relevant for a document. Users can take advantage of auto-complete functionalities for searching the relevant concepts to assign to each document. 
 
@@ -32,6 +32,9 @@ MedTAG provides the following functionalities:
 - multilingual support
 - support for ontologies/concepts to use for the annotation process
 - support for schema configuration, so that users can easily import data (i.e., reports, labels and concepts), as CSV files, and choose which report fields to annotate.
+- support for automatic annotation of all the annotation types for reports belonging to three use cases: colon, uterine cervix and lung. Automatic annotation is available for english reports 
+- support for annotation of PubMed articles
+- support for inter-annotator agreement
 
 ## Files
 
@@ -100,7 +103,9 @@ The following procedure describe how to start using MedTAG in _Test Mode_, which
 
    3. **Institute**: this is the medical institute which provides the diagnostic reports.
 
-      **NOTE**:  In  _Test Mode_ only one combination is possible (i.e., English, Colon, default_hospital )
+   4. **Annotation mode**: This can be _Manual_ if the user creates the ground truths from scratch, or _Automatic_ if the user edits the ground truths automatically created. _Automatic_ option is available if there are some automatically created ground truths.
+
+      **NOTE**:  In  _Test Mode_ only one combination is possible (i.e., English, Colon, default_hospital, Manual)
 
 ![initial_test_conf](./img/screenshots/select_configuration_550.PNG)
 
@@ -125,6 +130,18 @@ In order to customize MedTAG with your own data, you need to provide three CSV f
      ![report_file](./img/screenshots/report_csv_1000.PNG)
 
      **NOTE:** In addition to the previous mandatory columns, you need to provide a set of additional columns to describe the actual textual content of your reports (e.g. the diagnosis text, the patient information and so on). You can specify as many columns as you want.
+     
+- **pubmed_file**: this file contains the PubMed articles to annotate. The csv header must contain the following columns:
+
+  1. **ID**: the PubMed article's unique identifier.
+
+  2. **usecase**: the article's use-case (e.g. colon cancer) indicates the clinical case the report refers to.
+
+     **NOTE**: if you are not interested in providing the *usecase* you can assign it a default value of your choice, that holds for all the rows of the *pubmed_file*. 
+   
+     **NOTE**: the language considered for PubMed articles is: English.
+
+     **NOTE**: PubMed articles are uploaded with a rate of 3 articles per second.
 
 - **concepts_file**: this file contains the concepts used for annotating the clinical reports. All the concepts must be identified with a *concept_url* which uniquely identifies the concept according to a reference ontology. The csv header must contain the following columns:
 
@@ -170,9 +187,11 @@ To start a new configuration follow the instructions below:
 
    **NOTE**: You can add one or more files from the same folder. If it is the first time you configure MedTAG, you are asked to provide both the username and the password that will be used by the admin user to login into MedTAG. The admin user is the only one who can change the configuration files and access the data. If you do not have access to _Configure_ section (i.e., you do not see it in the side bar), this means that you are not logged in as the admin user.
 
-   **NOTE**: The ***reports_file* is mandatory**. Once you uploaded it, MedTAG automatically detects the columns which characterize your report and asks you to choose which fields of the report you want to hide, display or annotate. **You need to set at least one field to be displayed**.
+   **NOTE**: It is mandatory to upload at least one file between ***reports_file*** and ***pubmed_file***. Once you uploaded it, MedTAG automatically detects the columns which characterize your report and asks you to choose which fields of the report you want to hide, display or annotate. **You need to set at least one field to be displayed**.
 
    **NOTE**: The *concepts_file* and _labels_file_ and are not mandatory. This means that if you are not interested in labels annotation and/or concepts identification you can avoid to provide them. By the way,  you must provide either the _labels_file_ or the *concepts_file* or set at least one field to *Display* and *Annotate*.
+   
+   **NOTE**: If you uploaded the ***reports_file*** or the ***pubmed_file*** giving *Colon, Uterine cervix* or *Lung* as use-cases, you can rely on a set of concepts and labels we provide, without uploading your own ones. Remember that it is not allowed to upload new concepts (or labels) if you decided to rely on those we provide. 
 
    ![reportsfields](./img/screenshots/reportsfields_857x500.png)
 
@@ -186,7 +205,7 @@ To start a new configuration follow the instructions below:
 
        ![examplemessages](./img/screenshots/examplemessages_771x500.png)
 
-5. The procedure has ended, a notification of success or error will be provided. In case of successful configuration of MedTAG, the login page will look like the screenshot below. 
+5. When the procedure has ended, a notification of success or error will be provided. If you provided reports (or PubMed articles) whose use-cases are: *Colon, Uterine cervix* or *lung* you will be notified that automatic annotation is available. This operation can be time consuming, hence you can decide to automatically annotate your reports or log in and start the automatic annotation process in another moment. If you want to automatically annotate your reports you have to select the fields you want to extract the concepts, the mentions and the labels from. In case of successful configuration of MedTAG, the login page will look like the screenshot below. 
 
    ![loginnew](./img/screenshots/loginnew_296x344.png)
 
@@ -199,6 +218,10 @@ The following procedure describe how to provide additional data to the current c
 2. Select what you want to update. You can add some reports, labels or concepts. You can also change the fields to display and annotate. If you want to update the fields to annotate and display, remember that you cannot set to *Hide* or *Display* the fields you previously decided to annotate, since this would affect the annotations that rely on those fields.
 
    **NOTE**: If you decide to add reports having columns that MedTAG has never detected before, you will be asked to choose what columns to display, hide or annotate.
+ 
+3. In this page you can also automatically annotate your reports whose use-cases are: *Colon, Uterine cervix* or *Lung* (if any). You can decide for each use-case what fields you want to extract concepts, labels and mentions from. This process might be time and memory consuming, this is why we recommend you to have machines powerful enough (see **requirements** section) to perform this task. 
+
+   **NOTE**: If you want to automatically re-annotate reports belonging to a use-case, all the ground-truths previously automatically created for that use-case will be removed. The same holds for the automatic annotation of PubMed articles.
 
    ![update](./img/screenshots/update_conf_676x344.PNG)
    
@@ -232,10 +255,11 @@ The experiment results are summarized in the following tables:
 
 |                                            Tool | #Actions | Elapsed time in seconds (mean) | Standard deviation in seconds |
 | ----------------------------------------------: | :------: | :----------------------------: | :---------------------------: |
-| [MedTAG](https://github.com/MedTAG/medtag-core) |   419    |            159.337             |             0.479             |
+| [MedTAG](https://github.com/MedTAG/medtag-core) |   519    |            159.337             |             0.479             |
 |           [ezTag](https://eztag.bioqrator.org/) |   307    |             260.34             |             0.576             |
+|             [teamTat](https://www.teamtat.org/) |   307    |            271.577             |             1.542             |
 |               [tagtog](https://www.tagtog.net/) |   404    |            304.692             |            10.067             |
-
+|  [MyMiner](https://myminer.armi.monash.edu.au/) |   414    |            114.390             |             1.507             |
 
 
 ## Technical details 
