@@ -13,7 +13,7 @@ MedTAG provides four annotation types:
 - *Mentions*: shows the list of the mentions identified by the user in the report text. 
 - *Linking*: allows the user to link the mentions identified with the corresponding concepts. Users can link the same mention to multiple concepts.
 
-![](./img/screenshots/screenshot_medtag_1_539x344.png)
+![](./img/screenshots/annot1_539x344.png)
 
 ## Functionalities
 
@@ -97,7 +97,7 @@ The following procedure describe how to start using MedTAG in _Test Mode_, which
 
 3. Once you have logged in, you will be asked to provide a first reports configuration. In particular, you have to provide:
 
-   1. **Report type**: this is can be *MedTAG Reports* and it indicates the reports the administrator uploaded or *PubMed articles* and it indicates the PubMed articles you uploaded giving their ID.
+   1. **Report type**: this can be *MedTAG Reports* and it indicates the reports the administrator uploaded or *PubMed articles* and it indicates the PubMed articles you uploaded giving their ID.
 
    2. **Language**: this is the language of the reports you will annotate.
 
@@ -109,7 +109,7 @@ The following procedure describe how to start using MedTAG in _Test Mode_, which
 
       **NOTE**:  In  _Test Mode_ you can annotate a set of reports about colon we provided (this corresponds to the following combination: MedTAG reports, English, colon, default_hospital, Manual), or a set of PubMed articles (this corresponds to: PubMed articles, colon, Manual). Note that if you select PubMed articles you do not need to set *language* or *institute* because they are set by default.
 
-![initial_test_conf](./img/screenshots/select_configuration_550.PNG)
+![initial_test_conf](./img/screenshots/new_start_580.png)
 
 ## Customize MedTAG
 
@@ -144,6 +144,8 @@ In order to customize MedTAG with your own data, you need to provide three CSV f
      **NOTE**: the language considered for PubMed articles is: English.
 
      **NOTE**: PubMed articles are uploaded with a rate of 3 articles per second.
+     
+     ![pubmed_file](./img/screenshots/pubmed_file.png)
 
 - **concepts_file**: this file contains the concepts used for annotating the clinical reports. All the concepts must be identified with a *concept_url* which uniquely identifies the concept according to a reference ontology. The csv header must contain the following columns:
 
@@ -177,9 +179,9 @@ To start a new configuration follow the instructions below:
 
 1. Open the Menu from the _Test Mode_ and go to _Configure_.
 
-   ![menu_main_interface](./img/screenshots/new_conf1_550.png)
+   ![menu_main_interface](./img/screenshots/config_1_580.png)
 
-   ![configure](./img/screenshots/new_conf2_550.png)
+   ![configure](./img/screenshots/config_580.png)
 
 2. Read and follow the instructions of the guided procedure.
 
@@ -192,10 +194,10 @@ To start a new configuration follow the instructions below:
    **NOTE**: It is mandatory to upload at least one file between ***reports_file*** and ***pubmed_file***. Once you uploaded it, MedTAG automatically detects the columns which characterize your report and asks you to choose which fields of the report you want to hide, display or annotate. **You need to set at least one field to be displayed**.
 
    **NOTE**: The *concepts_file* and _labels_file_ and are not mandatory. This means that if you are not interested in labels annotation and/or concepts identification you can avoid to provide them. By the way,  you must provide either the _labels_file_ or the *concepts_file* or set at least one field to *Display* and *Annotate*.
-   
-   **NOTE**: If you uploaded the ***reports_file*** or the ***pubmed_file*** giving *Colon, Uterine cervix* or *Lung* as use-cases, you can rely on a set of concepts and labels we provide, without uploading your own ones. Remember that it is not allowed to upload new concepts (or labels) if you decided to rely on those we provide. 
 
    ![reportsfields](./img/screenshots/reportsfields_857x500.png)
+   
+    **NOTE**: If you uploaded the ***reports_file*** or the ***pubmed_file*** giving *Colon, Uterine cervix* or *Lung* as use-cases, you can rely on a set of concepts and labels we provide, without uploading your own ones. Remember that it is not allowed to upload new concepts (or labels) if you decided to rely on those we provide. 
 
 4. Check the format of the provided CSV files, by clicking on the *Check* button. Then, the automatic procedure will produce some state messages in different colors:
 
