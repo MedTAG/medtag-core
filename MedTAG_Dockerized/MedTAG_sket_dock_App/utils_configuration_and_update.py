@@ -481,12 +481,7 @@ def check_file(reports,pubmedfiles, labels, concepts, jsonDisp, jsonAnn, usernam
                     if 'usecase' in cols:
                         df['usecase'] = df['usecase'].str.lower()
 
-                    if load_concepts is not None:
-                        for el in load_concepts:
-                            if el in df.usecase.unique():
-                                json_resp['concept_message'] = 'CONCEPTS FILE - ' + concepts[
-                                    i].name + ' - You can not insert concepts files for the use case ' + el + ' after having decide to use EXAMODE concepts.'
-                                break
+
                     # Check if all the mandatory cols are present
                     for el in list_db_col:
                         if el not in cols:
@@ -497,7 +492,12 @@ def check_file(reports,pubmedfiles, labels, concepts, jsonDisp, jsonAnn, usernam
                     if columns_wrong == True:
                         break
 
-
+                    if load_concepts is not None:
+                        for el in load_concepts:
+                            if el in df.usecase.unique():
+                                json_resp['concept_message'] = 'CONCEPTS FILE - ' + concepts[
+                                    i].name + ' - You can not insert concepts files for the use case ' + el + ' after having decide to use EXAMODE concepts.'
+                                break
 
                     # header length must be the same, no extra columns
                     if len(list_db_col) != len(cols):
@@ -565,12 +565,7 @@ def check_file(reports,pubmedfiles, labels, concepts, jsonDisp, jsonAnn, usernam
                     if 'usecase' in cols:
                         df['usecase'] = df['usecase'].str.lower()
 
-                    if (load_labels) is not None:
-                        for el in load_labels:
-                            if el in df.usecase.unique():
-                                json_resp['label_message'] = 'LABELS FILE - ' + labels[
-                                    i].name + ' - You can not insert labels files for the use case ' + el + ' after having decide to use EXAMODE labels.'
-                                break
+
 
                     esco = False
                     for el in list_db_col:
@@ -581,6 +576,13 @@ def check_file(reports,pubmedfiles, labels, concepts, jsonDisp, jsonAnn, usernam
 
                     if esco == True:
                         break
+
+                    if (load_labels) is not None:
+                        for el in load_labels:
+                            if el in df.usecase.unique():
+                                json_resp['label_message'] = 'LABELS FILE - ' + labels[
+                                    i].name + ' - You can not insert labels files for the use case ' + el + ' after having decide to use EXAMODE labels.'
+                                break
 
                     if len(cols) != len(list_db_col):
                         json_resp['label_message'] = 'LABELS FILE - ' + labels[
