@@ -176,7 +176,7 @@ def configure_update_labels(cursor,load_labels):
             data = json.load(outfile)
             cursor.execute("SELECT MAX(seq_number) FROM annotation_label")
             seq = cursor.fetchone()[0]
-            if len(load_labels) > 0:
+            if (load_labels) is not None:
                 labs = []
                 for el in load_labels:
                     for label in data['labels'][el]:
@@ -185,65 +185,6 @@ def configure_update_labels(cursor,load_labels):
 
                 cursor.executemany("INSERT INTO annotation_label (label,seq_number,name) VALUES (%s,%s,%s)",
                                    labs)
-
-
-# def configure_update_concepts(cursor,load_concepts):
-#
-#     """This method configures concepts when a an existing configuration is updated"""
-#
-#     for usecase in load_concepts:
-#         disease = ''
-#         description = {'provenance':'EXAMODE','insertion_author':'admin'}
-#         desc = json.dumps(description)
-#         if usecase.lower() == 'colon':
-#             disease = 'colon carcinoma'
-#         elif usecase.lower() == 'uterine cervix':
-#             disease = 'cervical cancer'
-#         elif usecase.lower() == 'lung':
-#             disease = 'lung cancer'
-#         if disease != '':
-#             workpath = os.path.dirname(os.path.abspath(__file__))  # Returns the Path your .py file is in
-#             r = process_ontology(workpath,disease)
-#             # convert query output to DataFrame
-#             belong_to = []
-#             concept_has_uc = []
-#             conc = []
-#             description = {'provenance': 'EXAMODE', 'insertion_author': 'admin'}
-#             desc = json.dumps(description)
-#             with transaction.atomic():
-#                 for e in r:
-#                     if(e[0] is not None and e[1] is not None and e[2] is not None and e[3] is not None):
-#                         belong_to.append((e[0].toPython(),e[3].toPython()))
-#                         concept_has_uc.append((e[0].toPython(),usecase))
-#                         conc.append((e[0].toPython(),e[1].toPython(),None))
-#                         cursor.execute("SELECT json_concept FROM concept WHERE concept_url = %s",[e[0].toPython()])
-#                         ans = cursor.fetchall()
-#                         if len(ans) == 0:
-#                             query = ("INSERT INTO concept (concept_url,json_concept, name) VALUES(%s,%s,%s);")
-#                             values = (e[0].toPython(), desc,e[1].toPython())
-#                             cursor.execute(query, values)
-#                         else:
-#                             for row in ans:
-#                                 j_c = json.loads(row[0])
-#                                 j_c['insertion_author'] = 'admin'
-#                                 j_c['provenance'] = 'EXAMODE'
-#                                 j_c = json.dumps(j_c)
-#                                 cursor.execute("UPDATE concept SET json_concept = %s WHERE concept_url = %s",[j_c,e[0].toPython()])
-#
-#                         cursor.execute("SELECT * FROM belong_to WHERE concept_url = %s AND name = %s", [e[0].toPython(),e[3].toPython()])
-#                         ans = cursor.fetchall()
-#                         if len(ans) == 0:
-#                             query1 = ("INSERT INTO belong_to (name, concept_url) VALUES(%s,%s);")
-#                             values1 = (e[3].toPython(), e[0].toPython())
-#                             cursor.execute(query1, values1)
-#
-#                         cursor.execute("SELECT * FROM concept_has_uc WHERE concept_url = %s AND name = %s",
-#                                     [e[0].toPython(),usecase])
-#                         ans = cursor.fetchall()
-#                         if len(ans) == 0:
-#                             query2 = ("INSERT INTO concept_has_uc (concept_url,name) VALUES(%s,%s);")
-#                             values2 = (e[0].toPython(), usecase)
-#                             cursor.execute(query2, values2)
 
 
 def check_file(reports,pubmedfiles, labels, concepts, jsonDisp, jsonAnn, username, password,load_concepts,load_labels):
@@ -262,6 +203,13 @@ def check_file(reports,pubmedfiles, labels, concepts, jsonDisp, jsonAnn, usernam
     json_resp['label_message'] = ''
     json_resp['fields_message'] = ''
     json_resp['keys'] = json_keys
+    if load_labels is not None:
+        load_labels = ''.join(load_labels)
+        load_labels = load_labels.split(',')
+    if load_concepts is not None:
+        load_concepts = ''.join(load_concepts)
+
+        load_concepts = load_concepts.split(',')
 
     # Error if the user has not inserted enough files
     if len(concepts) == 0 and load_concepts is None and load_labels is None and len(labels) == 0 and len(jsonAnn) == 0 and len(reports) > 0:
@@ -533,6 +481,12 @@ def check_file(reports,pubmedfiles, labels, concepts, jsonDisp, jsonAnn, usernam
                     if 'usecase' in cols:
                         df['usecase'] = df['usecase'].str.lower()
 
+                    if load_concepts is not None:
+                        for el in load_concepts:
+                            if el in df.usecase.unique():
+                                json_resp['concept_message'] = 'CONCEPTS FILE - ' + concepts[
+                                    i].name + ' - You can not insert concepts files for the use case ' + el + ' after having decide to use EXAMODE concepts.'
+                                break
                     # Check if all the mandatory cols are present
                     for el in list_db_col:
                         if el not in cols:
@@ -610,6 +564,13 @@ def check_file(reports,pubmedfiles, labels, concepts, jsonDisp, jsonAnn, usernam
                     list_db_col = ['label', 'usecase']
                     if 'usecase' in cols:
                         df['usecase'] = df['usecase'].str.lower()
+
+                    if (load_labels) is not None:
+                        for el in load_labels:
+                            if el in df.usecase.unique():
+                                json_resp['label_message'] = 'LABELS FILE - ' + labels[
+                                    i].name + ' - You can not insert labels files for the use case ' + el + ' after having decide to use EXAMODE labels.'
+                                break
 
                     esco = False
                     for el in list_db_col:
@@ -695,7 +656,6 @@ def configure_data(pubmedfiles,reports, labels, concepts, jsondisp, jsonann, jso
     try:
         with transaction.atomic():
             cursor = connection.cursor()
-
             cursor.execute("DELETE FROM annotate;")
             cursor.execute("DELETE FROM linked;")
             cursor.execute("DELETE FROM associate;")
@@ -710,8 +670,9 @@ def configure_data(pubmedfiles,reports, labels, concepts, jsondisp, jsonann, jso
             cursor.execute("DELETE FROM use_case;")
             cursor.execute("DELETE FROM semantic_area;")
             # connection.commit()
-
             cursor.execute("DELETE FROM public.user WHERE username = 'Test'")
+
+
             if username is not None and password is not None:
                 cursor.execute("INSERT INTO public.user (username,password,profile,ns_id) VALUES(%s,%s,%s,%s);",
                                (str(username), hashlib.md5(str(password).encode()).hexdigest(), 'Admin', 'Human'))
@@ -865,9 +826,7 @@ def configure_data(pubmedfiles,reports, labels, concepts, jsondisp, jsonann, jso
                             "INSERT INTO report (id_report,report_json,institute,language,name) VALUES (%s,%s,%s,%s,%s);",
                             (str(id_report), report_json, str(institute), str(language), str(name.lower())))
 
-            # Popolate the labels table
-            # print(load_labels)
-            # if load_labels != '' and load_labels != [] and load_labels is not None:
+
             configure_labels(cursor,load_labels)
             if len(labels) > 0:
                 error_location = 'Labels'
@@ -1758,7 +1717,7 @@ def update_db_util(reports,pubmedfiles,labels,concepts,jsondisp,jsonann,jsondisp
             # Popolate the concepts table
             if len(concepts) > 0:
                 error_location = 'Concepts'
-                if len(load_concepts) > 0:
+                if (load_concepts) is not None:
                     usecases = get_presence_exa_concepts()
                     # in questo caso l'utente ha scelto nell'update di usare i concetti di examode
                     description = {'provenance':'EXAMODE','insertion_author':'admin'}
