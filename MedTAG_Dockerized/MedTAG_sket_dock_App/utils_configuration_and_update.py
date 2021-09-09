@@ -581,7 +581,7 @@ def check_file(reports,pubmedfiles, labels, concepts, jsonDisp, jsonAnn, usernam
                         for el in load_labels:
                             if el in df.usecase.unique():
                                 json_resp['label_message'] = 'LABELS FILE - ' + labels[
-                                    i].name + ' - You can not insert labels files for the use case ' + el + ' after having decide to use EXAMODE labels.'
+                                    i].name + ' - You can not insert labels files for the use case ' + el + ' after having decided to use EXAMODE labels.'
                                 break
 
                     if len(cols) != len(list_db_col):

@@ -142,7 +142,7 @@ def aux_start_end(report_string,report_field,mention,use,report):
                                                          language=report.language)
 
                 start_ment = int(start_element) + int(start)
-                stop_ment = int(start_ment) + len(mention_2) - 1  # nella mention devo incontrare il primo spazio se no è troncata e può dare problemi
+                stop_ment = int(start_ment) + len(mention_3) - 1  # nella mention devo incontrare il primo spazio se no è troncata e può dare problemi
                 start_mention_element = start_ment
                 end_mention_element = stop_ment
 
@@ -202,26 +202,6 @@ def create_concepts_all_dataset(use,rep,data_1,report_key):
 
     return concepts_to_ret
 
-
-
-# def get_outputs(use):
-#
-#     """This method returns concepts and labels files created by sket"""
-#
-#     workpath = os.path.dirname(os.path.abspath(__file__))  # Returns the Path your .py file is in
-#     output_concepts_dir = os.path.join(workpath, './sket/outputs/concepts/raw/' + use + '/')
-#     # output_labels_dir = os.path.join(workpath, './sket/outputs/labels/raw/' + use + '/')
-#     files_conc = os.listdir(output_concepts_dir)  # add path to each file
-#     files_conc = [os.path.join(output_concepts_dir, f) for f in files_conc]
-#
-#     # files_labels = os.listdir(output_labels_dir)  # add path to each file
-#     # files_labels = [os.path.join(output_concepts_dir, f) for f in files_labels]
-#
-#     files_conc.sort(key=lambda x: os.path.getmtime(x), reverse=True)
-#     # files_labels.sort(key=lambda x: os.path.getmtime(x), reverse=True)
-#     out_file_conc = files_conc[0]
-#     # out_file_lab = files_labels[0]
-#     return out_file_conc
 
 
 def create_json_to_submit(reports,fields_to_extract):

@@ -1952,10 +1952,13 @@ def get_annotations_count(id_report,language):
 
         mentions_list = []
         for lab_entry in json_dict['Robot']['mentions']['mentions_list']:
+            print('human',lab_entry)
             if {'start':lab_entry['start'],'stop':lab_entry['stop'],'mention':lab_entry['mention']} not in mentions_list:
                 mentions_list.append({'start':lab_entry['start'],'stop':lab_entry['stop'],'mention':lab_entry['mention']})
 
         for lab_entry in json_dict['Human']['mentions']['mentions_list']:
+            print('robot',lab_entry)
+
             if {'start': lab_entry['start'], 'stop': lab_entry['stop'],'mention': lab_entry['mention']} not in mentions_list:
                 mentions_list.append({'start': lab_entry['start'], 'stop': lab_entry['stop'], 'mention': lab_entry['mention']})
 

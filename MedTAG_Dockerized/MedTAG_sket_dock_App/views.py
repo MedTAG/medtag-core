@@ -1236,6 +1236,51 @@ def contains(request, action=None):
                         response_json = {"message": "Update successfull"}
                     else:
                         response_json = {"error": "Update unsuccessfull"}
+                else:
+                    try:
+                        with transaction.atomic():
+                            if mode1 == 'Human':
+                                json_response = {'message': 'no changes detected'}
+                                return JsonResponse(json_response)
+                            elif mode1 == 'Robot':
+                                user_robot = User.objects.get(username='Robot_user', ns_id=mode)
+                                gt_robot = GroundTruthLogFile.objects.filter(username=user_robot, ns_id=mode,
+                                                                             id_report=report1, language=language,
+                                                                             gt_type='concepts')
+                                # in questa sezione solo se la gt è uguale a prima, l'utente acconsente alla gt della macchina
+                                gt = GroundTruthLogFile.objects.filter(username=user1, ns_id=mode, id_report=report1,
+                                                                       language=language,
+                                                                       gt_type='concepts')
+                                if gt.count() == 1 and gt_robot.count() == 1:
+                                    if gt_robot[0].insertion_time == gt[0].insertion_time:
+
+                                        js = gt[0].gt_json
+                                        GroundTruthLogFile.objects.filter(username=user1, ns_id=mode, id_report=report1,
+                                                                          language=language,
+                                                                          gt_type='concepts').delete()
+                                        GroundTruthLogFile.objects.create(gt_json=js, insertion_time=Now(),
+                                                                          username=user1, ns_id=mode, id_report=report1,
+                                                                          language=language, gt_type='concepts')
+                                        ass = Contains.objects.filter(username=user1, id_report=report1, language=language,
+                                                                    ns_id=mode).values('name',
+                                                                                       'concept_url')
+                                        for el in ass:
+
+                                            sem = SemanticArea.objects.get(name=el['name'])
+                                            concept_u = Concept.objects.get(concept_url=el['concept_url'])
+                                            Contains.objects.filter(username=user1, id_report=report1, language=language,
+                                                                  ns_id=mode, name=sem,concept_url=concept_u).delete()
+                                            Contains.objects.create(username=user1, ns_id=mode, id_report=report1,
+                                                                  language=language, name=sem, concept_url=concept_u,
+                                                                  insertion_time=Now())
+
+                    except Exception as error:
+                        print(error)
+                        json_response = {'error': 'An error occurred trying to save your ground truth.'}
+                        return JsonResponse(json_response, status=500)
+                    else:
+                        json_response = {'message': 'dates updated'}
+                        return JsonResponse(json_response)
             else:
                 response_json = {"error": "Missing data"}
 
@@ -2267,57 +2312,6 @@ def get_stats_array_per_usecase(request):
     return JsonResponse(json_dict)
 
 
-# def get_number_annot_per_report(request):
-#     json_resp = {}
-#     report_id = request.GET.get('report',None)
-#     language = request.GET.get('language',None)
-#     report = Report.objects.get(id_report=report_id,language=language)
-#     gt_lab = GroundTruthLogFile.objects.filter(id_report=report,language=language,gt_type='labels')
-#     gt_ment = GroundTruthLogFile.objects.filter(id_report=report,language=language,gt_type='mentions')
-#     gt_conc = GroundTruthLogFile.objects.filter(id_report=report,language=language,gt_type='concepts')
-#     gt_link = GroundTruthLogFile.objects.filter(id_report=report,language=language,gt_type='concept-mention')
-#     json_resp['total'] = gt_lab + gt_ment + gt_conc + gt_link
-#     json_resp['labels'] = gt_lab
-#     json_resp['mentions'] = gt_ment
-#     json_resp['concepts'] = gt_conc
-#     json_resp['linking'] = gt_link
-#     return JsonResponse(json_resp)
-
-# def get_data1(request):
-#
-#     """This view returns the rows to be inserted in the reports' table
-#     .js files: ReportsStats.js"""
-#
-#     json_resp = {}
-#     reports = Report.objects.all()
-#     json_resp['reports'] = []
-#     for el in reports:
-#
-#         report = Report.objects.get(id_report=el.id_report, language=el.language)
-#         language = el.language
-#         gt_lab = GroundTruthLogFile.objects.filter(id_report=report, language=language, gt_type='labels')
-#         gt_ment = GroundTruthLogFile.objects.filter(id_report=report, language=language, gt_type='mentions')
-#         gt_conc = GroundTruthLogFile.objects.filter(id_report=report, language=language, gt_type='concepts')
-#         gt_link = GroundTruthLogFile.objects.filter(id_report=report, language=language, gt_type='concept-mention')
-#         total = gt_lab.count() + gt_ment.count() + gt_conc.count() + gt_link.count()
-#         labels = gt_lab.count()
-#         mentions = gt_ment.count()
-#         concepts = gt_conc.count()
-#         linking = gt_link.count()
-#         rep = report.report_json
-#         new_rep = {}
-#         for key in rep.keys():
-#             nkey = key+ '_0'
-#             new_rep[nkey] = rep[key]
-#
-#         new_rep['usecase'] = report.name_id
-#         new_rep['id_report'] = report.id_report
-#         new_rep['institute'] = report.institute
-#         new_rep['language'] = report.language
-#         json_resp['reports'].append({'total':total,'labels':labels,'mentions':mentions,'concepts':concepts,'linking':linking, 'report':new_rep,'id_report':el.id_report, 'language':el.language})
-#
-#     return JsonResponse(json_resp)
-
 
 def get_data(request):
 
@@ -2550,7 +2544,7 @@ def annotation_all_stats(request):
     json_dict = get_annotations_count(id_report,language)
     # json_dict['Human'] = get_annotations_count(id_report,language,human)
     # json_dict['Robot'] = get_annotations_count(id_report,language,robot)
-    # print('annotations',json_dict)
+    print('annotations',json_dict)
     return JsonResponse(json_dict)
 
 
@@ -2799,7 +2793,10 @@ def check_presence_exa_conc_lab(request):
         usecase = report.name_id
         # print(usecase)
         json_resp = {}
-        bool = check_exa_lab_conc_only(usecase)
+        if usecase in ['colon','uterine cervix','lung']:
+            bool = check_exa_lab_conc_only(usecase)
+        else:
+            bool = [False,False]
         json_resp['labels'] = bool[0]
         json_resp['concepts'] = bool[1]
     elif usecase is not None:
@@ -2810,7 +2807,10 @@ def check_presence_exa_conc_lab(request):
         labels = []
         concepts = []
         json_resp = {}
-        bool = check_exa_lab_conc_only(usecase)
+        if usecase in ['colon','uterine cervix','lung']:
+            bool = check_exa_lab_conc_only(usecase)
+        else:
+            bool = [False,False]
         labels.append(bool[0])
         concepts.append(bool[1])
         if False in labels:
@@ -2837,7 +2837,10 @@ def check_presence_exa_conc_lab(request):
         for u in usecases:
             # print(u)
             json_resp = {}
-            bool = check_exa_lab_conc_only(u)
+            if u in ['colon', 'uterine cervix', 'lung']:
+                bool = check_exa_lab_conc_only(u)
+            else:
+                bool = [False, False]
             labels.append(bool[0])
             concepts.append(bool[1])
         if False in labels:
