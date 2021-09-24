@@ -1815,6 +1815,7 @@ def update_db_util(reports,pubmedfiles,labels,concepts,jsondisp,jsonann,jsondisp
                 if int(version) != 0:
                     json_resp1 = get_fields_from_json()
                     all_fields = json_resp1['all_fields']
+                    fields = json_resp1['fields']
                     fields_to_ann = json_resp1['fields_to_ann']
                 jsondisp = ''.join(jsondisp)
                 jsonann = ''.join(jsonann)
@@ -1835,6 +1836,9 @@ def update_db_util(reports,pubmedfiles,labels,concepts,jsondisp,jsonann,jsondisp
                         if el not in all_fields:
                             all_fields.append(el)
 
+                data['fields'] = fields
+                data['fields_to_ann'] = fields_to_ann
+                data['all_fields'] = all_fields
 
                 version = get_version()
                 workpath = os.path.dirname(os.path.abspath(__file__))  # Returns the Path your .py file is in
