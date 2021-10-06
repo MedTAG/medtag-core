@@ -1,0 +1,388 @@
+{
+  "Human": {
+    "labels": {
+      "users_list": [],
+      "labels_list": [],
+      "count": 0
+    },
+    "mentions": {
+      "users_list": [],
+      "mentions_list": [],
+      "count": 0
+    },
+    "concepts": {
+      "users_list": [],
+      "concepts_list": [],
+      "count": 0
+    },
+    "linking": {
+      "users_list": [],
+      "linking_list": [],
+      "count": 0
+    }
+  },
+  "Robot": {
+    "labels": {
+      "labels_list": [
+        {
+          "users_list": [
+            "Robot_user",
+            "ornella"
+          ],
+          "count": 1,
+          "label": "Adenomatous polyp - low grade dysplasia"
+        },
+        {
+          "users_list": [
+            "Robot_user",
+            "ornella"
+          ],
+          "count": 1,
+          "label": "Hyperplastic polyp"
+        }
+      ],
+      "users_list": [
+        "ornella"
+      ],
+      "count": 2
+    },
+    "mentions": {
+      "mentions_list": [
+        {
+          "users_list": [
+            "Robot_user"
+          ],
+          "mention": "octopus sigma",
+          "start": 50,
+          "stop": 62,
+          "count": 0
+        },
+        {
+          "users_list": [
+            "Robot_user"
+          ],
+          "mention": "low-grade dysplasia (mild)",
+          "start": 314,
+          "stop": 339,
+          "count": 0
+        },
+        {
+          "users_list": [
+            "Robot_user"
+          ],
+          "mention": "glandular epithelium.",
+          "start": 341,
+          "stop": 361,
+          "count": 0
+        },
+        {
+          "users_list": [
+            "Robot_user"
+          ],
+          "mention": "tubular adenoma",
+          "start": 293,
+          "stop": 307,
+          "count": 0
+        }
+      ],
+      "users_list": [],
+      "count": 1
+    },
+    "concepts": {
+      "concepts_list": [
+        {
+          "users_list": [
+            "Robot_user"
+          ],
+          "concept_url": "http://purl.obolibrary.org/obo/NCIT_C4848",
+          "concept_name": "Mild Colon Dysplasia",
+          "area": "Diagnosis",
+          "count": 0
+        },
+        {
+          "users_list": [
+            "Robot_user"
+          ],
+          "concept_url": "http://purl.obolibrary.org/obo/NCIT_C4930",
+          "concept_name": "Colon Hyperplastic Polyp",
+          "area": "Diagnosis",
+          "count": 0
+        },
+        {
+          "users_list": [
+            "Robot_user"
+          ],
+          "concept_url": "http://purl.obolibrary.org/obo/NCIT_C7041",
+          "concept_name": "Colon Tubular Adenoma",
+          "area": "Diagnosis",
+          "count": 0
+        }
+      ],
+      "users_list": [],
+      "count": 1
+    },
+    "linking": {
+      "linking_list": [
+        {
+          "users_list": [
+            "Robot_user"
+          ],
+          "mention": "low-grade dysplasia (mild)",
+          "start": 314,
+          "stop": 339,
+          "concept_url": "http://purl.obolibrary.org/obo/NCIT_C4848",
+          "concept_name": "Mild Colon Dysplasia",
+          "area": "Diagnosis",
+          "count": 0
+        },
+        {
+          "users_list": [
+            "Robot_user"
+          ],
+          "mention": "octopus sigma",
+          "start": 50,
+          "stop": 62,
+          "concept_url": "http://purl.obolibrary.org/obo/NCIT_C4930",
+          "concept_name": "Colon Hyperplastic Polyp",
+          "area": "Diagnosis",
+          "count": 0
+        },
+        {
+          "users_list": [
+            "Robot_user"
+          ],
+          "mention": "glandular epithelium.",
+          "start": 341,
+          "stop": 361,
+          "concept_url": "http://purl.obolibrary.org/obo/NCIT_C4930",
+          "concept_name": "Colon Hyperplastic Polyp",
+          "area": "Diagnosis",
+          "count": 0
+        },
+        {
+          "users_list": [
+            "Robot_user"
+          ],
+          "mention": "tubular adenoma",
+          "start": 293,
+          "stop": 307,
+          "concept_url": "http://purl.obolibrary.org/obo/NCIT_C7041",
+          "concept_name": "Colon Tubular Adenoma",
+          "area": "Diagnosis",
+          "count": 0
+        }
+      ],
+      "users_list": [],
+      "count": 1
+    }
+  },
+  "Human_Robot": {
+    "labels": {
+      "labels_list": [
+        {
+          "robot_users": [
+            "Robot_user",
+            "ornella"
+          ],
+          "human_users": [],
+          "users_list": [
+            "Robot_user",
+            "ornella"
+          ],
+          "label": "Adenomatous polyp - low grade dysplasia",
+          "count": 2
+        },
+        {
+          "robot_users": [
+            "Robot_user",
+            "ornella"
+          ],
+          "human_users": [],
+          "users_list": [
+            "Robot_user",
+            "ornella"
+          ],
+          "label": "Hyperplastic polyp",
+          "count": 2
+        }
+      ],
+      "users_list": [
+        "ornella"
+      ],
+      "count": 1
+    },
+    "mentions": {
+      "mentions_list": [
+        {
+          "robot_users": [
+            "Robot_user"
+          ],
+          "human_users": [],
+          "users_list": [
+            "Robot_user"
+          ],
+          "count": 1,
+          "start": 50,
+          "stop": 62,
+          "mention": "octopus sigma"
+        },
+        {
+          "robot_users": [
+            "Robot_user"
+          ],
+          "human_users": [],
+          "users_list": [
+            "Robot_user"
+          ],
+          "count": 1,
+          "start": 314,
+          "stop": 339,
+          "mention": "low-grade dysplasia (mild)"
+        },
+        {
+          "robot_users": [
+            "Robot_user"
+          ],
+          "human_users": [],
+          "users_list": [
+            "Robot_user"
+          ],
+          "count": 1,
+          "start": 341,
+          "stop": 361,
+          "mention": "glandular epithelium."
+        },
+        {
+          "robot_users": [
+            "Robot_user"
+          ],
+          "human_users": [],
+          "users_list": [
+            "Robot_user"
+          ],
+          "count": 1,
+          "start": 293,
+          "stop": 307,
+          "mention": "tubular adenoma"
+        }
+      ],
+      "users_list": [],
+      "count": 0
+    },
+    "concepts": {
+      "concepts_list": [
+        {
+          "robot_users": [
+            "Robot_user"
+          ],
+          "human_users": [],
+          "users_list": [
+            "Robot_user"
+          ],
+          "count": 1,
+          "concept_url": "http://purl.obolibrary.org/obo/NCIT_C4848",
+          "concept_name": "Mild Colon Dysplasia",
+          "area": "Diagnosis"
+        },
+        {
+          "robot_users": [
+            "Robot_user"
+          ],
+          "human_users": [],
+          "users_list": [
+            "Robot_user"
+          ],
+          "count": 1,
+          "concept_url": "http://purl.obolibrary.org/obo/NCIT_C4930",
+          "concept_name": "Colon Hyperplastic Polyp",
+          "area": "Diagnosis"
+        },
+        {
+          "robot_users": [
+            "Robot_user"
+          ],
+          "human_users": [],
+          "users_list": [
+            "Robot_user"
+          ],
+          "count": 1,
+          "concept_url": "http://purl.obolibrary.org/obo/NCIT_C7041",
+          "concept_name": "Colon Tubular Adenoma",
+          "area": "Diagnosis"
+        }
+      ],
+      "users_list": [],
+      "count": 0
+    },
+    "linking": {
+      "linking_list": [
+        {
+          "robot_users": [
+            "Robot_user"
+          ],
+          "human_users": [],
+          "users_list": [
+            "Robot_user"
+          ],
+          "count": 1,
+          "concept_url": "http://purl.obolibrary.org/obo/NCIT_C4848",
+          "concept_name": "Mild Colon Dysplasia",
+          "area": "Diagnosis",
+          "start": 314,
+          "stop": 339,
+          "mention": "low-grade dysplasia (mild)"
+        },
+        {
+          "robot_users": [
+            "Robot_user"
+          ],
+          "human_users": [],
+          "users_list": [
+            "Robot_user"
+          ],
+          "count": 1,
+          "concept_url": "http://purl.obolibrary.org/obo/NCIT_C4930",
+          "concept_name": "Colon Hyperplastic Polyp",
+          "area": "Diagnosis",
+          "start": 50,
+          "stop": 62,
+          "mention": "octopus sigma"
+        },
+        {
+          "robot_users": [
+            "Robot_user"
+          ],
+          "human_users": [],
+          "users_list": [
+            "Robot_user"
+          ],
+          "count": 1,
+          "concept_url": "http://purl.obolibrary.org/obo/NCIT_C4930",
+          "concept_name": "Colon Hyperplastic Polyp",
+          "area": "Diagnosis",
+          "start": 341,
+          "stop": 361,
+          "mention": "glandular epithelium."
+        },
+        {
+          "robot_users": [
+            "Robot_user"
+          ],
+          "human_users": [],
+          "users_list": [
+            "Robot_user"
+          ],
+          "count": 1,
+          "concept_url": "http://purl.obolibrary.org/obo/NCIT_C7041",
+          "concept_name": "Colon Tubular Adenoma",
+          "area": "Diagnosis",
+          "start": 293,
+          "stop": 307,
+          "mention": "tubular adenoma"
+        }
+      ],
+      "users_list": [],
+      "count": 0
+    }
+  }
+}

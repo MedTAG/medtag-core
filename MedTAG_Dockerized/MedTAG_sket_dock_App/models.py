@@ -57,6 +57,8 @@ class Report(models.Model):
     report_json = models.JSONField()
     institute = models.TextField()
     language = models.TextField()
+    batch = models.IntegerField()
+    insertion_date = models.DateField()
 
     class Meta:
         #managed = False
@@ -68,6 +70,7 @@ class Concept(models.Model):
     concept_url = models.TextField(primary_key=True)
     name = models.CharField(max_length=1000, blank=True, null=True)
     json_concept = models.JSONField(null=True)
+    annotation_mode = models.TextField()
 
     class Meta:
         #managed = False
@@ -78,6 +81,8 @@ class AnnotationLabel(models.Model):
     name = models.ForeignKey('UseCase', models.DO_NOTHING,  db_column='name')
     seq_number = models.IntegerField()
     label = models.TextField(primary_key=True)
+    annotation_mode = models.TextField()
+
 
     class Meta:
         db_table = 'annotation_label'

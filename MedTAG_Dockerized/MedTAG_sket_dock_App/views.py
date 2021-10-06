@@ -6,6 +6,7 @@ from django.contrib.auth.models import User as User1
 from django.contrib.auth.models import *
 from MedTAG_sket_dock_App.utils import *
 from MedTAG_sket_dock_App.utils_download import *
+from MedTAG_sket_dock_App.utils_upload_files import *
 # from MedTAG_sket_dock_App.utils_CERT import *
 from django.contrib.auth.decorators import login_required
 import hashlib
@@ -46,9 +47,11 @@ def new_credentials(request):
         usecase = request_body_json['usecase']
         request.session['usecase'] = usecase
         language = request_body_json['language']
-        request.session['language'] = language
+        request.session['language'] = language.lower()
         institute = request_body_json['institute']
         request.session['institute'] = institute
+        batch = request_body_json['batch']
+        request.session['batch'] = batch
         annotation = request_body_json['annotation']
 
         if annotation == 'Automatic':
@@ -70,7 +73,9 @@ def new_credentials(request):
                 data = json.load(out)
                 request.session['fields_to_ann'] = data['extract_fields'][usecase]
 
-        if request.session['report_type'] == 'pubmed':
+        if request.session['institute'] == 'PUBMED':
+            request.session['report_type'] = 'pubmed'
+        if request.session['report_type'] == 'pubmed' or request.session['institute'] == 'PUBMED':
             request.session['fields'] = ['volume','year','authors','journal']
             request.session['fields_to_ann'] = ['title','abstract']
 
@@ -93,6 +98,7 @@ def logout(request):
         del request.session['profile']
         del request.session['fields']
         del request.session['mode']
+        del request.session['batch']
         del request.session['report_type']
         del request.session['team_member']
         del request.session['fields_to_ann']
@@ -121,7 +127,7 @@ def registration(request):
             context = {'errorMessage': "Please set your profile."}
             return render(request, 'MedTAG_sket_dock_App/registration.html', context)
 
-        if User.objects.filter(username = username).exists():
+        if User.objects.filter(username = username).exists() or username == 'Test':
             context = {'errorMessage': "This username is not available. Please, choose another one."}
             return render(request, 'MedTAG_sket_dock_App/registration.html', context)
         try:
@@ -144,7 +150,7 @@ def registration(request):
                 for usecase in ['colon','uterine cervix','lung']:
                     groundTruths,groundTruths1 = check_user_agent_gt_presence(username,usecase)
                     if groundTruths1 > 0:
-                        copy_rows(usecase,'Robot_user',username)
+                        copy_rows(usecase,'Robot_user',username,None)
                 return redirect('MedTAG_sket_dock_App:index')
         except (Exception) as error:
             print(error)
@@ -165,6 +171,18 @@ def credits(request):
     else:
         return redirect('MedTAG_sket_dock_App:login')
 
+
+def uploadFile(request):
+
+    """Credits page for app"""
+
+    username = request.session.get('username', False)
+    profile = request.session.get('profile', False)
+    if(username):
+        context = {'username': username,'profile':profile}
+        return render(request, 'MedTAG_sket_dock_App/index.html', context)
+    else:
+        return redirect('MedTAG_sket_dock_App:login')
 
 
 def configure(request):
@@ -268,12 +286,15 @@ def get_session_params(request):
     annotation = request.session.get('mode',None)
     team_member = request.session.get('team_member',None)
     report_type = request.session.get('report_type',None)
-    if report_type is not None and usecase is not None and language is not None and institute is not None and annotation is not None:
+    batch = request.session.get('batch',None)
+
+    if batch is not None and report_type is not None and usecase is not None and language is not None and institute is not None and annotation is not None:
         json_resp['usecase'] = usecase
         json_resp['language'] = language
         json_resp['institute'] = institute
         json_resp['team_member'] = team_member
         json_resp['report_type'] = report_type
+        json_resp['batch'] = batch
         if annotation == 'Human':
             json_resp['annotation'] = 'Manual'
         elif annotation == 'Robot':
@@ -282,6 +303,7 @@ def get_session_params(request):
         json_resp['usecase'] = ''
         json_resp['language'] = ''
         json_resp['institute'] = ''
+        json_resp['batch'] = ''
         if User.objects.filter(profile='Admin').exists():
             admin = User.objects.filter(profile='Admin')
             admin = admin.first()
@@ -369,15 +391,16 @@ def annotationlabel(request,action=None):
 
     # print('mode',mode1)
     usecase = request.session['usecase']
-    language = request.session['language']
+    # language = request.GET.get('language',request.session['language'])
     type = 'labels'
 
     if request.method == 'GET' and action.lower() == 'user_labels':
 
         """GET request: given the report, the labels annotated by the user are returned"""
 
-
+        language = request.GET.get('language', request.session['language'])
         user_get = request.GET.get('username',username)
+        print(user_get)
         report_id = request.GET.get('report_id')
         report1 = Report.objects.get(id_report = report_id,language = language)
         # if auto_required == 'Robot':
@@ -387,23 +410,24 @@ def annotationlabel(request,action=None):
         else:
             mode_1 = mode
         json_dict = get_user_gt(user_get,mode_1,report1,language,'labels')
-
+        print(json_dict)
         return JsonResponse(json_dict,safe=False)
 
     elif request.method == 'GET' and action.lower() == 'all_labels':
 
-        """ GET request: given the usecase, all the labels associated to that usecase are returned. """
+        """ GET request: given the use case, all the labels associated to that usecase are returned. """
 
-        labels = AnnotationLabel.objects.filter(name=usecase).values('seq_number','label')
+        labels = AnnotationLabel.objects.filter(name=usecase).values('seq_number','label','annotation_mode')
+        print(labels)
         json_dict = {}
-        count = get_labels_exa_count()
         if len(labels) > 0:
 
             if mode1 == 'Human' or auto_required == 'Human':
                 json_dict['labels'] = []
                 for el in labels:
                     json_val = {}
-                    if int(el['seq_number']) > count: # i primi 20 sono inseriti automaticamente
+                    if 'Manual' in el['annotation_mode']:
+                    # if int(el['seq_number']) > count: # i primi 20 sono inseriti automaticamente
                         json_val['label'] = (el['label'])
                         json_val['seq_number'] = (el['seq_number'])
                         json_dict['labels'].append(json_val)
@@ -411,7 +435,7 @@ def annotationlabel(request,action=None):
                 json_dict['labels'] = []
                 for el in labels:
                     json_val = {}
-                    if int(el['seq_number']) <= count: # i primi 20 sono inseriti automaticamente
+                    if 'Automatic' in el['annotation_mode']:
                         json_val['label'] = (el['label'])
                         json_val['seq_number'] = (el['seq_number'])
                         json_dict['labels'].append(json_val)
@@ -430,7 +454,7 @@ def annotationlabel(request,action=None):
         request_body_json = json.loads(request.body)
         report_id = request_body_json['report_id']
         user = User.objects.get(username=username,ns_id=mode)
-        language = request.session['language']
+        language = request.GET.get('language', request.session['language'])
         report1 = Report.objects.get(id_report=report_id,language = language)
         if user is None or report1 is None:
             json_response = {'error': 'An error occurred getting parameters.'}
@@ -455,10 +479,7 @@ def annotationlabel(request,action=None):
         else:
             json_response = {'msg': 'nothing to do'}
             return JsonResponse(json_response)
-        # else:
-        #     to_del = Associate.objects.filter(id_report=report1, language=language, username=user, ns_id=mode)
-        #     json_response = restore_robot_annotation(report1, 'labels',user)
-        #     return JsonResponse(json_response)
+
 
     if request.method == 'POST' and action.lower() == 'insert':
 
@@ -468,7 +489,7 @@ def annotationlabel(request,action=None):
         request_body_json = json.loads(request.body)
         report_id = request_body_json['report_id']
         user = User.objects.get(username=username,ns_id=mode)
-        language = request.session['language']
+        language = request.GET.get('language', request.session['language'])
         report1 = Report.objects.get(id_report=report_id,language = language)
 
         if user is None or report1 is None:
@@ -609,7 +630,8 @@ def mention_insertion(request,action=None):
     mode1 = request.session['mode']
     mode = NameSpace.objects.get(ns_id=mode1)
 
-    language = request.session['language']
+    # language = request.GET.get('language',request.session['language'])
+    # print(language)
     usecase = request.session['usecase']
     type = 'mentions'
 
@@ -618,6 +640,7 @@ def mention_insertion(request,action=None):
         """ GET request: it returns the list of mentions associated to a specific report the user already inserted. """
 
         report_id = request.GET.get('report_id')
+        language = request.GET.get('language', request.session['language'])
         report1 = Report.objects.get(id_report=report_id,language=language)
         user_get = request.GET.get('username',username)
         try:
@@ -643,6 +666,7 @@ def mention_insertion(request,action=None):
 
         request_body_json = json.loads(request.body)
         report_id = request_body_json['report_id']
+        language = request_body_json['language']
         user = User.objects.get(username=username,ns_id=mode)
         report1 = Report.objects.get(id_report=report_id,language = language)
         if user is None or report1 is None:
@@ -668,15 +692,7 @@ def mention_insertion(request,action=None):
         else:
             json_resp = {'msg':'ok'}
             return JsonResponse(json_resp)
-        # else:
-        #
-        #     """If the user chose AUTOMATIC MDOE it is impossible to delete the ground truth. If the user did not
-        #     modified the annotation created by the algorithm that one is kept, otherwise it is kept the one modified
-        #     by the user."""
-        #
-        #     to_del = Annotate.objects.filter(username = user, ns_id = mode, id_report  = report1,language = language)
-        #     json_response = restore_robot_annotation(report1,'mentions',user)
-        #     return JsonResponse(json_response)
+
 
     elif request.method == 'POST' and action.lower() == 'insert':
 
@@ -685,6 +701,7 @@ def mention_insertion(request,action=None):
         json_response = {'message':'Mentions and Ground truth saved.'}
         request_body_json = json.loads(request.body)
         report_id = request_body_json['report_id']
+        language = request_body_json['language']
         user = User.objects.get(username = username,ns_id=mode)
         report1 = Report.objects.get(id_report = report_id,language = language)
         if user is None or report1 is None:
@@ -826,7 +843,7 @@ def insert_link(request,action=None):
     username = request.session['username']
     mode1 = request.session['mode']
     mode = NameSpace.objects.get(ns_id=mode1)
-    language = request.session['language']
+    # language = request.GET.get('language',request.session['language'])
     usecase = request.session['usecase']
     auto_required = request.GET.get('ns_id', None)
     type = 'concept-mention'
@@ -837,7 +854,7 @@ def insert_link(request,action=None):
 
         try:
             report_id = request.GET.get('report_id')
-
+            language = request.GET.get('language', request.session['language'])
             user_get = request.GET.get('username',username)
             report1 = Report.objects.get(id_report=report_id,language = language )
             # if auto_required == 'Robot':
@@ -859,13 +876,15 @@ def insert_link(request,action=None):
         """This GET request returns the list fo mentions associated to the report """
 
         report_id = request.GET.get('report_id')
+        user_get = request.GET.get('username', username)
+        language = request.GET.get('language', request.session['language'])
         if auto_required is not None:
             mode_1 = NameSpace.objects.get(ns_id=auto_required)
         else:
             mode_1 = mode
         report1 = Report.objects.get(id_report=report_id,language = language)
         try:
-            a = Annotate.objects.filter(username=username,ns_id=mode_1, id_report=report1, language=language).values('start', 'stop')
+            a = Annotate.objects.filter(username=user_get,ns_id=mode_1, id_report=report1, language=language).values('start', 'stop')
             json_dict = {}
             json_dict['mentions1'] = []
             for el in a:
@@ -892,6 +911,7 @@ def insert_link(request,action=None):
         user = User.objects.get(username=username,ns_id=mode)
         request_body_json = json.loads(request.body)
         report_id = request_body_json['report_id']
+        language = request_body_json['language']
         mentions = request_body_json['mentions']
         report1 = Report.objects.get(id_report=report_id, language=language)
         if user is None or report1 is None:
@@ -935,6 +955,7 @@ def insert_link(request,action=None):
 
         request_body_json = json.loads(request.body)
         report_id = request_body_json['report_id']
+        language = request_body_json['language']
         user = User.objects.get(username=username,ns_id=mode)
         report1 = Report.objects.get(id_report=report_id,language = language)
         if user is None or report1 is None:
@@ -958,12 +979,7 @@ def insert_link(request,action=None):
         else:
             json_resp = {'msg':'ok'}
             return JsonResponse(json_resp)
-        # else:
-        #     """ In Automatic mode a ground truth the robot ground-truth is restored and the changes made by the user
-        #      are lost """
-        #     to_del = Linked.objects.filter(username=user, ns_id=mode, id_report=report1, language=language)
-        #     json_response = restore_robot_annotation(report1, 'concept-mention',user)
-        #     return JsonResponse(json_response)
+
 
     elif request.method == 'POST' and action.lower() == 'insert':
 
@@ -972,6 +988,7 @@ def insert_link(request,action=None):
         json_response = {'message': 'Associations and Ground truth saved.'}
         request_body_json = json.loads(request.body)
         report_id = request_body_json['report_id']
+        language = request_body_json['language']
         user = User.objects.get(username=username,ns_id=mode)
         report1 = Report.objects.get(id_report=report_id,language = language)
         if user is None or report1 is None:
@@ -1032,7 +1049,7 @@ def insert_link(request,action=None):
 
                     json_response = update_associations(concepts, user, report1,language,usecase,mode)
                     if GroundTruthLogFile.objects.filter(username=user,ns_id=mode, language = language,id_report=report1, gt_type='concept-mention').exists():
-                        obj = GroundTruthLogFile.objects.filter(username=user, language = language,id_report=report1, gt_type='concept-mention')
+                        obj = GroundTruthLogFile.objects.filter(username=user, ns_id = mode,language = language,id_report=report1, gt_type='concept-mention')
                         obj.delete()
                     jsonDict = serialize_gt(type, usecase, username, report_id,language,mode)
                     GroundTruthLogFile.objects.create(username=user,ns_id=mode, language = language,id_report=report1, gt_json=jsonDict, gt_type=type,
@@ -1089,7 +1106,7 @@ def contains(request, action=None):
     username = request.session.get('username', False)
     mode1 = request.session.get('mode', False)
     mode = NameSpace.objects.get(ns_id=mode1)
-    language = request.session.get('language', False)
+
     error_json = {"Error": "No user authenticated"}
 
     if (username):
@@ -1099,6 +1116,7 @@ def contains(request, action=None):
             """GET request: it returns a list of concepts the user inserted about that report """
 
             report = request.GET.get('report_id')
+            language = request.GET.get('language', request.session['language'])
             user_get = request.GET.get('username',username)
             report1 = Report.objects.get(id_report=report, language = language)
             auto_required = request.GET.get('ns_id',None)
@@ -1109,6 +1127,7 @@ def contains(request, action=None):
             else:
                 mode_1 = mode
             response_json = get_user_gt(user_get,mode_1,report1,language,'concepts')
+            print('concetti',response_json)
             return JsonResponse(response_json)
 
         elif request.method == 'POST' and action.lower() == 'insert':
@@ -1117,6 +1136,7 @@ def contains(request, action=None):
 
             request_body_json = json.loads(request.body)
             concepts_list = request_body_json['concepts_list']
+            language = request_body_json['language']
             report = request_body_json['report_id']
             report1 = Report.objects.get(id_report=report)
 
@@ -1167,6 +1187,7 @@ def contains(request, action=None):
             request_body_json = json.loads(request.body)
             concepts_list = request_body_json['concepts_list']
             report = request_body_json['report_id']
+            language = request_body_json['language']
             report1 = Report.objects.get(id_report = report,language = language)
             username = request.session.get('username',False)
             user1 = User.objects.get(username = username,ns_id=mode)
@@ -1183,6 +1204,7 @@ def contains(request, action=None):
                             return JsonResponse(json_response,safe=False)
                     else:
                         # json_response = {'message': 'Robot mode, rows can not be deleted'}
+                        print('RESTORE')
                         json_response = restore_robot_annotation(report1,'concepts',user1)
                         return JsonResponse(json_response)
                 elif not rows.exists() and len(concepts_list) == 0:
@@ -1290,6 +1312,7 @@ def contains(request, action=None):
 
             request_body_json = json.loads(request.body)
             report = request_body_json['report_id']
+            language = request_body_json['language']
             username = request.session.get('username', False)
             user1 = User.objects.get(username=username,ns_id=mode)
             report1 = Report.objects.get(id_report = report,language = language)
@@ -1298,11 +1321,10 @@ def contains(request, action=None):
                     if mode1 == 'Human':
                         response_json = delete_contains_record(report, language, None,mode, user1, None)
                     else:
-                        response_json = {'msg': 'ok'}
-                    # elif mode1 == 'Robot':
-                    #     # report1 = Report.objects.get(id_report = report,language = language)
-                    #     rows = Contains.objects.filter(username = user1,ns_id = mode,id_report = report,language = language)
-                    #     response_json = restore_robot_annotation(report1,'concepts',user1)
+                        print('RESTORE')
+                        response_json = restore_robot_annotation(report1, 'concepts', user1)
+
+
                 else:
                     response_json = {"Error": "Missing data"}
 
@@ -1343,7 +1365,9 @@ def get_reports(request):
     inst = request.GET.get('institute',None)
     use = request.GET.get('usec',None)
     lang = request.GET.get('lang',None)
+    batch = request.GET.get('batch',None)
     all = request.GET.get('all',None)
+    actual_report = request.GET.get('actual_report',None)
 
     if all == 'all':
         # All the reports are returned independently of the usecase, the language or institute.
@@ -1359,13 +1383,13 @@ def get_reports(request):
             json_resp['report'].append(json_rep)
         return JsonResponse(json_resp)
 
-    if(inst != None and use != None and lang != None):
+    if(inst != None and use != None and lang != None and batch != None):
 
         """ It is used in the options modal: if the reuqired combination of institute, language and usecase has 0 reports
          associated, a message is returned. In this case this view returns the number of reports associated to a specific 
          configuration required """
 
-        rep = Report.objects.filter(institute = inst, name = use, language = lang)
+        rep = Report.objects.filter(institute = inst, name = use, language = lang, batch = batch)
         json_count = {'count':len(rep)}
         return JsonResponse(json_count)
 
@@ -1375,57 +1399,22 @@ def get_reports(request):
     language = request.session.get('language',None)
     institute = request.session.get('institute',None)
     username = request.session['username']
+    batch = request.session['batch']
     token = request.GET.get('configure',None) # This parameter is set when
 
     jsonError = {'error':'something wrong with params!'}
-    if usecase is not None and language is not None and institute is not None:
+    if usecase is not None and language is not None and institute is not None and batch is not None:
         # Get the reports associated to the usecase, language and institute of the SESSION
-        reports1 = Report.objects.filter(name = usecase, language = language, institute = institute)
+        reports1 = Report.objects.filter(name = usecase, language = language, institute = institute,batch=batch)
         if mode1 == 'Robot':
             gts_r = GroundTruthLogFile.objects.filter(language = language,ns_id=mode).values('id_report')
             ids = []
             for el in gts_r:
-                if el['id_report'] not in ids:
+                if el['id_report'] not in ids and Report.objects.filter(language = language, id_report = el['id_report'], batch = batch).exists():
                     ids.append(el['id_report'])
 
-            reports1 = Report.objects.filter(id_report__in=ids,name = usecase, language = language, institute = institute)
-        # if mode1 == 'Robot':
-        #     cursor = connection.cursor()
-        #     cursor.execute("SELECT r.id_report,r.language,r.report_json FROM ground_truth_log_file AS g INNER JOIN report AS r ON r.id_report = g.id_report AND r.language = g.language WHERE g.ns_id = %s",['Robot'])
-        #     reports = cursor.fetchall()
-        #     json_resp = {}
-        #     json_resp['report'] = []
-        #     if len(reports) > 0:
-        #         for report in reports:
-        #             json_rep = {}
-        #             json_rep['id_report'] = report[0]
-        #             json_rep['language'] = report[1]
-        #             json_rep['report_json'] = report[2]
-        #             json_resp['report'].append(json_rep)
-        #
-        #         json_resp['report'].sort(key=lambda json: json['id_report'], reverse=False)  # Reports are sorted by ID
-        #         json_resp['index'] = 0
-        #
-        #         if token is not None:
-        #             # Get the last ground truth given the session parameters.
-        #             gt = get_last_groundtruth(username, usecase, language, institute, mode)
-        #         else:
-        #             # Get the last ground truth of the user.
-        #             gt = get_last_groundtruth(username, mode)
-        #
-        #         if gt is not None:
-        #             # The index is updated and it characterizes the first report of the list shown to the user.
-        #             id_report = gt['id_report']
-        #             use = gt['use_case']
-        #             lang = gt['language']
-        #             institute = gt['institute']
-        #             report_json = Report.objects.get(id_report=id_report, name=use, language=lang, institute=institute)
-        #             rep_json = report_json.report_json
-        #             index = json_resp['report'].index(
-        #                 {'id_report': id_report, 'language': lang, 'report_json': rep_json})
-        #             json_resp['index'] = int(index)
+            reports1 = Report.objects.filter(id_report__in=ids,name = usecase, language = language, institute = institute,batch = batch)
 
-        # elif mode1 == 'Human':
         json_resp = {}
         json_resp['report'] = []
         if reports1.exists():
@@ -1442,10 +1431,10 @@ def get_reports(request):
 
             if token is not None:
                 # Get the last ground truth given the session parameters.
-                gt = get_last_groundtruth(username, usecase, language, institute,mode)
+                gt = get_last_groundtruth(username, usecase, language, institute,mode,batch)
             else:
                 # Get the last ground truth of the user.
-                gt = get_last_groundtruth(username,mode)
+                gt = get_last_groundtruth(username,None, None, None,mode,batch)
 
             if gt is not None:
                 # The index is updated and it characterizes the first report of the list shown to the user.
@@ -1457,10 +1446,14 @@ def get_reports(request):
                 rep_json = report_json.report_json
                 index = json_resp['report'].index({'id_report':id_report,'language':lang,'report_json':rep_json})
                 json_resp['index'] = int(index)
+            if actual_report is not None:
+                index = json_resp['report'].index(actual_report)
+                json_resp['index'] = int(index)
 
         return JsonResponse(json_resp)
     else:
         return JsonResponse(jsonError,status=500)
+
 
 def get_admin(request):
 
@@ -1477,6 +1470,7 @@ def get_admin(request):
         jsonResp['admin'] = admin
 
     return JsonResponse(jsonResp)
+
 
 def check_input_files(request):
 
@@ -1540,10 +1534,11 @@ def get_gt_list(request):
         list_gt = GroundTruthLogFile.objects.filter(username = rob_user).count() + GroundTruthLogFile.objects.filter(ns_id=ns_human).count()
         groundTruths = list_gt
         gt_rob = GroundTruthLogFile.objects.filter(ns_id=ns_robot,username = rob_user)
+
         i = 0
         # print(groundTruths)
         for el in gt_rob:
-            gts = GroundTruthLogFile.objects.filter(ns_id=ns_robot,gt_type = el.gt_type,id_report = el.id_report,language = el.language).exclude(insertion_time = el.insertion_time)
+            gts = GroundTruthLogFile.objects.filter(ns_id=ns_robot,gt_type = el.gt_type,id_report = el.id_report_id,language = el.language).exclude(insertion_time = el.insertion_time)
             gts_count = gts.count()
             # print('count: '+str(i)+' '+str(gts.count()))
             i = i+1
@@ -1622,8 +1617,7 @@ def check_files_for_update(request):
 
     reports = []
     pubmedfiles = []
-    usecase = []
-    areas = []
+
     labels = []
     concepts = []
     type1 = request.POST.get('type',None)
@@ -1643,7 +1637,7 @@ def check_files_for_update(request):
     jsonAnnUp = request.POST.get('json_ann_update',None)
     load_concepts = request.POST.get('exa_concepts',None)
     load_labels = request.POST.get('exa_labels',None)
-    msg = check_for_update(type1,pubmedfiles,reports,labels,concepts,areas,usecase,jsonDisp,jsonAnn,jsonDispUp,jsonAnnUp,load_concepts,load_labels)
+    msg = check_for_update(type1,pubmedfiles,reports,labels,concepts,jsonDisp,jsonAnn,jsonDispUp,jsonAnnUp,load_concepts,load_labels)
     jsonResp = {'message':msg}
     return JsonResponse(jsonResp)
 
@@ -1679,7 +1673,9 @@ def update_db(request):
     jsonAll = request.POST.get('json_all_update', '')
     load_concepts = request.POST.get('exa_concepts',None)
     load_labels = request.POST.get('exa_labels',None)
-    msg = update_db_util(reports,pubmedfiles,labels,concepts,jsonDisp,jsonAnn,jsonDispUp,jsonAnnUp,jsonAll,load_concepts,load_labels)
+    batch = request.POST.get('batch',None)
+    #print(batch)
+    msg = update_db_util(reports,pubmedfiles,labels,concepts,jsonDisp,jsonAnn,jsonDispUp,jsonAnnUp,jsonAll,load_concepts,load_labels,batch)
     if 'message' in list(msg.keys()):
         keys = get_fields_from_json()
         request.session['fields'] = keys['fields']
@@ -1775,9 +1771,13 @@ def download_ground_truths(request):
     inst = request.GET.get('institute',None)
     if inst == '':
         inst = None
+    else:
+        inst = str(inst)
     use = request.GET.get('usec',None)
     if use == '':
         use = None
+    else:
+        use = str(use)
     report_type = request.GET.get('report_type',None)
     if report_type == '':
         report_type = None
@@ -1787,20 +1787,26 @@ def download_ground_truths(request):
     lang = request.GET.get('lang',None)
     if lang == '':
         lang = None
+    else:
+        lang = str(lang)
+    batch = request.GET.get('batch',None)
+    if batch == '' or batch == 'all':
+        batch = None
+    else:
+        batch = int(batch)
 
     all = request.GET.get('all_gt',None)
-
     action = request.GET.get('action',None)
     format = request.GET.get('format',None)
     json_resp = {}
     json_resp['ground_truth'] = []
     if format == 'json' or all =='all' :
-        json_resp = create_json_to_download(report_type,action,username,use,annotation_mode,inst,lang,all)
+        json_resp = create_json_to_download(report_type,action,username,use,annotation_mode,inst,lang,all,batch)
         return JsonResponse(json_resp)
 
     elif format == 'csv':
         response = HttpResponse(content_type='text/csv')
-        resp = create_csv_to_download(report_type,annotation_mode,username,use,inst,lang,action,response)
+        resp = create_csv_to_download(report_type,annotation_mode,username,use,inst,lang,action,response,batch)
         return resp
 
     elif format == 'biocxml':
@@ -1810,14 +1816,14 @@ def download_ground_truths(request):
             json_keys_to_display = ['year','authors','volume','journal']
             json_keys_to_ann = ['title','abstract']
         json_keys = json_keys_to_display + json_keys_to_ann
-        resp = generate_bioc(json_keys,json_keys_to_ann,username,action,lang,use,inst,'xml',annotation_mode,report_type)
+        resp = generate_bioc(json_keys,json_keys_to_ann,username,action,lang,use,inst,'xml',annotation_mode,report_type,batch)
         return HttpResponse(resp,content_type='application/xml')
 
     elif format == 'biocjson':
         json_keys_to_display = request.session['fields']
         json_keys_to_ann = request.session['fields_to_ann']
         json_keys = json_keys_to_display + json_keys_to_ann
-        resp = generate_bioc(json_keys,json_keys_to_ann,username,action,lang,use,inst,'json',annotation_mode,report_type)
+        resp = generate_bioc(json_keys,json_keys_to_ann,username,action,lang,use,inst,'json',annotation_mode,report_type,batch)
         return HttpResponse(resp,content_type='application/xml')
 
 
@@ -1912,7 +1918,7 @@ def get_reports_from_action(request):
         elif mode1 == 'Robot':
             user_rob = User.objects.get(username = 'Robot_user',ns_id = mode)
             for el in gt:
-                gt_rob = GroundTruthLogFile.objects.get(id_report = el.id_report, language = language, gt_type = el.gt_type,ns_id=mode, username=user_rob)
+                gt_rob = GroundTruthLogFile.objects.get(id_report = el.id_report_id, language = language, gt_type = el.gt_type,ns_id=mode, username=user_rob)
                 if el.insertion_time != gt_rob.insertion_time:
                     val = (el.id_report_id, el.insertion_time.replace(tzinfo=timezone.utc).astimezone(tz=None))
                     report_to_ret.append(val)
@@ -1935,12 +1941,13 @@ def get_last_gt(request):
     language = request.session['language']
     usecase = request.session['usecase']
     institute = request.session['institute']
+    batch = request.session['batch']
     jsonDict = {}
     token = request.GET.get('configure',None)
     if token is None:
-        gt_json = get_last_groundtruth(username,mode)
+        gt_json = get_last_groundtruth(username,None,None,None,mode,batch)
     else:
-        gt_json = get_last_groundtruth(username,usecase,language,institute,mode)
+        gt_json = get_last_groundtruth(username,usecase,language,institute,mode,batch)
 
     if gt_json is None:
         jsonDict['groundtruth'] = ''
@@ -1972,16 +1979,16 @@ def conc_view(request):
     notEmpty = False
     jsonDict['concepts'] = []
     if mode == 'Human' or auto_required == 'Human':
-        areas = SemanticArea.objects.all()
+        cursor = connection.cursor()
+        cursor.execute("SELECT DISTINCT b.name FROM belong_to as b inner join concept_has_uc as ch on ch.concept_url = b.concept_url inner join concept as c on c.concept_url = ch.concept_url where ch.name = %s AND annotation_mode in %s",[str(usecase),('Manual','Manual and Automatic')])
+        ar = cursor.fetchall()
+        areas = []
+        for el in ar:
+            areas.append(el[0])
         for area in areas:
-            name = area.name
+            name = area
             concepts[name] = []
-            description = {'provenance': 'admin', 'insertion_author': 'admin'}
-            description_1 = {'provenance': 'EXAMODE', 'insertion_author': 'admin'}
-            desc = json.dumps(description)
-            desc_1 = json.dumps(description_1)
-            concepts_list = get_concepts_by_usecase_area(usecase, name,desc)
-            concepts_list_final = concepts_list + get_concepts_by_usecase_area(usecase, name,desc_1)
+            concepts_list_final = get_concepts_by_usecase_area(usecase, name,'Human')
             for c in concepts_list_final:
                 if c not in concepts[name]:
                     concepts[name].append(c)
@@ -1992,18 +1999,10 @@ def conc_view(request):
     elif mode == 'Robot' or auto_required == 'Robot':
         with transaction.atomic():
             with connection.cursor() as cursor:
-                description = {'provenance': 'EXAMODE','insertion_author':'admin'}
-                description_1 = {'provenance': 'EXAMODE','insertion_author':'robot'}
-                desc = json.dumps(description)
-                desc1 = json.dumps(description_1)
-                # desc_tup = [desc,desc1]
-                # cursor.execute("SELECT DISTINCT(name) FROM belong_to WHERE concept_url IN (SELECT c.concept_url FROM concept AS c INNER JOIN concept_has_uc AS chu ON chu.concept_url = c.concept_url WHERE chu.name=%s AND c.json_concept IN %s)",[usecase,tuple(desc_tup)])
-                # areas_arr = cursor.fetchall()
-                # areas = [el[0] for el in areas_arr]
+
                 areas = ['Diagnosis', 'Test', 'Procedure', 'Anatomical Location']
                 for area in areas:
-                    concepts[area] = get_concepts_by_usecase_area(usecase, area, desc)
-                    concepts[area].extend(get_concepts_by_usecase_area(usecase, area, desc1))
+                    concepts[area] = get_concepts_by_usecase_area(usecase, area, 'Robot')
                     if len(concepts[area]) > 0:
                         notEmpty = True
                 if notEmpty == True:
@@ -2025,32 +2024,22 @@ def get_semantic_area(request):
     arr_sem = SemanticArea.objects.all().values('name')
     for area in arr_sem:
         arr.append(area['name'])
-    description = {'provenance':'EXAMODE','insertion_author':'admin'}
-    description1 = {'provenance': 'EXAMODE', 'insertion_author': 'robot'}
-    description2 = {'provenance': 'admin', 'insertion_author': 'admin'}
-    desc = json.dumps(description)
-    desc1 = json.dumps(description1)
-    desc2 = json.dumps(description2)
-    tup = (desc,desc1)
-    tup1 = (desc,desc2)
     areas = []
     auto_required = request.GET.get('ns_id',None)
     if request.session['mode'] == 'Robot' or auto_required == 'Robot':
         with connection.cursor() as cursor:
             areas = ['Diagnosis','Test','Procedure','Anatomical Location']
-            # cursor.execute('SELECT DISTINCT(b.name) FROM concept AS c INNER JOIN belong_to AS b ON c.concept_url = b.concept_url WHERE c.json_concept IN %s',[tup])
-            # rows = cursor.fetchall()
-            # for row in rows:
-            #     areas.append(row[0])
+
     elif request.session['mode'] == 'Human' or auto_required == 'Human':
         with connection.cursor() as cursor:
             cursor.execute(
-                'SELECT DISTINCT(b.name) FROM concept AS c INNER JOIN belong_to AS b ON c.concept_url = b.concept_url WHERE c.json_concept IN %s',
-                [tup1])
+                'SELECT DISTINCT(b.name) FROM concept AS c INNER JOIN belong_to AS b ON c.concept_url = b.concept_url INNER JOIN concept_has_uc AS ch ON c.concept_url = ch.concept_url WHERE c.annotation_mode IN %s and ch.name = %s',
+                [tuple(['Manual and Automatic','Manual']),request.session['usecase']])
             rows = cursor.fetchall()
             for row in rows:
                 areas.append(row[0])
     json_dict['area'] = areas
+    print('areas',areas)
     return JsonResponse(json_dict)
 
 
@@ -2079,26 +2068,20 @@ def report_start_end(request):
     .js files: Baseindex.js SubmitButtons.js ReportToText.js ReportForModal.js  """
 
     report = request.GET.get('report_id')
+    lang = request.GET.get('language',None)
     usecase = request.session['usecase']
     data = get_fields_from_json()
-    # print(data)
     json_keys_to_display = data['fields']
     json_keys_to_display.extend(['journal','authors','year','volume'])
     json_keys_to_ann = data['fields_to_ann']
     json_keys = (data['all_fields'])
 
-    # json_keys_to_ann.extend(['abstract','title'])
-    # json_keys_to_display = request.session['fields']
-    # json_keys_to_ann = request.session['fields_to_ann']
-    # print(json_keys_to_ann)
     language = request.session['language']
     request_auto = request.GET.get('ns_id',None)
     if request_auto is not None and request_auto == 'Robot' and request.session['institute'] != 'PUBMED':
         # In this case we require automatic annotation: the keys to annotate change
-        workpath = os.path.dirname(
-            os.path.abspath(__file__))  # Returns the Path your .py file is in
-        with open(os.path.join(workpath,
-                               './automatic_annotation/auto_fields/auto_fields.json')) as out:
+        workpath = os.path.dirname(os.path.abspath(__file__))  # Returns the Path your .py file is in
+        with open(os.path.join(workpath,'./automatic_annotation/auto_fields/auto_fields.json')) as out:
             data = json.load(out)
             json_keys = data['total_fields'][usecase]
             json_keys_to_ann = data['extract_fields'][usecase]
@@ -2108,13 +2091,8 @@ def report_start_end(request):
 
     json_keys.extend(['journal', 'authors', 'year', 'volume', 'abstract', 'title'])
     json_keys_to_ann.extend(['abstract', 'title'])
-    # json_keys = json_keys_to_display + json_keys_to_ann
-
-    # if request.session['report_type'] == 'pubmed':
-    #     json_keys = ['title','abstract','journal','volume','year','authors']
-    #     json_keys_to_ann = ['title','abstract']
-    # print(json_keys)
-    # print(json_keys_to_ann)
+    if lang is not None:
+        language = lang
     json_dict = report_get_start_end(json_keys,json_keys_to_ann,report,language)
     # print(json_dict)
     return JsonResponse(json_dict)
@@ -2145,6 +2123,7 @@ def get_fields(request):
     workpath = os.path.dirname(os.path.abspath(__file__))  # Returns the Path your .py file is in
     auto_request = request.GET.get('ns_id', None)
     report = request.GET.get('report', None)
+    print(request.session['report_type'])
     if report is not None or all == 'all':
         if report is not None:
             if report.startswith('PUBMED_'):
@@ -2155,7 +2134,8 @@ def get_fields(request):
         if all == 'all':
             # All the possible fields for every usecase (MANUAL CONFIGURATION)
             json_resp = get_fields_from_json()
-            json_resp['all_fields'].extend(['title','abstract','volume','journal','year','authors']) #aggiungo pubmed solo in coda!
+            if Report.objects.filter(institute = 'PUBMED').exists():
+                json_resp['all_fields'].extend(['title','abstract','volume','journal','year','authors']) #aggiungo pubmed solo in coda!
     else:
         if request.session['report_type'] == 'pubmed':
             json_resp['fields'] = ['volume','authors','year','journal']
@@ -2170,9 +2150,7 @@ def get_fields(request):
                     for el in json_resp['fields_to_ann']:
                         if el in json_resp['fields']:
                             json_resp['fields'].remove(el)
-
-
-
+    # print('FIELDS', json_resp)
     return JsonResponse(json_resp)
 
 
@@ -2256,9 +2234,15 @@ def get_keys_and_uses_from_csv(request):
             type_selected = 'concepts'
             reports.append(file)
 
-    keys,uses = get_keys_and_uses_csv(reports,type_selected)
+    keys,uses,final_uses = get_keys_and_uses_csv(reports)
     json_resp['keys'] = keys
-    json_resp['usecases'] = uses
+    # print(uses)
+    # print(type(uses))
+    #
+    uses = list(map(lambda x: x.lower(), uses))
+    final_uses = list(map(lambda x: x.lower(), final_uses))
+    json_resp['uses'] = list(uses)
+
     return JsonResponse(json_resp)
 
 
@@ -2274,9 +2258,12 @@ def get_keys_from_csv_update(request):
     for filename, file in request.FILES.items():
         if filename.startswith('reports'):
             reports.append(file)
+        elif filename.startswith('pubmed'):
+            reports.append(file)
 
     keys,uses = get_keys_csv_update(reports)
     json_resp['keys'] = keys
+    json_resp['uses'] = list(uses)
     # print('CHIAVI',keys)
     return JsonResponse(json_resp)
 
@@ -2327,7 +2314,6 @@ def get_data(request):
     for el in reports:
         # print(str(indice))
         indice +=1
-        st1 = time.time()
         report = Report.objects.get(id_report=el.id_report, language=el.language)
         language = el.language
         ns_human = NameSpace.objects.get(ns_id='Human')
@@ -2350,8 +2336,8 @@ def get_data(request):
         new_rep['id_report'] = report.id_report
         new_rep['institute'] = report.institute
         new_rep['language'] = report.language
+        new_rep['batch'] = report.batch
         json_resp['reports'].append({'total':total, 'report':new_rep,'id_report':el.id_report, 'language':el.language})
-        end1 = time.time()
         # print('elaboro1',str(end1-st1))
     # tot = time.time()
     # print('totale',str(tot-st))
@@ -2371,22 +2357,47 @@ def report_missing_auto(request):
 
     for el in usecases:
         use = el.name
+        batches = []
+        batches.append('all')
         if use.lower() in ['colon','lung','uterine cervix']:
-            report = Report.objects.filter(name=el).exclude(institute = 'PUBMED')
+            report = Report.objects.filter(name=el,language='english').exclude(institute = 'PUBMED')
             count_rep = report.count()
+            for rp in report:
+                if rp.batch not in batches:
+                    batches.append(rp.batch)
             # print(el)
             # print(count_rep)
             if count_rep > 0:
                 json_resp[use] = {}
-                json_resp[use]['tot'] = count_rep
-                with connection.cursor() as cursor:
-                    cursor.execute(
-                        "SELECT COUNT(*) FROM report AS r INNER JOIN ground_truth_log_file AS g ON g.id_report = r.id_report AND r.language = g.language WHERE r.name = %s AND g.username = %s AND gt_type=%s and institute != %s;",
-                        [str(use),'Robot_user','labels','PUBMED']) # We could consider any of the gt_type
-                    groundTruths = cursor.fetchone()[0]
-                    json_resp[use]['annotated'] = groundTruths
+                for batch in batches:
+                    batch = str(batch)
+                    json_resp[use][batch] = {}
+                    if batch == 'all':
+                        json_resp[use][batch]['tot'] = count_rep
+                        with connection.cursor() as cursor:
+                            cursor.execute(
+                                "SELECT COUNT(*) FROM report AS r INNER JOIN ground_truth_log_file AS g ON g.id_report = r.id_report AND r.language = g.language WHERE r.name = %s AND g.username = %s AND gt_type=%s and institute != %s and r.language =%s;",
+                                [str(use),'Robot_user','labels','PUBMED','english']) # We could consider any of the gt_type
+                            groundTruths = cursor.fetchone()[0]
+                            if groundTruths is None:
+                                json_resp[use][batch]['annotated'] = 0
+                            else:
+                                json_resp[use][batch]['annotated'] = groundTruths
+                    else:
+                        report_count  = Report.objects.filter(name=el,batch = batch).exclude(institute = 'PUBMED').count()
+                        json_resp[use][batch]['tot'] = report_count
+                        with connection.cursor() as cursor:
+                            cursor.execute(
+                                "SELECT COUNT(*) FROM report AS r INNER JOIN ground_truth_log_file AS g ON g.id_report = r.id_report AND r.language = g.language WHERE r.name = %s AND g.username = %s AND gt_type=%s and institute != %s and batch = %s and r.language = %s;",
+                                [str(use), 'Robot_user', 'labels', 'PUBMED',batch,'english'])  # We could consider any of the gt_type
+                            groundTruths = cursor.fetchone()[0]
+                            if groundTruths is None:
+                                json_resp[use][batch]['annotated'] = 0
+                            else:
+                                json_resp[use][batch]['annotated'] = groundTruths
     # print(json_resp)
     return JsonResponse(json_resp)
+
 
 def pubmed_missing_auto(request):
 
@@ -2402,21 +2413,58 @@ def pubmed_missing_auto(request):
     json_resp['usecase'] = []
     for el in usecases:
         use = el.name
+        json_resp[use] = {}
+        batches = []
+        batches.append('all')
         if use.lower() in ['colon','lung','uterine cervix']:
-            report = Report.objects.filter(name=el,institute = 'PUBMED')
+            report = Report.objects.filter(name=el,language='english',institute = 'PUBMED')
+            for el in report:
+                if el.batch not in batches:
+                    batches.append(el.batch)
             count_rep = report.count()
 
             if count_rep > 0:
                 json_resp['usecase'].append(str(use))
-                # json_resp[use] = {}
-                json_resp['tot'] = json_resp['tot'] +  count_rep
+                json_resp['tot'] = json_resp['tot'] + count_rep
                 with connection.cursor() as cursor:
                     cursor.execute(
-                        "SELECT COUNT(*) FROM report AS r INNER JOIN ground_truth_log_file AS g ON g.id_report = r.id_report AND r.language = g.language WHERE r.name = %s AND g.username = %s AND gt_type=%s AND institute = %s;",
-                        [str(use),'Robot_user','labels','PUBMED']) # We could consider any of the gt_type
+                        "SELECT COUNT(*) FROM report AS r INNER JOIN ground_truth_log_file AS g ON g.id_report = r.id_report AND r.language = g.language WHERE r.name = %s AND g.username = %s AND gt_type=%s AND institute = %s and r.language = %s;",
+                        [str(use),'Robot_user','labels','PUBMED','english']) # We could consider any of the gt_type
                     groundTruths = cursor.fetchone()[0]
 
                     json_resp['annotated'] = json_resp['annotated'] + groundTruths
+
+                for batch in batches:
+
+                    json_resp[use][batch] = {}
+                    if batch == 'all' or batch is None:
+                        report = Report.objects.filter(name=use, institute='PUBMED')
+                        count_rep = report.count()
+                        json_resp[use][batch]['tot'] = count_rep
+                        with connection.cursor() as cursor:
+                            cursor.execute(
+                                "SELECT COUNT(*) FROM report AS r INNER JOIN ground_truth_log_file AS g ON g.id_report = r.id_report AND r.language = g.language WHERE r.name = %s AND g.username = %s AND gt_type=%s AND institute = %s and r.language = %s;",
+                                [str(use),'Robot_user','labels','PUBMED','english']) # We could consider any of the gt_type
+                            groundTruths = cursor.fetchone()[0]
+
+                            if groundTruths is None:
+                                json_resp[use][batch]['annotated'] = 0
+                            else:
+                                json_resp[use][batch]['annotated'] = groundTruths
+                    else:
+                        report = Report.objects.filter(name=use,language='english', institute='PUBMED',batch = batch)
+                        count_rep = report.count()
+                        json_resp[use][batch]['tot'] = count_rep
+                        with connection.cursor() as cursor:
+                            cursor.execute(
+                                "SELECT COUNT(*) FROM report AS r INNER JOIN ground_truth_log_file AS g ON g.id_report = r.id_report AND r.language = g.language WHERE r.name = %s AND g.username = %s AND gt_type=%s AND institute = %s and batch = %s and r.language = %s;",
+                                [str(use), 'Robot_user', 'labels', 'PUBMED',batch,'english'])  # We could consider any of the gt_type
+                            groundTruths = cursor.fetchone()[0]
+
+                            if groundTruths is None:
+                                json_resp[use][batch]['annotated'] = 0
+                            else:
+                                json_resp[use][batch]['annotated'] = groundTruths
     # print('risposta',json_resp)
     return JsonResponse(json_resp)
 
@@ -2432,13 +2480,11 @@ def get_post_fields_for_auto(request):
     with open(os.path.join(workpath, './automatic_annotation/auto_fields/auto_fields.json'), 'r') as use_outfile:
         json_to_ret = json.load(use_outfile)
     if request.method == 'GET':
-        # print(json_to_ret)
         return JsonResponse(json_to_ret)
 
     if request.method == 'POST':
         json_error = {'error': 'an error occurred'}
         json_resp = {'msg': 'ok'}
-
         try:
             request_body_json = json.loads(request.body)
             fields = request_body_json['fields']
@@ -2469,6 +2515,7 @@ def create_auto_annotations(request): # post
     usecase_list = request_body_json['usecase']
     fields_list = request_body_json['selected']
     report_key = request_body_json['report_type']
+    batch = request_body_json['batch']
 
     # check existence of examode labels and concepts
 
@@ -2490,14 +2537,14 @@ def create_auto_annotations(request): # post
             # print(fields)
 
             workpath = os.path.dirname(os.path.abspath(__file__))  # Returns the Path your .py file is in
-            output_concepts_dir = os.path.join(workpath, './sket/outputs')
-            for root, dirs, files in os.walk(output_concepts_dir):
-                for f in files:
-                    os.unlink(os.path.join(root, f))
-                for d in dirs:
-                    shutil.rmtree(os.path.join(root, d))
+            # output_concepts_dir = os.path.join(workpath, './sket/outputs')
+            # for root, dirs, files in os.walk(output_concepts_dir):
+            #     for f in files:
+            #         os.unlink(os.path.join(root, f))
+            #     for d in dirs:
+            #         shutil.rmtree(os.path.join(root, d))
 
-            bool_val,error = create_auto_gt_1(usecase,fields,report_key)
+            bool_val,error = create_auto_gt_1(usecase,fields,report_key,batch)
             if bool_val == False:
                 with open(os.path.join(workpath, './automatic_annotation/auto_fields/auto_fields.json'),
                           'r') as use_outfile:
@@ -2513,15 +2560,15 @@ def create_auto_annotations(request): # post
     elif report_key == 'pubmed':
         for usecase in usecase_list:
             fields = ['title','abstract']
-            workpath = os.path.dirname(os.path.abspath(__file__))  # Returns the Path your .py file is in
-            output_concepts_dir = os.path.join(workpath, './sket/outputs')
-            for root, dirs, files in os.walk(output_concepts_dir):
-                for f in files:
-                    os.unlink(os.path.join(root, f))
-                for d in dirs:
-                    shutil.rmtree(os.path.join(root, d))
+            # workpath = os.path.dirname(os.path.abspath(__file__))  # Returns the Path your .py file is in
+            # output_concepts_dir = os.path.join(workpath, './sket/outputs')
+            # for root, dirs, files in os.walk(output_concepts_dir):
+            #     for f in files:
+            #         os.unlink(os.path.join(root, f))
+            #     for d in dirs:
+            #         shutil.rmtree(os.path.join(root, d))
 
-            bool_val, error = create_auto_gt_1(usecase, fields, report_key)
+            bool_val, error = create_auto_gt_1(usecase, fields, report_key, batch)
             if bool_val == False:
                 json_resp = {'error': error}
                 return JsonResponse(json_resp)
@@ -2538,12 +2585,9 @@ def annotation_all_stats(request):
 
     id_report = request.GET.get('report',None)
     language = request.GET.get('language',None)
-    # human = NameSpace.objects.get(ns_id='Human')
-    # robot = NameSpace.objects.get(ns_id='Robot')
-    json_dict = {}
+
     json_dict = get_annotations_count(id_report,language)
-    # json_dict['Human'] = get_annotations_count(id_report,language,human)
-    # json_dict['Robot'] = get_annotations_count(id_report,language,robot)
+
     print('annotations',json_dict)
     return JsonResponse(json_dict)
 
@@ -2616,11 +2660,11 @@ def get_insertion_time_record(request):
     action = request.GET.get('action',None)
     report1 = Report.objects.get(id_report = report, language = language)
     ns_id = NameSpace.objects.get(ns_id=ns_id_str)
-
+    print('get_insertion_time')
     user = User.objects.get(username=user_obj,ns_id=ns_id)
     gt_user = GroundTruthLogFile.objects.filter(id_report = report1, language = language, ns_id = ns_id,username=user,gt_type=action)
     if gt_user.exists():
-        gt_user =GroundTruthLogFile.objects.get(id_report = report1, language = language, ns_id = ns_id,username=user,gt_type=action)
+        gt_user = GroundTruthLogFile.objects.get(id_report = report1, language = language, ns_id = ns_id,username=user,gt_type=action)
         val = (gt_user.insertion_time.replace(tzinfo=timezone.utc).astimezone(tz=None))
         if user_obj == request.session['username'] and ns_id_str == 'Robot':
             ns_id_rob = NameSpace.objects.get(ns_id='Robot')
@@ -2636,7 +2680,6 @@ def get_insertion_time_record(request):
             json_resp = {'date': val}
     else:
         json_resp = {'date': ''}
-    # print(json_resp)
     return JsonResponse(json_resp)
 
 
@@ -2661,9 +2704,7 @@ def get_user_ground_truth(request):
     action = request.GET.get('action',None)
     mode = request.GET.get('mode',None)
     report = request.GET.get('report',None)
-
     language = request.GET.get('language',request.session['language'])
-
     mode_obj = NameSpace.objects.get(ns_id=mode)
     report = Report.objects.get(id_report = report, language = language)
     gt = get_user_gt(user,mode_obj,report,language,action)
@@ -2679,6 +2720,8 @@ def check_auto_presence_for_configuration(request):
     usecase = request.GET.get('usecase',None)
     language = request.GET.get('language',None)
     institute = request.GET.get('institute',None)
+    batch = request.GET.get('batch',None)
+    print('BATCH',str(batch))
     use = UseCase.objects.get(name=usecase)
     json_resp = {}
     mode = NameSpace.objects.get(ns_id = 'Robot')
@@ -2686,25 +2729,101 @@ def check_auto_presence_for_configuration(request):
 
     if report_type == 'pubmed':
         cursor = connection.cursor()
-        cursor.execute("SELECT COUNT(*) FROM ground_truth_log_file AS g INNER JOIN report AS r ON r.id_report = g.id_report AND r.language = g.language WHERE g.ns_id = %s AND g.username = %s AND r.institute=%s AND r.language = %s AND r.name = %s",['Robot','Robot_user','PUBMED','English',str(usecase)])
+        cursor.execute("SELECT COUNT(*) FROM ground_truth_log_file AS g INNER JOIN report AS r ON r.id_report = g.id_report AND r.language = g.language WHERE g.ns_id = %s AND g.username = %s AND r.institute=%s AND r.language = %s AND r.name = %s AND r.batch = %s",['Robot','Robot_user','PUBMED','english',str(usecase),int(batch)])
         reports = cursor.fetchone()[0]
         json_resp['count'] = reports
 
     elif report_type == 'reports':
         cursor = connection.cursor()
         cursor.execute(
-            "SELECT COUNT(*) FROM ground_truth_log_file AS g INNER JOIN report AS r ON r.id_report = g.id_report AND r.language = g.language WHERE g.ns_id = %s AND g.username = %s AND r.institute!=%s AND r.institute = %s AND r.language = %s AND r.name = %s",
-            ['Robot', 'Robot_user', 'PUBMED',str(institute),str(language),str(usecase)])
+            "SELECT COUNT(*) FROM ground_truth_log_file AS g INNER JOIN report AS r ON r.id_report = g.id_report AND r.language = g.language WHERE g.ns_id = %s AND g.username = %s AND r.institute!=%s AND r.institute = %s AND r.language = %s AND r.name = %s AND r.batch = %s",
+            ['Robot', 'Robot_user', 'PUBMED',str(institute),str(language),str(usecase),int(batch)])
         reports = cursor.fetchone()[0]
         json_resp['count'] = reports
     # print(json_resp)
     return JsonResponse(json_resp)
 
+
+def get_batch_list(request):
+
+    """This view returns the list of batches associated to a use case"""
+
+    json_resp = {}
+    usecase = request.GET.get('usecase')
+    print(usecase)
+    use_obj = UseCase.objects.get(name=usecase)
+    json_resp['batch_list'] = []
+    batch = Report.objects.filter(name=use_obj).exclude(institute = 'PUBMED').values('batch')
+    for el in batch:
+        if el['batch'] not in json_resp['batch_list']:
+            json_resp['batch_list'].append( el['batch'])
+    print(json_resp['batch_list'])
+    json_resp['batch_list'] = sorted(json_resp['batch_list'])
+    print(json_resp)
+    return JsonResponse(json_resp)
+
+
+def get_auto_anno_batch_list(request):
+
+    """This view returns the list of batches associated to a use case which have english language"""
+
+    json_resp = {}
+    usecase = request.GET.get('usecase')
+    print(usecase)
+    use_obj = UseCase.objects.get(name=usecase)
+    json_resp['batch_list'] = []
+    batch = Report.objects.filter(name=use_obj,language = 'english').exclude(institute = 'PUBMED').values('batch')
+    for el in batch:
+        if el['batch'] not in json_resp['batch_list']:
+            json_resp['batch_list'].append( el['batch'])
+    print(json_resp['batch_list'])
+    json_resp['batch_list'] = sorted(json_resp['batch_list'])
+    print(json_resp)
+    return JsonResponse(json_resp)
+
+
+def get_PUBMED_batch_list(request):
+
+    """This view returns the list of batches associated to a PUBMED use case"""
+
+    json_resp = {}
+    usecase = request.GET.get('usecase')
+    print(usecase)
+    use_obj = UseCase.objects.get(name=usecase)
+    json_resp['batch_list'] = []
+    batch = Report.objects.filter(name=use_obj,institute = 'PUBMED').values('batch')
+    for el in batch:
+        if el['batch'] not in json_resp['batch_list']:
+            json_resp['batch_list'].append( el['batch'])
+    print(json_resp['batch_list'])
+    json_resp['batch_list'] = sorted(json_resp['batch_list'])
+    print(json_resp)
+    return JsonResponse(json_resp)
+
+
+def get_auto_anno_PUBMED_batch_list(request):
+
+    """This view returns the list of batches associated to a PUBMED use case in english language """
+
+    json_resp = {}
+    usecase = request.GET.get('usecase')
+    print(usecase)
+    use_obj = UseCase.objects.get(name=usecase)
+    json_resp['batch_list'] = []
+    batch = Report.objects.filter(name=use_obj,language = 'english',institute = 'PUBMED').values('batch')
+    for el in batch:
+        if el['batch'] not in json_resp['batch_list']:
+            json_resp['batch_list'].append( el['batch'])
+    print(json_resp['batch_list'])
+    json_resp['batch_list'] = sorted(json_resp['batch_list'])
+    print(json_resp)
+    return JsonResponse(json_resp)
+
+
 def get_presence_robot_user(request):
 
     """This view returns whether the automatic annotations are available given an id,language,usecase
     .js files: MajorityVoteModal.js DownloadModalRep.js"""
-    # usecase = request.GET.get('usecase',None)
 
     id_report = request.GET.get('id_report',None)
     language = request.GET.get('language',None)
@@ -2717,8 +2836,6 @@ def get_presence_robot_user(request):
     if request.method == 'POST':
         request_body_json = json.loads(request.body)
         reports_list = request_body_json['reports']
-        # print(type(reports_list))
-        # print(reports_list)
 
     if id_report is not None and language is not None:
 
@@ -2730,7 +2847,7 @@ def get_presence_robot_user(request):
         ans = cursor.fetchone()[0]
         json_resp = {'auto_annotation_count': (ans)}
 
-    if use is not None and rep is not None:
+    elif use is not None and rep is not None:
         # print(rep)
         if rep == 'reports':
             cursor.execute(
@@ -2745,13 +2862,12 @@ def get_presence_robot_user(request):
 
             json_resp = {'auto_annotation_count':ans}
         # print(json_resp)
-    if reports_list is not None:
+    elif reports_list is not None:
         report_list = json.loads(reports_list)
         # print(report_list)
         usecase_list = []
         for rep in report_list:
-            # print(rep)
-            # rep = json.loads(rep)
+
             if rep['usecase'] not in usecase_list:
                 usecase_list.append(rep['usecase'])
         for u in usecase_list:
@@ -2764,15 +2880,14 @@ def get_presence_robot_user(request):
                 json_resp = {'auto_annotation_count': ans}
             else:
                 json_resp = {'auto_annotation_count': 0}
-    if use is None and reports_list is None and id_report is None and language is None:
+
+    elif use is None and reports_list is None and id_report is None and language is None:
         robot = NameSpace.objects.get(ns_id = 'Robot')
         gt = GroundTruthLogFile.objects.filter(ns_id = robot)
         json_resp = {'auto_annotation_count': gt.count()}
 
+    print(json_resp)
     return JsonResponse(json_resp)
-
-
-
 
 
 def check_presence_exa_conc_lab(request):
@@ -2795,6 +2910,7 @@ def check_presence_exa_conc_lab(request):
         json_resp = {}
         if usecase in ['colon','uterine cervix','lung']:
             bool = check_exa_lab_conc_only(usecase)
+            print('bool',bool)
         else:
             bool = [False,False]
         json_resp['labels'] = bool[0]
@@ -2804,24 +2920,26 @@ def check_presence_exa_conc_lab(request):
         json_resp['labels'] = False
         json_resp['concepts'] = False
 
-        labels = []
-        concepts = []
+        # labels = []
+        # concepts = []
         json_resp = {}
         if usecase in ['colon','uterine cervix','lung']:
             bool = check_exa_lab_conc_only(usecase)
         else:
             bool = [False,False]
-        labels.append(bool[0])
-        concepts.append(bool[1])
-        if False in labels:
-            json_resp['labels'] = False
-        else:
-            json_resp['labels'] = True
-
-        if False in concepts:
-            json_resp['concepts'] = False
-        else:
-            json_resp['concepts'] = True
+        json_resp['labels'] = bool[0]
+        json_resp['concepts'] = bool[1]
+        # labels.append(bool[0])
+        # concepts.append(bool[1])
+        # if False in labels:
+        #     json_resp['labels'] = False
+        # else:
+        #     json_resp['labels'] = True
+        #
+        # if False in concepts:
+        #     json_resp['concepts'] = False
+        # else:
+        #     json_resp['concepts'] = True
     elif reports is not None:
         report_list = json.loads(reports)
         json_resp = {}
@@ -2841,6 +2959,7 @@ def check_presence_exa_conc_lab(request):
                 bool = check_exa_lab_conc_only(u)
             else:
                 bool = [False, False]
+
             labels.append(bool[0])
             concepts.append(bool[1])
         if False in labels:
@@ -2856,7 +2975,7 @@ def check_presence_exa_conc_lab(request):
     else:
         json_resp={'error':'a usecase is needed'}
 
-    # print(json_resp)
+    print(json_resp)
     return JsonResponse(json_resp)
 
 
@@ -2869,16 +2988,9 @@ def create_majority_vote_groundtruth(request):
     users = request_body_json['users']
     report = Report.objects.get(id_report = id_report,language = language)
 
-    # action = request.POST.get('action',None)
-    # mode = request.POST.get('mode',None)
-    # users = request.POST.get('users',None)
-    # report = request.POST.get('id_report',None)
-    # users = ''.join(users)
-    # users = users.split(',')
     json_resp = create_majority_vote_gt(action, users, mode, report)
     # print(json_resp)
     return JsonResponse(json_resp)
-
 
 
 from MedTAG_sket_dock_App.utils_majority_vote import *
@@ -2938,39 +3050,6 @@ def download_majority_reports(request):
         return JsonResponse(json_error)
 
 
-# def download_for_report(request):
-#
-#     """This view handles the download of one or more reports' groundtruths (including the GT majority vote based.
-#
-#     .js files: DownloadForModal.js"""
-#
-#     request_body_json = json.loads(request.body)
-#     report_list =request_body_json['report_list']
-#     mode = request_body_json['format']
-#     action = request_body_json['action']
-#     type_gts = request_body_json['type_gts']
-#     annot = request_body_json['annotation_mode']
-#     if annot == 'Manual':
-#         annot = 'Human'
-#     elif annot == 'Automatic':
-#         annot = 'Robot'
-#     else:
-#         annot = None
-#     try:
-#         response = HttpResponse(content_type='text/csv')
-#         resp = download_report_gt(report_list,action,annot,mode,response,type_gts)
-#         if mode == 'biocxml' or mode == 'biocjson':
-#             return HttpResponse(resp, content_type='application/xml')
-#         elif mode == 'csv':
-#             return resp
-#         elif mode == 'json':
-#             return JsonResponse(resp)
-#
-#     except Exception as e:
-#         print(e)
-#         json_error = {'error': e}
-#         return JsonResponse(json_error)
-
 def update_user_chosen(request):
 
     """This view updates the team member: this is needed to see the ground truth of a specific user"""
@@ -2984,6 +3063,7 @@ def update_user_chosen(request):
     else:
         json_resp={'msg':'a user is required '}
         return JsonResponse(json_resp,status=500)
+
 
 def check_PUBMED_reports(request):
 
@@ -3000,7 +3080,7 @@ def check_PUBMED_reports(request):
 
 def get_uses_missing_exa(request):
 
-    """This view returns the usecase which have not nor exa labels nor exa concepts"""
+    """This view returns the usecases which have not nor exa labels nor exa concepts"""
 
     use_to_ret = {}
     use_to_ret['labels_present'] = []
@@ -3012,19 +3092,16 @@ def get_uses_missing_exa(request):
         usecase = UseCase.objects.get(name=el)
         presence = False
         if Report.objects.filter(name = usecase).count() > 0:
-            if not AnnotationLabel.objects.filter(name = usecase, seq_number__gt=20).exists():
+            if not AnnotationLabel.objects.filter(name = usecase, annotation_mode = 'Manual and Automatic').exists():
                 use_to_ret['labels_missing'].append(el)
             else:
                 use_to_ret['labels_present'].append(el)
 
             cursor = connection.cursor()
-            cursor.execute("SELECT c.json_concept FROM concept AS c INNER JOIN concept_has_uc AS hc ON c.concept_url = hc.concept_url WHERE hc.name = %s",[str(el)])
+            cursor.execute("SELECT c.annotation_mode FROM concept AS c INNER JOIN concept_has_uc AS hc ON c.concept_url = hc.concept_url WHERE hc.name = %s",[str(el)])
             ans = cursor.fetchall()
             for concept in ans:
-                # print(concept[0])
-                # print(type(concept[0]))
-                json_concept = json.loads(concept[0])
-                if json_concept['provenance'] == 'EXAMODE' and json_concept['insertion_author'] == 'admin':
+                if concept[0] == 'Manual and Automatic':
                     presence = True
                     break
             if presence == False:
@@ -3032,3 +3109,92 @@ def get_uses_missing_exa(request):
             else:
                 use_to_ret['concepts_present'].append(el)
     return JsonResponse(use_to_ret)
+
+
+def handle_copy_rows(request):
+
+    """This view handles the transfer of the ground truths from a user to another. COPY WHEN DATABASE IS SHARED
+
+    .js files: UpdateFle.js"""
+
+    request_body_json = json.loads(request.body)
+    username = request_body_json['username']
+    print(username)
+    overwrite = request_body_json['overwrite']
+    if overwrite == 'true':
+        overwrite = True
+    elif overwrite == 'false':
+        overwrite = False
+
+    usecases = UseCase.objects.all()
+    uses = []
+    json_resp = {'message':'Ok'}
+    for el in usecases:
+        if el.name not in uses:
+            uses.append(el.name)
+    if username is not None:
+        try:
+            for el in uses:
+                copy_rows(el, username,request.session['username'],overwrite)
+
+        except Exception as e:
+            json_resp = {'error':'error'}
+            return JsonResponse(json_resp,status=500)
+        else:
+            return JsonResponse(json_resp)
+
+
+def handle_check_upload_files(request):
+
+    """This view checks the files uploaded for the transfer of the ground-truths
+
+    .js files: UpdateFle.js"""
+
+    files = []
+    for filename, file in request.FILES.items():
+        files.append(file)
+
+    json_message = check_uploaded_files(files)
+    return JsonResponse(json_message)
+
+
+def handle_upload_files(request):
+
+    """This view adds in the database the data included in the files uploaded for the transfer of the ground-truths
+
+    .js files: UpdateFle.js"""
+
+    files = []
+    for filename, file in request.FILES.items():
+        files.append(file)
+    overwrite = request.POST.get('overwrite',None)
+
+    if overwrite == 'false':
+        overwrite = False
+    elif overwrite == 'true':
+        overwrite = True
+
+    json_message = upload_files(files,request.session['username'],overwrite)
+    return JsonResponse(json_message)
+
+
+def get_report_translations(request):
+
+    """This view returns the languages available for a report"""
+
+    id_report = request.GET.get('id_report',None)
+    if id_report is not None:
+        languages = []
+        lang = Report.objects.filter(id_report = id_report)
+        for el in lang:
+            if el.language not in languages:
+                languages.append(el.language)
+
+        json_resp = {}
+        print(languages)
+        json_resp['languages'] = languages
+        return JsonResponse(json_resp)
+
+
+
+

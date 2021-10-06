@@ -36,7 +36,6 @@ def process_ontology(workpath, disease):
         ontology_dict['iri'].append(e[0].toPython() if e[0] else None)
         ontology_dict['label'].append(e[1].toPython() if e[1] else None)
         ontology_dict['semantic_area_label'].append(e[2].toPython() if e[2] else None)
-    # print(pd.DataFrame(ontology_dict))
     return r
 
 
@@ -44,10 +43,12 @@ def configure_concepts(cursor,load_concepts,author):
 
     """This method configures concepts when a NEW CONFIGURATION is performed"""
 
+    if author == 'admin':
+        to_add = 'Manual and Automatic'
+    elif author == 'robot':
+        to_add = 'Automatic'
     for usecase in load_concepts:
         disease = ''
-        description = {'provenance':'EXAMODE','insertion_author':author}
-        desc = json.dumps(description)
         if usecase.lower() == 'colon':
             disease = 'colon carcinoma'
         elif usecase.lower() == 'uterine cervix':
@@ -62,10 +63,34 @@ def configure_concepts(cursor,load_concepts,author):
             concept_has_uc = []
             conc = []
             with transaction.atomic():
+                cursor.execute("SELECT c.concept_url FROM concept AS c inner join concept_has_uc as ch on ch.concept_url = c.concept_url where annotation_mode = %s and ch.name = %s",['Manual',usecase])
+                ans = cursor.fetchall()
+                if len(ans) > 0:
+                    concepts = []
+                    for el in ans:
+                        concepts.append(el[0])
+                    # cursor.execute("SELECT (id_report, language) FROM contains WHERE concept_url in %s",[tuple(concepts)])
+                    # ids_contains = cursor.fetchall()
+                    # con = []
+                    # for el in ids_contains:
+                    #     con.append((el[0],el[1]))
+                    # cursor.execute("SELECT (id_report, language) FROM linked WHERE concept_url in %s", [tuple(concepts)])
+                    # ids_linked = cursor.fetchall()
+                    # lin = []
+                    # for el in ids_linked:
+                    #     lin.append((el[0],el[1]))
+                    cursor.execute("DELETE FROM ground_truth_log_file WHERE gt_type = %s and (id_report,language) in (SELECT id_report, language FROM contains WHERE concept_url in %s)", ['concepts',tuple(concepts)])
+                    cursor.execute("DELETE FROM ground_truth_log_file WHERE gt_type = %s and (id_report,language) in (SELECT id_report, language FROM linked WHERE concept_url in %s)", ['concept-mention',tuple(concepts)])
+                    cursor.execute("DELETE FROM contains WHERE concept_url in %s",[tuple(concepts)])
+                    cursor.execute("DELETE FROM linked WHERE concept_url in %s", [tuple(concepts)])
+                    cursor.execute("DELETE FROM belong_to WHERE concept_url in %s ", [tuple(concepts)])
+                    cursor.execute("DELETE FROM concept_has_uc WHERE concept_url in %s", [tuple(concepts)])
+                    cursor.execute("DELETE FROM concept WHERE concept_url in %s", [tuple(concepts)])
+
+
                 for e in r:
                     if (e[0] is not None and e[1] is not None and e[2] is not None):
                         concept = e[0].toPython()
-                        # print(concept)
                         if concept == 'SevereColonDysplasia':
                             concept = 'https://w3id.org/examode/ontology/SevereColonDysplasia'
                         elif concept == 'uterusNOS':
@@ -81,33 +106,21 @@ def configure_concepts(cursor,load_concepts,author):
                         conc.append((concept, e[1].toPython(), None))
                         cursor.execute('SELECT * FROM concept WHERE concept_url = %s',(concept,))
                         ans = cursor.fetchall()
-                        # print(ans)
-                        if len(ans) == 0:
-                            query = ("INSERT INTO concept (concept_url, json_concept, name) VALUES(%s,%s,%s);")
-                            values = (concept, desc, e[1].toPython())
-                            cursor.execute(query, values)
-                        else:
-                            for row in ans:
-                                j_c = json.loads(row[2])
-                                if author == 'admin':
-                                    if j_c['insertion_author'] != 'admin' or j_c['provenance'] != 'EXAMODE':
-                                        j_c['insertion_author'] = 'admin'
-                                        j_c['provenance'] = 'EXAMODE'
-                                        j_c = json.dumps(j_c)
-                                        cursor.execute("UPDATE concept SET json_concept = %s WHERE concept_url = %s",
-                                                       [j_c, e[0].toPython()])
 
-                                elif author == 'robot':
-                                    if j_c['provenance'] != 'EXAMODE':
-                                        j_c['provenance'] = 'EXAMODE'
-                                        j_c = json.dumps(j_c)
-                                        cursor.execute("UPDATE concept SET json_concept = %s WHERE concept_url = %s",[j_c,e[0].toPython()])
+                        if len(ans) == 0:
+                            query = ("INSERT INTO concept (concept_url,name,annotation_mode) VALUES(%s,%s,%s);")
+                            values = (concept, e[1].toPython(),to_add)
+                            cursor.execute(query, values)
+                        elif author == 'admin':
+                            cursor.execute("UPDATE concept SET annotation_mode = %s WHERE concept_url = %s",
+                                           ['Manual and Automatic', e[0].toPython()])
 
                         cursor.execute('SELECT * FROM belong_to WHERE concept_url = %s AND name=%s',[concept,e[2].toPython()])
                         if len(cursor.fetchall()) == 0:
                             query1 = ("INSERT INTO belong_to (name, concept_url) VALUES(%s,%s);")
                             values1 = (e[2].toPython(), concept)
                             cursor.execute(query1, values1)
+
                         cursor.execute('SELECT * FROM concept_has_uc WHERE concept_url = %s AND name=%s',[concept,usecase.lower()])
                         if len(cursor.fetchall()) == 0:
                             query2 = ("INSERT INTO concept_has_uc (concept_url,name) VALUES(%s,%s);")
@@ -133,36 +146,21 @@ def configure_labels(cursor,load_labels):
             ar_tup = []
             ar_tup_label = []
             seq = 0
-            # print(usecases)
-            cursor.execute('SELECT * FROM use_case')
-            ans = cursor.fetchall()
-            # print(ans)
             for el in usecases:
+                to_add = 'Automatic'
+                if el in load_labels:
+                    to_add = 'Manual and Automatic'
                 ar_tup.append(el.lower())
                 for label in data['labels'][el]:
                     seq = seq + 1
-                    ar_tup_label.append((label, seq, el.lower(),))
+                    ar_tup_label.append((label, seq, el.lower(),to_add,))
             for el in ar_tup:
                 cursor.execute('SELECT * FROM use_case WHERE name = %s', (str(el).lower(),))
                 ans = cursor.fetchall()
                 if len(ans) == 0:
                     cursor.execute('INSERT INTO use_case VALUES(%s)', (str(el).lower(),))
-            cursor.execute("SELECT * FROM use_case")
-            ans = cursor.fetchall()
-            # print(ans)
-            cursor.executemany("INSERT INTO annotation_label (label,seq_number,name) VALUES (%s,%s,%s)", ar_tup_label)
 
-            if load_labels is not None:
-                if len(load_labels) > 0: #TODO risolvere questo problema: ora li ricopio due volte ma va gestito
-                    labs = []
-                    for el in load_labels:
-                        for label in data['labels'][el.lower()]:
-                            seq = seq + 1
-                            labs.append((label, seq, el.lower(),))
-
-
-                    cursor.executemany("INSERT INTO annotation_label (label,seq_number,name) VALUES (%s,%s,%s)",
-                                       labs)
+            cursor.executemany("INSERT INTO annotation_label (label,seq_number,name,annotation_mode) VALUES (%s,%s,%s,%s)", ar_tup_label)
 
 
 def configure_update_labels(cursor,load_labels):
@@ -174,24 +172,24 @@ def configure_update_labels(cursor,load_labels):
         with open(os.path.join(workpath, 'automatic_annotation/db_examode_data/examode_db_population.json'),
                   'r') as outfile:
             data = json.load(outfile)
-            cursor.execute("SELECT MAX(seq_number) FROM annotation_label")
-            seq = cursor.fetchone()[0]
-            if (load_labels) is not None:
-                labs = []
+            up = False
+            if load_labels is not None:
                 for el in load_labels:
                     for label in data['labels'][el]:
-                        seq = seq + 1
-                        labs.append((label, seq, el.lower(),))
-
-                cursor.executemany("INSERT INTO annotation_label (label,seq_number,name) VALUES (%s,%s,%s)",
-                                   labs)
+                        cursor.execute("UPDATE annotation_label SET annotation_mode = %s WHERE label = %s AND name = %s",['Manual and Automatic',label,str(el).lower()])
+                    a = AnnotationLabel.objects.filter(name=str(el).lower(), annotation_mode='Manual')
+                    if a.count() > 0:
+                        up = True
+                    if up:
+                        cursor.execute("DELETE FROM associate WHERE label NOT IN %s ",[tuple(data['labels'][el])])
+                        cursor.execute("DELETE FROM annotation_label WHERE label NOT IN %s AND name = %s",[tuple(data['labels'][el]),str(el).lower()])
+                        cursor.execute("DELETE FROM ground_truth_log_file WHERE gt_type = %s AND (id_report,language) IN (SELECT id_report, language FROM associate AS a INNER JOIN annotation_label AS anno ON anno.label = a.label WHERE anno.label IN %s) ",['labels',tuple(data['labels'])])
 
 
 def check_file(reports,pubmedfiles, labels, concepts, jsonDisp, jsonAnn, username, password,load_concepts,load_labels):
 
     """This method checks whether the inserted files complies with the requirements"""
 
-    message = 'ok'
     json_resp = {}
     json_keys = []
     usecases_list = []
@@ -206,10 +204,15 @@ def check_file(reports,pubmedfiles, labels, concepts, jsonDisp, jsonAnn, usernam
     if load_labels is not None:
         load_labels = ''.join(load_labels)
         load_labels = load_labels.split(',')
+        load_labels = list(set(load_labels))
+
     if load_concepts is not None:
         load_concepts = ''.join(load_concepts)
-
         load_concepts = load_concepts.split(',')
+        load_concepts = list(set(load_concepts))
+
+    load_labels = [x.lower() for x in load_labels]
+    load_concepts = [x.lower() for x in load_concepts]
 
     # Error if the user has not inserted enough files
     if len(concepts) == 0 and load_concepts is None and load_labels is None and len(labels) == 0 and len(jsonAnn) == 0 and len(reports) > 0:
@@ -221,18 +224,15 @@ def check_file(reports,pubmedfiles, labels, concepts, jsonDisp, jsonAnn, usernam
         json_resp['general_message'] = 'PUBMED - only mentions allowed.'
 
     try:
-
         try:
             cursor = connection.cursor()
             cursor.execute('SELECT * FROM public.user WHERE username = %s', (str(username),))
             ans = cursor.fetchall()
             # Error on username and password: duplicated username or missing
-            if len(ans) > 0:
+            if len(ans) > 0 or username == 'Test':
                 json_resp['username_message'] = 'USERNAME - The username you selected is already taken. Choose another one.'
             if (username == ''):
                 json_resp['username_message'] = 'USERNAME - Please, provide a username.'
-            # if (email == ''):
-            #     json_resp['username_message'] = 'EMAIL - Please, provide a valid email address.'
             if password == '' and username == '':
                 json_resp['username_message'] = 'USERNAME - Please, provide a username and a password.'
 
@@ -266,7 +266,6 @@ def check_file(reports,pubmedfiles, labels, concepts, jsonDisp, jsonAnn, usernam
             json_resp['pubmed_message'] = 'PUBMED FILES - You must provide at least one file containing reports or at least one file containing PubMED IDs before checking'
 
         for i in range(len(pubmedfiles)):
-
             # Error if the file is not csv
             if not pubmedfiles[i].name.endswith('csv'):
                 json_resp['pubmed_message'] = 'PUBMED FILE - ' + pubmedfiles[i].name + ' - The file must be .csv'
@@ -290,8 +289,7 @@ def check_file(reports,pubmedfiles, labels, concepts, jsonDisp, jsonAnn, usernam
                 missing = False
                 for el in list_db_col:
                     if el not in cols:
-                        json_resp['pubmed_message'] = 'PUBMED FILE - ' + pubmedfiles[
-                            i].name + ' - The column: ' + el + ' is missing, please add it.'
+                        json_resp['pubmed_message'] = 'PUBMED FILE - ' + pubmedfiles[i].name + ' - The column: ' + el + ' is missing, please add it.'
                         missing = True
                         break
                 if missing:
@@ -300,12 +298,10 @@ def check_file(reports,pubmedfiles, labels, concepts, jsonDisp, jsonAnn, usernam
                 for column in cols:
                     null_val = df[df[column].isnull()].index.tolist()
                     if len(null_val) > 0:
-                        json_resp['pubmed_message'] = 'PUBMED FILE - ' + pubmedfiles[
-                            i].name + ' - You did not inserted the '+column +' for rows: '+null_val.split(', ')
+                        json_resp['pubmed_message'] = 'PUBMED FILE - ' + pubmedfiles[i].name + ' - You did not inserted the '+column +' for rows: '+null_val.split(', ')
 
                 if 'usecase' in cols:
                     df['usecase']=df['usecase'].str.lower()
-
 
                 # usecases_list = df.usecase.unique()
                 for el in df.usecase.unique():
@@ -314,23 +310,18 @@ def check_file(reports,pubmedfiles, labels, concepts, jsonDisp, jsonAnn, usernam
 
                 # Check if the csv is empty with 0 rows
                 if df.shape[0] == 0:
-                    json_resp['pubmed_message'] = 'PUBMED FILE - ' + pubmedfiles[
-                        i].name + ' -  You must provide at least a report.'
+                    json_resp['pubmed_message'] = 'PUBMED FILE - ' + pubmedfiles[i].name + ' -  You must provide at least a report.'
                     break
                 else:
                     # check if columns id_report and language have no duplicates
                     df_dup = df[df.duplicated(subset=['ID', 'usecase'], keep=False)]
-                    # print(df_dup.loc[:, 'id_report'])
                     if df_dup.shape[0] > 0:
-                        json_resp['pubmed_message'] = 'WARNING PUBMED FILE - ' + pubmedfiles[
-                            i].name + ' - The rows: ' + str(
-                            df_dup.index.to_list()) + ' are duplicated. The duplicates are ignored.'
+                        json_resp['pubmed_message'] = 'WARNING PUBMED FILE - ' + pubmedfiles[i].name + ' - The rows: ' + str(df_dup.index.to_list()) + ' are duplicated. The duplicates are ignored.'
 
         if len(pubmedfiles)>0:
             if json_resp['pubmed_message'] == '':
                 json_resp['pubmed_message'] = 'Ok'
                 
-
         for i in range(len(reports)):
 
             # Error if the file is not csv
@@ -357,13 +348,11 @@ def check_file(reports,pubmedfiles, labels, concepts, jsonDisp, jsonAnn, usernam
                 missing = False
                 for el in list_db_col:
                     if el not in cols:
-                        json_resp['report_message'] = 'REPORTS FILE - ' + reports[
-                            i].name + ' - The column: ' + el + ' is missing, please add it.'
+                        json_resp['report_message'] = 'REPORTS FILE - ' + reports[i].name + ' - The column: ' + el + ' is missing, please add it.'
                         missing = True
                         break
                 if missing:
                     break
-
 
                 for el in cols:
                     if el not in list_db_col:
@@ -373,16 +362,16 @@ def check_file(reports,pubmedfiles, labels, concepts, jsonDisp, jsonAnn, usernam
                     df['usecase'] = df['usecase'].str.lower()
                 if 'institute' in cols:
                     df['institute'] = df['institute'].str.lower()
+                if 'language' in cols:
+                    df['language'] = df['language'].str.lower()
 
                 for el in df.institute.unique():
                     if el.lower() == 'pubmed':
-                        json_resp['report_message'] = 'REPORTS FILE - ' + reports[
-                            i].name + ' - calling an institute "PUBMED" is forbidden, please, change the name'
+                        json_resp['report_message'] = 'REPORTS FILE - ' + reports[i].name + ' - calling an institute "PUBMED" is forbidden, please, change the name'
 
                 for el in df.id_report:
                     if el.lower().startswith('pubmed_'):
-                        json_resp['report_message'] = 'REPORTS FILE - ' + reports[
-                            i].name + ' - reports\' ids can not start with "PUBMED_", please, change the name'
+                        json_resp['report_message'] = 'REPORTS FILE - ' + reports[i].name + ' - reports\' ids can not start with "PUBMED_", please, change the name'
                 # usecases_list = df.usecase.unique()
                 for el in df.usecase.unique():
                     if el not in usecases_list:
@@ -395,24 +384,20 @@ def check_file(reports,pubmedfiles, labels, concepts, jsonDisp, jsonAnn, usernam
 
                 # Check if the csv is empty with 0 rows
                 if df.shape[0] == 0:
-                    json_resp['report_message'] = 'REPORTS FILE - ' + reports[
-                        i].name + ' -  You must provide at least a report.'
+                    json_resp['report_message'] = 'REPORTS FILE - ' + reports[i].name + ' -  You must provide at least a report.'
                     break
                 else:
                     # check if columns id_report and language have no duplicates
                     df_dup = df[df.duplicated(subset=['id_report', 'language'], keep=False)]
                     # print(df_dup.loc[:, 'id_report'])
                     if df_dup.shape[0] > 0:
-                        json_resp['report_message'] = 'WARNING REPORTS FILE - ' + reports[
-                            i].name + ' - The rows: ' + str(
-                            df_dup.index.to_list()) + ' are duplicated. The duplicates are ignored.'
+                        json_resp['report_message'] = 'WARNING REPORTS FILE - ' + reports[i].name + ' - The rows: ' + str(df_dup.index.to_list()) + ' are duplicated. The duplicates are ignored.'
 
                 # Check if the optional rows are empty for one or more reports.
                 exit = False
                 for ind in range(df.shape[0]):
 
                     count_both = 0
-
                     not_none_cols = []
                     isnone = True
                     for el in list_not_db_col:
@@ -425,17 +410,16 @@ def check_file(reports,pubmedfiles, labels, concepts, jsonDisp, jsonAnn, usernam
                             count_both = count_both + 1
 
                     if count_both == len(not_none_cols):
-                        json_resp['fields_message'] = 'WARNING REPORT FIELDS TO DISPLAY AND ANNOTATE - ' + reports[
-                            i].name + ' -  With this configuration the report at the row: ' + str(
+                        json_resp['fields_message'] = 'WARNING REPORT FIELDS TO DISPLAY AND ANNOTATE - ' + reports[i].name + ' -  With this configuration the report at the row: ' + str(
                             ind) + ' would not be displayed since the columns to display are all empty for that report.'
 
                     if isnone:
                         exit = True
-                        json_resp['report_message'] = 'REPORTS FILE - ' + reports[
-                            i].name + ' -  The report at row ' + str(ind) + ' has the columns: ' + ', '.join(
+                        json_resp['report_message'] = 'REPORTS FILE - ' + reports[i].name + ' -  The report at row ' + str(ind) + ' has the columns: ' + ', '.join(
                             list_not_db_col) + ' empty. Provide a value for at least one of these columns.'
                         break
-                if exit == True:
+
+                if exit:
                     break
 
                 # check if there are None in mandatory columns
@@ -451,14 +435,14 @@ def check_file(reports,pubmedfiles, labels, concepts, jsonDisp, jsonAnn, usernam
                 if el != '':
                     lista = df[el].tolist()
                     ind = lista.index(None)
-                    json_resp['report_message'] = 'REPORTS FILE - ' + reports[
-                        i].name + ' - The column ' + el + ' is empty at the row: ' + str(ind) + '.'
+                    json_resp['report_message'] = 'REPORTS FILE - ' + reports[i].name + ' - The column ' + el + ' is empty at the row: ' + str(ind) + '.'
                     break
+
         if len(reports)>0:
             if json_resp['report_message'] == '':
                 json_resp['report_message'] = 'Ok'
 
-        if (len(concepts) > 0):
+        if len(concepts) > 0:
             for i in range(len(concepts)):
                 # Check if it is a csv
                 if not concepts[i].name.endswith('csv'):
@@ -469,8 +453,7 @@ def check_file(reports,pubmedfiles, labels, concepts, jsonDisp, jsonAnn, usernam
                     df = df.where(pd.notnull(df), None)
                     df = df.reset_index(drop=True)
                 except Exception as e:
-                    json_resp['concept_message'] = 'CONCEPTS FILE - ' + concepts[
-                        i].name + ' - An error occurred while parsing the csv. Check if it is well formatted. '
+                    json_resp['concept_message'] = 'CONCEPTS FILE - ' + concepts[i].name + ' - An error occurred while parsing the csv. Check if it is well formatted. '
                     pass
                 # print(df)
                 else:
@@ -486,8 +469,7 @@ def check_file(reports,pubmedfiles, labels, concepts, jsonDisp, jsonAnn, usernam
                     for el in list_db_col:
                         if el not in cols:
                             columns_wrong = True
-                            json_resp['concept_message'] = 'CONCEPTS FILE - ' + concepts[
-                                i].name + ' - The column ' + el + ' is not present. The only columns allowed are: concept_utl, concept_name, usecase, area'
+                            json_resp['concept_message'] = 'CONCEPTS FILE - ' + concepts[i].name + ' - The column ' + el + ' is not present. The only columns allowed are: concept_utl, concept_name, usecase, area'
                             break
                     if columns_wrong == True:
                         break
@@ -495,28 +477,23 @@ def check_file(reports,pubmedfiles, labels, concepts, jsonDisp, jsonAnn, usernam
                     if load_concepts is not None:
                         for el in load_concepts:
                             if el in df.usecase.unique():
-                                json_resp['concept_message'] = 'CONCEPTS FILE - ' + concepts[
-                                    i].name + ' - You can not insert concepts files for the use case ' + el + ' after having decide to use EXAMODE concepts.'
+                                json_resp['concept_message'] = 'CONCEPTS FILE - ' + concepts[i].name + ' - You can not insert concepts files for the use case ' + el + ' after having decide to use EXAMODE concepts.'
                                 break
 
                     # header length must be the same, no extra columns
                     if len(list_db_col) != len(cols):
-                        json_resp['concept_message'] = 'CONCEPTS FILE - ' + concepts[
-                            i].name + ' - The columns allowed are: concept_url, concept_name, usecase, area. If you inserted more (less) columns please, remove (add) them.'
+                        json_resp['concept_message'] = 'CONCEPTS FILE - ' + concepts[i].name + ' - The columns allowed are: concept_url, concept_name, usecase, area. If you inserted more (less) columns please, remove (add) them.'
                         break
 
                     # Check if the df has no rows
                     if df.shape[0] == 0:
-                        json_resp['concept_message'] = 'CONCEPTS FILE - ' + concepts[
-                            i].name + ' - You must provide at least a concept.'
+                        json_resp['concept_message'] = 'CONCEPTS FILE - ' + concepts[i].name + ' - You must provide at least a concept.'
                         break
                     else:
                         # check if column concept_url has no duplicates
                         df_dup = df[df.duplicated(subset=['concept_url', 'usecase', 'area'], keep=False)]
                         if df_dup.shape[0] > 0:
-                            json_resp['concept_message'] = 'WARNING CONCEPTS FILE - ' + concepts[
-                                i].name + ' - The rows: ' + str(
-                                df_dup.index.to_list()) + ' are duplicated. The duplicates will be ignored.'
+                            json_resp['concept_message'] = 'WARNING CONCEPTS FILE - ' + concepts[i].name + ' - The rows: ' + str(df_dup.index.to_list()) + ' are duplicated. The duplicates will be ignored.'
 
                         # Check if there are None in mandatory cols
                         el = ''
@@ -531,20 +508,18 @@ def check_file(reports,pubmedfiles, labels, concepts, jsonDisp, jsonAnn, usernam
                         if el != '':
                             lista = df[el].tolist()
                             ind = lista.index(None)
-                            json_resp['concept_message'] = 'CONCEPTS FILE - ' + concepts[
-                                i].name + ' - The column ' + el + ' is empty at the row: ' + str(ind) + ' .'
+                            json_resp['concept_message'] = 'CONCEPTS FILE - ' + concepts[i].name + ' - The column ' + el + ' is empty at the row: ' + str(ind) + ' .'
                             break
 
                         # warning if there are new use cases
                         for el in df.usecase.unique():
                             if el not in usecases_list and el is not None:
-                                json_resp['concept_message'] = 'WARNING CONCEPTS FILE - ' + concepts[
-                                    i].name + ' - The usecase ' + el + ' has not any report associated. It\'ok but you can not use the concepts until you have inserted a report with that use case.'
+                                json_resp['concept_message'] = 'WARNING CONCEPTS FILE - ' + concepts[i].name + ' - The usecase ' + el + ' has not any report associated. It\'ok but you can not use the concepts until you have inserted a report with that use case.'
 
             if json_resp['concept_message'] == '':
                 json_resp['concept_message'] = 'Ok'
 
-        if (len(labels) > 0):
+        if len(labels) > 0:
             for i in range(len(labels)):
                 if not labels[i].name.endswith('csv'):
                     json_resp['label_message'] = 'LABELS FILE - ' + labels[i].name + ' - The file must be .csv'
@@ -554,52 +529,42 @@ def check_file(reports,pubmedfiles, labels, concepts, jsonDisp, jsonAnn, usernam
                     df = df.reset_index(drop=True)
 
                 except Exception as e:
-                    json_resp['label_message'] = 'LABELS FILE - ' + labels[
-                        i].name + ' - An error occurred while parsing the csv. Check if is well formatted.'
+                    json_resp['label_message'] = 'LABELS FILE - ' + labels[i].name + ' - An error occurred while parsing the csv. Check if is well formatted.'
                     pass
-                # print(df)
-                else:
 
+                else:
                     cols = list(df.columns)
                     list_db_col = ['label', 'usecase']
                     if 'usecase' in cols:
                         df['usecase'] = df['usecase'].str.lower()
 
-
-
                     esco = False
                     for el in list_db_col:
                         if el not in cols:
                             esco = True
-                            json_resp['label_message'] = 'LABELS FILE - ' + labels[
-                                i].name + ' - The columns: ' + el + ' is not present. The columns allowed are: labels, usecase.'
+                            json_resp['label_message'] = 'LABELS FILE - ' + labels[i].name + ' - The columns: ' + el + ' is not present. The columns allowed are: labels, usecase.'
 
                     if esco == True:
                         break
 
-                    if (load_labels) is not None:
+                    if load_labels is not None:
                         for el in load_labels:
                             if el in df.usecase.unique():
-                                json_resp['label_message'] = 'LABELS FILE - ' + labels[
-                                    i].name + ' - You can not insert labels files for the use case ' + el + ' after having decided to use EXAMODE labels.'
+                                json_resp['label_message'] = 'LABELS FILE - ' + labels[i].name + ' - You can not insert labels files for the use case ' + el + ' after having decided to use EXAMODE labels.'
                                 break
 
                     if len(cols) != len(list_db_col):
-                        json_resp['label_message'] = 'LABELS FILE - ' + labels[
-                            i].name + ' - The columns allowed are: label, usecase. If you inserted more (less) columns please, remove (add) them.'
+                        json_resp['label_message'] = 'LABELS FILE - ' + labels[i].name + ' - The columns allowed are: label, usecase. If you inserted more (less) columns please, remove (add) them.'
                         break
 
                     if df.shape[0] == 0:
-                        json_resp['label_message'] = 'LABELS FILE - ' + labels[
-                            i].name + ' - You must provide at least a row.'
+                        json_resp['label_message'] = 'LABELS FILE - ' + labels[i].name + ' - You must provide at least a row.'
                         break
                     else:
                         # check if columns annotation_label and name have no duplicates
                         df_dup = df[df.duplicated(subset=['label', 'usecase'], keep=False)]
                         if df_dup.shape[0] > 0:
-                            json_resp['label_message'] = 'WARNING LABELS FILE - ' + labels[
-                                i].name + ' - The rows: ' + str(
-                                df_dup.index.to_list()) + ' are duplicated. The duplicates will be ignored.'
+                            json_resp['label_message'] = 'WARNING LABELS FILE - ' + labels[i].name + ' - The rows: ' + str(df_dup.index.to_list()) + ' are duplicated. The duplicates will be ignored.'
 
                         el = ''
                         if None in df['usecase'].tolist():
@@ -609,26 +574,22 @@ def check_file(reports,pubmedfiles, labels, concepts, jsonDisp, jsonAnn, usernam
                         if el != '':
                             lista = df[el].tolist()
                             ind = lista.index(None)
-                            json_resp['label_message'] = 'LABELS FILE - ' + labels[
-                                i].name + ' - The column ' + el + ' is empty at the row: ' + str(ind) + ' .'
+                            json_resp['label_message'] = 'LABELS FILE - ' + labels[i].name + ' - The column ' + el + ' is empty at the row: ' + str(ind) + ' .'
                             break
 
                         for el in df.usecase.unique():
                             if el not in usecases_list:
-                                json_resp['label_message'] = 'WARNING LABELS FILE - ' + labels[
-                                    i].name + ' - The use case ' + el + ' has not any report associated. It\'s ok, but you need some reports associated to that use case if you want to use the labels.'
+                                json_resp['label_message'] = 'WARNING LABELS FILE - ' + labels[i].name + ' - The use case ' + el + ' has not any report associated. It\'s ok, but you need some reports associated to that use case if you want to use the labels.'
 
             if json_resp['label_message'] == '':
                 json_resp['label_message'] = 'Ok'
 
         if len(jsonAnn) == 0 and len(jsonDisp) == 0 and len(reports)>0:
-            json_resp[
-                'fields_message'] = 'REPORT FIELDS TO DISPLAY AND ANNOTATE - Please provide at least one field to be displayed and/or at least one field to be annotated.'
+            json_resp['fields_message'] = 'REPORT FIELDS TO DISPLAY AND ANNOTATE - Please provide at least one field to be displayed and/or at least one field to be annotated.'
 
         elif len(jsonAnn) == 0  and len(reports)>0:
             if json_resp['fields_message'] == '':
-                json_resp[
-                    'fields_message'] = 'WARNING REPORT FIELDS TO ANNOTATE - ok but with this configuration you will not be able to perform mention annotation and linking. Please, select also at least a field to annotate if you want to find some mentions and link them.'
+                json_resp['fields_message'] = 'WARNING REPORT FIELDS TO ANNOTATE - ok but with this configuration you will not be able to perform mention annotation and linking. Please, select also at least a field to annotate if you want to find some mentions and link them.'
 
         if len(reports) > 0:
             if json_resp['fields_message'] == '':
@@ -637,7 +598,6 @@ def check_file(reports,pubmedfiles, labels, concepts, jsonDisp, jsonAnn, usernam
     except Exception as e:
         print(e)
         json_resp['general_message'] = 'An error occurred. Please check if it is similar to the example we provided.'
-
         return json_resp
 
     else:
@@ -645,7 +605,11 @@ def check_file(reports,pubmedfiles, labels, concepts, jsonDisp, jsonAnn, usernam
             json_resp['general_message'] = 'Ok'
         return json_resp
 
+
 import time
+from datetime import date
+
+
 def configure_data(pubmedfiles,reports, labels, concepts, jsondisp, jsonann, jsonall, username, password, load_concepts,load_labels):
 
     """This method is run after having checked the files inserted by the user"""
@@ -654,6 +618,7 @@ def configure_data(pubmedfiles,reports, labels, concepts, jsondisp, jsonann, jso
     error_location = 'database'
     report_usecases = []
     created_file = False
+    today = str(date.today())
 
     try:
         with transaction.atomic():
@@ -695,15 +660,20 @@ def configure_data(pubmedfiles,reports, labels, concepts, jsondisp, jsonann, jso
             if load_labels is not None:
                 load_labels = ''.join(load_labels)
                 load_labels = load_labels.split(',')
+                load_labels = list(set(load_labels))
             if load_concepts is not None:
                 load_concepts = ''.join(load_concepts)
-
                 load_concepts = load_concepts.split(',')
+                load_concepts = list(set(load_concepts))
+            load_labels = [x.lower() for x in load_labels]
+            load_concepts = [x.lower() for x in load_concepts]
 
             for el in jsonall:
-                all_fields.append(el)
+                if len(el) > 0:
+                    all_fields.append(el)
             for el in jsondisp:
-                fields.append(el)
+                if len(el) > 0:
+                    fields.append(el)
             for el in jsonann:
                 if len(el) > 0:
                     fields_to_ann.append(el)
@@ -726,16 +696,13 @@ def configure_data(pubmedfiles,reports, labels, concepts, jsondisp, jsonann, jso
                     if len(ans) == 0:
                         cursor.execute('INSERT INTO use_case VALUES(%s)', (str(el).lower(),))
 
-                list_col_mandatory = ['ID', 'usecase']
                 count_rows = df_pubmed.shape[0]
                 i = 0
                 var = True
 
-                # print(count_rows)
                 while var:
                     st = time.time()
                     for count in range(3):
-                        count = count + 1
                         id_report_original = str(df_pubmed.loc[i, 'ID'])
                         id_report = 'PUBMED_' + str(id_report_original)
                         name = str(df_pubmed.loc[i, 'usecase'])
@@ -745,17 +712,14 @@ def configure_data(pubmedfiles,reports, labels, concepts, jsondisp, jsonann, jso
                         report_json = json.dumps(report_json)
                         # Duplicates are not inserted
                         cursor.execute("SELECT * FROM report WHERE id_report = %s AND language = %s;",
-                                       (str(id_report), 'English'))
+                                       (str(id_report), 'english'))
                         ans = cursor.fetchall()
                         if len(ans) == 0:
                             cursor.execute(
-                                "INSERT INTO report (id_report,report_json,institute,language,name) VALUES (%s,%s,%s,%s,%s);",
-                                (str(id_report), report_json, 'PUBMED', 'English', str(name).lower()))
+                                "INSERT INTO report (id_report,report_json,institute,language,name,batch,insertion_date) VALUES (%s,%s,%s,%s,%s,%s,%s);",
+                                (str(id_report), report_json, 'PUBMED', 'english', str(name).lower(),1,today))
 
                         i = i + 1
-                        # print(count)
-                        # print(i)
-
                         if count_rows == i:
                             var = False
                             break
@@ -766,14 +730,13 @@ def configure_data(pubmedfiles,reports, labels, concepts, jsondisp, jsonann, jso
                         print(e)
                         pass
 
-
             error_location = 'Reports'
             for report in reports:
                 df_report = pd.read_csv(report)
                 df_report = df_report.where(pd.notnull(df_report), None)
                 df_report = df_report.reset_index(drop=True)
-                # print(df_report)
                 df_report['usecase'] = df_report['usecase'].str.lower()
+                df_report['language'] = df_report['language'].str.lower()
                 df_report['institute'] = df_report['institute'].str.lower()
 
                 usecases = df_report.usecase.unique()
@@ -792,26 +755,18 @@ def configure_data(pubmedfiles,reports, labels, concepts, jsondisp, jsonann, jso
                     if col not in list_col_mandatory:
                         list_col_not_mandatory.append(col)
 
-                # 30062021
-                # df_report_filtered = df_report.loc[df_report['usecase'].lower() == 'Colon']
-                #
+
                 count_rows = df_report.shape[0]
                 for i in range(count_rows):
                     id_report = str(df_report.loc[i, 'id_report'])
-                    # id_report = rep_count_id
-                    # rep_count_id +=1
                     institute = str(df_report.loc[i, 'institute'])
-
                     language = str(df_report.loc[i, 'language'])
                     name = str(df_report.loc[i, 'usecase'])
                     report_json = {}
 
                     # Check if all the not mandatory cols have at least one value != None
-                    found = False
                     for col in list_col_not_mandatory:
                         if df_report.loc[i, col] is not None:
-                            # col1 = col.replace(' ','_')
-                            # report_json[col1] = str(df_report.loc[i,col])
                             col1 = col.replace(' ', '_')
                             testo = str(df_report.loc[i, col])
                             filtered_characters = list(s for s in testo if s.isprintable())
@@ -825,11 +780,11 @@ def configure_data(pubmedfiles,reports, labels, concepts, jsondisp, jsonann, jso
                     ans = cursor.fetchall()
                     if len(ans) == 0:
                         cursor.execute(
-                            "INSERT INTO report (id_report,report_json,institute,language,name) VALUES (%s,%s,%s,%s,%s);",
-                            (str(id_report), report_json, str(institute), str(language), str(name.lower())))
-
+                            "INSERT INTO report (id_report,report_json,institute,language,name,batch,insertion_date) VALUES (%s,%s,%s,%s,%s,%s,%s);",
+                            (str(id_report), report_json, str(institute), str(language), str(name.lower()),1,today))
 
             configure_labels(cursor,load_labels)
+
             if len(labels) > 0:
                 error_location = 'Labels'
                 for label_file in labels:
@@ -839,7 +794,6 @@ def configure_data(pubmedfiles,reports, labels, concepts, jsondisp, jsonann, jso
                     df_labels['usecase'] = df_labels['usecase'].str.lower()
                     count_lab_rows = df_labels.shape[0]
                     for i in range(count_lab_rows):
-                        # cursor.execute("INSERT INTO annotation_label (label,seq_number,name) VALUES (%s,%s,%s);", (df_labels.loc[i, df_labels.columns[0]],df_labels.loc[i, df_labels.columns[1]],df_labels.loc[i, df_labels.columns[2]]))
                         label = str(df_labels.loc[i, 'label'])
                         name = str(df_labels.loc[i, 'usecase'])
                         cursor.execute('SELECT * FROM use_case WHERE name = %s', (str(name).lower(),))
@@ -854,22 +808,20 @@ def configure_data(pubmedfiles,reports, labels, concepts, jsondisp, jsonann, jso
                         else:
                             cursor.execute('SELECT seq_number FROM annotation_label ORDER BY seq_number DESC;')
                             ans = cursor.fetchall()
-                            # print(ans[0][0])
-
                             seq_number = int(ans[0][0]) + 1
 
-                        count = get_labels_exa_count()
-                        cursor.execute("SELECT * FROM annotation_label WHERE seq_number > %s AND name = %s AND label = %s;",
-                                       (int(count), str(name), str(label).lower()))
+                        cursor.execute("SELECT * FROM annotation_label WHERE  name = %s AND label = %s;",
+                                       (str(name), str(label).lower()))
                         ans = cursor.fetchall()
                         if len(ans) == 0:
-                            cursor.execute("INSERT INTO annotation_label (label,seq_number,name) VALUES (%s,%s,%s);",
-                                           (str(label), int(seq_number), str(name).lower()))
+                            cursor.execute("INSERT INTO annotation_label (label,seq_number,name,annotation_mode) VALUES (%s,%s,%s,%s);",
+                                           (str(label), int(seq_number), str(name).lower(),'Manual'))
 
             # Popolate the concepts table
             error_location = 'Concepts'
             if load_concepts is not None and load_concepts != '' and load_concepts !=[] and len(concepts) == 0:
                 configure_concepts(cursor,load_concepts,'admin')
+
             for concept_file in concepts:
                 df_concept = pd.read_csv(concept_file)
                 df_concept = df_concept.where(pd.notnull(df_concept), None)
@@ -903,20 +855,10 @@ def configure_data(pubmedfiles,reports, labels, concepts, jsondisp, jsonann, jso
                                    (str(concept_url),))
                     ans = cursor.fetchall()
                     if len(ans) == 0:
-                        json_concept = json.dumps({'provenance': 'admin', 'insertion_author': 'admin'})
-                        cursor.execute("INSERT INTO concept (concept_url,name,json_concept) VALUES (%s,%s,%s);",
-                                       (str(concept_url), str(concept_name), json_concept))
+                        # json_concept = json.dumps({'provenance': 'admin', 'insertion_author': 'admin'})
+                        cursor.execute("INSERT INTO concept (concept_url,name,annotation_mode) VALUES (%s,%s,%s);",
+                                       (str(concept_url), str(concept_name), 'Manual'))
 
-                    # se c'è già significa che è stato inserito automaticamente quindi. tolgo robot e metto e admin come author così so quale prendere
-                    else:
-                        for el in ans:
-                            # print(el)
-                            desc = el[1]
-                            desc = json.loads(desc)
-                            if desc['insertion_author'] != 'admin':
-                                desc['insertion_author'] = 'admin'
-                                desc = json.dumps(desc)
-                                cursor.execute('UPDATE concept SET json_concept = %s WHERE concept_url = %s', [desc, el[0]])
 
                     cursor.execute("SELECT * FROM concept_has_uc WHERE concept_url = %s AND name = %s;",
                                    (str(concept_url), str(usecase).lower()))
@@ -954,15 +896,14 @@ def configure_data(pubmedfiles,reports, labels, concepts, jsondisp, jsonann, jso
             if filename != '' and filename != 'fields0':
                 path = os.path.join(workpath, './data/' + filename + '.json')
                 os.remove(path)
+
         json_resp = {'error': 'an error occurred in: ' + error_location + '.'}
         return json_resp
     else:
         # connection.commit()
         if created_file == True:
-
             for filen in os.listdir(os.path.join(workpath, './data')):
                 if filen.endswith('json'):
-                    print(filen)
                     if filen != '' and filen != 'fields0.json' and filen != filename+'.json':
                         path = os.path.join(workpath, './data/' + filen )
                         os.remove(path)
@@ -973,18 +914,17 @@ def configure_data(pubmedfiles,reports, labels, concepts, jsondisp, jsonann, jso
 #-------------------UPDATE----------------------------
 
 
-def check_for_update(type_req,pubmedfiles, reports, labels, concepts, areas, usecase, jsonDisp, jsonAnn, jsonDispUp, jsonAnnUp,load_concepts,load_labels):
+def check_for_update(type_req, pubmedfiles, reports, labels, concepts, jsonDisp, jsonAnn, jsonDispUp, jsonAnnUp,load_concepts,load_labels):
 
     """This method checks the files inserted by the user to update the db"""
 
     usecases = []
     sem_areas = []
-    json_keys = []
     keys = get_fields_from_json()
     ann = keys['fields_to_ann']
     disp = keys['fields']
 
-    if (jsonDispUp is not None and jsonAnnUp is not None):
+    if jsonDispUp is not None and jsonAnnUp is not None:
         jsonDispUp = ''.join(jsonDispUp)
         jsonAnnUp = ''.join(jsonAnnUp)
         jsonDispUp = jsonDispUp.split(',')
@@ -1010,10 +950,9 @@ def check_for_update(type_req,pubmedfiles, reports, labels, concepts, areas, use
         ans = cursor.fetchall()
         for el in ans:
             distinct_uc_report.append(el[0])
+
         message = ''
-
         if len(concepts) > 0:
-
             message = ''
             for i in range(len(concepts)):
                 if not concepts[i].name.endswith('csv'):
@@ -1035,16 +974,14 @@ def check_for_update(type_req,pubmedfiles, reports, labels, concepts, areas, use
 
                     for el in list_db_col:
                         if el not in cols:
-                            message = 'CONCEPTS FILE - ' + concepts[
-                                i].name + ' - The columns: ' + el + ' is missing. Please, add it.'
+                            message = 'CONCEPTS FILE - ' + concepts[i].name + ' - The columns: ' + el + ' is missing. Please, add it.'
                             return message
 
                     if 'usecase' in cols:
                         df['usecase'] = df['usecase'].str.lower()
 
                     if len(list_db_col) != len(cols):
-                        message = 'CONCEPTS FILE - ' + concepts[
-                            i].name + ' - The columns allowed are: concept_url, concept_name, usecase, area. If you inserted more (less) columns please, remove (add) them.'
+                        message = 'CONCEPTS FILE - ' + concepts[i].name + ' - The columns allowed are: concept_url, concept_name, usecase, area. If you inserted more (less) columns please, remove (add) them.'
                         return message
 
                     if df.shape[0] == 0:
@@ -1069,8 +1006,7 @@ def check_for_update(type_req,pubmedfiles, reports, labels, concepts, areas, use
                         if el != '':
                             lista = df[el].tolist()
                             ind = lista.index(None)
-                            message = 'CONCEPTS FILE - ' + concepts[
-                                i].name + ' - The column ' + el + ' is empty at the row: ' + str(ind) + '.'
+                            message = 'CONCEPTS FILE - ' + concepts[i].name + ' - The column ' + el + ' is empty at the row: ' + str(ind) + '.'
                             return message
 
                         distinct_concept_usecase = df['usecase'].unique()
@@ -1079,28 +1015,33 @@ def check_for_update(type_req,pubmedfiles, reports, labels, concepts, areas, use
                             if el in ['colon','uterine cervix','lung']:
                                 bool_arr = check_exa_lab_conc_only(str(el))
                                 if bool_arr[1] == True:
-                                    message = ' WARNING CONCEPTS FILE - ' + concepts[
-                                        i].name + ' - You are using EXAMODE concepts for the use case '+str(el) + '. Uploading new concepts will remove the existing ones together with all the annotatiions. The action is irreversible.'
+                                    message = ' WARNING CONCEPTS FILE - ' + concepts[i].name + ' - You are using EXAMODE concepts for the use case '+str(el) + '. Uploading new concepts will remove the existing ones together with all the annotatiions. The action is irreversible.'
 
                             if el not in distinct_uc_report:
-                                message = 'WARNING CONCEPTS FILE - ' + concepts[
-                                    i].name + ' - The file contains the concepts for the use case ' + el + ' which has 0 reports associated.'
+                                message = 'WARNING CONCEPTS FILE - ' + concepts[i].name + ' - The file contains the concepts for the use case ' + el + ' which has 0 reports associated.'
 
                         # Check for duplicates in db
                         for ind in range(df.shape[0]):
                             cursor.execute('SELECT COUNT(*) FROM concept WHERE concept_url = %s',
                                            [str(df.loc[ind, 'concept_url'])])
                             num = cursor.fetchone()
-                            if num[0] > 0:
+                            cursor.execute('SELECT COUNT(*) FROM concept_has_uc WHERE concept_url = %s and name = %s',
+                                           [str(df.loc[ind, 'concept_url']),str(df.loc[ind, 'usecase'])])
+                            num_uc = cursor.fetchone()
+                            cursor.execute('SELECT COUNT(*) FROM belong_to WHERE concept_url = %s and name = %s',
+                                           [str(df.loc[ind, 'concept_url']),str(df.loc[ind, 'area'])])
+                            num_b = cursor.fetchone()
+                            if num[0] > 0 and num_b[0] > 0:
                                 message = 'WARNING CONCEPTS FILE - ' + concepts[i].name + ' - The concept: ' + str(
-                                    df.loc[
-                                        ind, 'concept_url']) + ' is already present in the database. It will be ignored.'
+                                    df.loc[ind, 'concept_url']) + ' for the area ' + str(
+                                    df.loc[ind, 'area']) + ' is already present in the database. It will be ignored.'
+
+                            if num[0] > 0 and num_uc[0] > 0:
+                                message = 'WARNING CONCEPTS FILE - ' + concepts[i].name + ' - The concept: ' + str(df.loc[ind, 'concept_url']) +' for the use case '+ str(df.loc[ind, 'usecase'])+ ' is already present in the database. It will be ignored.'
 
                 return message
 
-
         elif len(labels) > 0:
-
             message = ''
             for i in range(len(labels)):
                 if not labels[i].name.endswith('csv'):
@@ -1113,8 +1054,7 @@ def check_for_update(type_req,pubmedfiles, reports, labels, concepts, areas, use
                     df = df.reset_index(drop=True)
 
                 except Exception as e:
-                    message = 'LABELS FILE - ' + labels[
-                        i].name + ' - An error occurred while parsing the csv. Check if is well formatted.'
+                    message = 'LABELS FILE - ' + labels[i].name + ' - An error occurred while parsing the csv. Check if is well formatted.'
                     return message
                 else:
                     cols = list(df.columns)
@@ -1124,13 +1064,11 @@ def check_for_update(type_req,pubmedfiles, reports, labels, concepts, areas, use
                         # print(df)
                     for el in list_db_col:
                         if el not in cols:
-                            message = 'LABELS FILE - ' + labels[
-                                i].name + ' - The columns: ' + el + 'is missing. The columns allowed are: label, usecase.'
+                            message = 'LABELS FILE - ' + labels[i].name + ' - The columns: ' + el + 'is missing. The columns allowed are: label, usecase.'
                             return message
 
                     if len(list_db_col) != len(cols):
-                        message = 'LABELS FILE - ' + labels[
-                            i].name + ' - The columns allowed are: label, usecase. If you inserted more (less) columns please, remove (add) them.'
+                        message = 'LABELS FILE - ' + labels[i].name + ' - The columns allowed are: label, usecase. If you inserted more (less) columns please, remove (add) them.'
                         return message
 
                     if df.shape[0] == 0:
@@ -1141,18 +1079,14 @@ def check_for_update(type_req,pubmedfiles, reports, labels, concepts, areas, use
 
                         df_dup = df[df.duplicated(subset=['label', 'usecase'], keep=False)]
                         if df_dup.shape[0] > 0:
-                            message = 'WARNING LABELS FILE - ' + labels[
-                                i].name + ' - The rows: ' + str(
-                                df_dup.index.to_list()) + ' are duplicated. The duplicates will be ignored.'
+                            message = 'WARNING LABELS FILE - ' + labels[i].name + ' - The rows: ' + str(df_dup.index.to_list()) + ' are duplicated. The duplicates will be ignored.'
 
                         for ind in range(df.shape[0]):
-                            cursor.execute('SELECT COUNT(*) FROM annotation_label WHERE label = %s AND name = %s AND seq_number > %s',
-                                           [str(df.loc[ind, 'label']), str(df.loc[ind, 'usecase']),20])
+                            cursor.execute('SELECT COUNT(*) FROM annotation_label WHERE label = %s AND name = %s',
+                                           [str(df.loc[ind, 'label']), str(df.loc[ind, 'usecase'])])
                             num = cursor.fetchone()
                             if num[0] > 0:
-                                message = 'WARNING LABELS FILE - ' + labels[i].name + ' - The label: ' + str(
-                                    df.loc[ind, 'label']) + ' for the use case: ' + str(
-                                    df.loc[ind, 'usecase']) + ' is already present in the database. It will be ignored.'
+                                message = 'WARNING LABELS FILE - ' + labels[i].name + ' - The label: ' + str(df.loc[ind, 'label']) + ' for the use case: ' + str(df.loc[ind, 'usecase']) + ' is already present in the database. It will be ignored.'
 
                         el = ''
                         if None in df['usecase'].tolist():
@@ -1163,8 +1097,7 @@ def check_for_update(type_req,pubmedfiles, reports, labels, concepts, areas, use
                         if el != '':
                             lista = df[el].tolist()
                             ind = lista.index(None)
-                            message = 'LABELS FILE - ' + labels[
-                                i].name + ' - The column ' + el + ' is empty at the row: ' + str(ind) + ' .'
+                            message = 'LABELS FILE - ' + labels[i].name + ' - The column ' + el + ' is empty at the row: ' + str(ind) + ' .'
                             return message
 
                         distinct_label_usecase = df['usecase'].unique()
@@ -1172,13 +1105,11 @@ def check_for_update(type_req,pubmedfiles, reports, labels, concepts, areas, use
                             if el in ['colon', 'uterine cervix', 'lung']:
                                 bool_arr = check_exa_lab_conc_only(str(el))
                                 if bool_arr[0] == True:
-                                    message = ' WARNING LABELS FILE - ' + labels[
-                                        i].name + ' - You are using EXAMODE labels for the use case ' + str(
-                                        el) + '. Uploading new labels will remove the existing ones together with all the annotatiions. The action is irreversible.'
+                                    message = ' WARNING LABELS FILE - ' + labels[i].name + ' - You are using EXAMODE labels for the use case ' + str(el) +\
+                                              '. Uploading new labels will remove the existing ones together with all the annotatiions. The action is irreversible.'
 
                             if el not in distinct_uc_report:
-                                message = 'WARNING LABELS FILE - ' + labels[
-                                    i].name + ' - The file contains the labels for ' + el + ' which has 0 reports associated.'
+                                message = 'WARNING LABELS FILE - ' + labels[i].name + ' - The file contains the labels for ' + el + ' which has 0 reports associated.'
 
                 return message
 
@@ -1193,21 +1124,15 @@ def check_for_update(type_req,pubmedfiles, reports, labels, concepts, areas, use
                     df = pd.read_csv(pubmedfiles[i])
                     df = df.where(pd.notnull(df), None)
                     df = df.reset_index(drop=True)
-                    # somma = df.notnull().sum(axis=1)
-                    # somma_null = df.isnull().sum(axis=1)
-                    # print(somma)
-                    # print(somma_null)
-                    # print(type(somma))
+
                 except Exception as e:
                     message = 'PUBMED FILE - ' + reports[
                         i].name + ' - An error occurred while parsing the csv. Check if it is well formatted. '
                     return message
                 else:
                     cols = list(df.columns)
-                    count = 0
                     if 'usecase' in cols:
                         df['usecase']=df['usecase'].str.lower()
-                    # print(cols)
                     list_db_col = ['ID', 'usecase']
                     for el in list_db_col:
                         if el not in cols:
@@ -1217,8 +1142,7 @@ def check_for_update(type_req,pubmedfiles, reports, labels, concepts, areas, use
 
                     for el in cols:
                         if el not in list_db_col:
-                            message = 'PUBMED FILE - ' + pubmedfiles[i].name + ' - The column: ' + str(
-                                el) + ' is not allowed.'
+                            message = 'PUBMED FILE - ' + pubmedfiles[i].name + ' - The column: ' + str(el) + ' is not allowed.'
                             return message
 
 
@@ -1228,28 +1152,23 @@ def check_for_update(type_req,pubmedfiles, reports, labels, concepts, areas, use
                     else:
                         df_dup = df[df.duplicated(subset=['ID', 'usecase'], keep=False)]
                         if df_dup.shape[0] > 0:
-                                message = 'WARNING PUBMED FILE - ' + pubmedfiles[i].name + ' - The rows: ' + str(
-                                df_dup.index.to_list()) + ' are duplicated. The duplicates are ignored.'
+                                message = 'WARNING PUBMED FILE - ' + pubmedfiles[i].name + ' - The rows: ' + str(df_dup.index.to_list()) + ' are duplicated. The duplicates are ignored.'
 
                         for ind in range(df.shape[0]):
                             found = False
                             id_report = 'PUBMED_'+str(df.loc[ind, 'ID'])
                             cursor.execute('SELECT COUNT(*) FROM report WHERE id_report = %s AND language = %s',
-                                           [str(id_report), 'English'])
+                                           [str(id_report), 'english'])
                             num = cursor.fetchone()
                             if num[0] > 0:
-                                message = 'WARNING PUBMED FILE - ' + pubmedfiles[i].name + ' - The report: ' + str(
-                                    id_report) + ' is already present in the database. It will be ignored.'
+                                message = 'WARNING PUBMED FILE - ' + pubmedfiles[i].name + ' - The report: ' + str(id_report) + ' is already present in the database. It will be ignored.'
 
                             for el in list_db_col:
                                 if df.loc[ind, el] is not None:
                                     found = True
                                     break
-
                             if found == False:
-                                message = 'PUBMED FILE - ' + pubmedfiles[i].name + ' -  The report at row ' + str(
-                                    ind) + ' has the columns: ' + ', '.join(
-                                    list_db_col) + ' empty. Provide a value for at least one of these columns.'
+                                message = 'PUBMED FILE - ' + pubmedfiles[i].name + ' -  The report at row ' + str(ind) + ' has the columns: ' + ', '.join(list_db_col) + ' empty. Provide a value for at least one of these columns.'
                                 return message
 
 
@@ -1277,12 +1196,6 @@ def check_for_update(type_req,pubmedfiles, reports, labels, concepts, areas, use
                     df = pd.read_csv(reports[i])
                     df = df.where(pd.notnull(df), None)
                     df = df.reset_index(drop=True)
-
-                    # somma = df.notnull().sum(axis=1)
-                    # somma_null = df.isnull().sum(axis=1)
-                    # print(somma)
-                    # print(somma_null)
-                    # print(type(somma))
                 except Exception as e:
                     message = 'REPORTS FILE - ' + reports[
                         i].name + ' - An error occurred while parsing the csv. Check if it is well formatted. '
@@ -1294,45 +1207,44 @@ def check_for_update(type_req,pubmedfiles, reports, labels, concepts, areas, use
                         df['usecase']=df['usecase'].str.lower()
                     if 'institute' in cols:
                         df['institute']=df['institute'].str.lower()
+                    if 'language' in cols:
+                        df['language']=df['language'].str.lower()
 
                     # print(cols)
                     list_db_col = ['id_report', 'institute', 'usecase', 'language']
                     for el in list_db_col:
                         if el not in cols:
-                            message = 'REPORTS FILE - ' + reports[i].name + ' - The column: ' + str(
-                                el) + ' must be present.'
+                            message = 'REPORTS FILE - ' + reports[i].name + ' - The column: ' + str(el) + ' must be present.'
                             return message
 
                     if 'usecase' in cols:
                         df['usecase']=df['usecase'].str.lower()
                     if 'institute' in cols:
                         df['institute']=df['institute'].str.lower()
+                    if 'language' in cols:
+                        df['language']=df['language'].str.lower()
 
                     list_not_db_col = []
                     for el in cols:
                         if el not in list_db_col:
                             list_not_db_col.append(el)
 
-                    if (jsonDispUp is not None and jsonAnnUp is not None):
-                        if (len(disp) > 0 or len(ann) > 0):
-                            disp_intersect = list(set(disp) & set(list_not_db_col))
+                    if jsonDispUp is not None and jsonAnnUp is not None:
+                        if len(disp) > 0 or len(ann) > 0:
                             ann_intersect = list(set(ann) & set(list_not_db_col))
                             for el in list_not_db_col:
-                                if (el not in disp and el not in ann) and (
-                                        el not in jsonDispUp and el not in jsonAnnUp):
+                                if (el not in disp and el not in ann) and (el not in jsonDispUp and el not in jsonAnnUp):
                                     count = count + 1
                             if count == len(list_not_db_col):
                                 message = 'REPORT FIELDS - Please, provide at least one field to display in file: ' + \
-                                          reports[
-                                              i].name + '. Be careful that if you do not provide one field to annotate you will not be able to perform mention annotation and linking.'
+                                          reports[i].name + '. Be careful that if you do not provide one field to annotate you will not be able to perform mention annotation and linking.'
                                 return message
                             elif len(ann_intersect) == 0 and (jsonAnnUp[0]) == '':
                                 message = 'WARNING REPORT FIELDS - file: ' + reports[
                                     i].name + ' Please, provide at least one field to annotate if you want to find mentions and perform linking.'
 
                     if len(list_not_db_col) == 0:
-                        message = 'REPORTS FILE - ' + reports[
-                            i].name + ' - You must provide at least one column other than institute, usecase, language, id_report'
+                        message = 'REPORTS FILE - ' + reports[i].name + ' - You must provide at least one column other than institute, usecase, language, id_report'
                         return message
 
                     if df.shape[0] == 0:
@@ -1351,8 +1263,7 @@ def check_for_update(type_req,pubmedfiles, reports, labels, concepts, areas, use
                             num = cursor.fetchone()
                             if num[0] > 0:
                                 message = 'WARNING REPORT FILE - ' + reports[i].name + ' - The report: ' + str(
-                                    df.loc[ind, 'id_report']) + ' for the language: ' + str(df.loc[
-                                                                                                ind, 'language']) + ' is already present in the database. It will be ignored.'
+                                    df.loc[ind, 'id_report']) + ' for the language: ' + str(df.loc[ind, 'language']) + ' is already present in the database. It will be ignored.'
 
                             for el in list_db_col:
                                 if df.loc[ind, el] is not None:
@@ -1415,28 +1326,23 @@ def check_for_update(type_req,pubmedfiles, reports, labels, concepts, areas, use
                         if el != '':
                             lista = df[el].tolist()
                             ind = lista.index(None)
-                            message = 'REPORTS FILE - ' + reports[
-                                i].name + ' - The column ' + el + ' is empty at the row: ' + str(ind) + '.'
+                            message = 'REPORTS FILE - ' + reports[i].name + ' - The column ' + el + ' is empty at the row: ' + str(ind) + '.'
                             return message
 
         if jsonAnn is not None and jsonDisp is not None:
-            if (type_req == 'json_fields' and len(jsonAnn) == 0) and len(jsonDisp) == 0 and len(ann) == 0:
+            if type_req == 'json_fields' and len(jsonAnn) == 0 and len(jsonDisp) == 0 and len(ann) == 0:
                 message = 'REPORT FIELDS TO ANNOTATE - You must provide at least one field to display and/or one field to display and annotate.'
                 return message
 
-            elif (type_req == 'json_fields' and len(jsonAnn) == 0):
-                message = 'WARNING REPORT FIELDS TO ANNOTATE - ok, but with this configuration you will not be able to perform mention annotation and linking. Please, select also at least a field to annotate if you want to find some mentions and link them'
+            elif type_req == 'json_fields' and len(jsonAnn) == 0:
+                message = 'WARNING REPORT FIELDS TO ANNOTATE - ok, but with this configuration you will not be able to perform mention annotation and linking. Please, select also at least a field to annotate if you want to find some mentions and to link them'
                 return message
-        # if jsonAnnUp is not None and jsonDispUp is not None:
-        #     if type_req == 'reports' and len(jsonAnnUp) == 0 and len(jsonDispUp) == 0:
-        #         message = 'REPORT FIELDS - You must provide at least one field to display and/or one field to display and annotate.'
-        #         return message
 
-        if type_req == 'labels' and len(labels) == 0 and (load_labels) is None:
+        if type_req == 'labels' and len(labels) == 0 and load_labels is None:
             message = 'LABELS - Please insert a labels file.'
             return message
 
-        if type_req == 'concepts' and len(concepts) == 0 and (load_concepts) is None:
+        if type_req == 'concepts' and len(concepts) == 0 and load_concepts is None:
             message = 'CONCEPTS - Please insert a concepts file.'
             return message
 
@@ -1455,12 +1361,12 @@ def check_for_update(type_req,pubmedfiles, reports, labels, concepts, areas, use
         return message
 
 
-def update_db_util(reports,pubmedfiles,labels,concepts,jsondisp,jsonann,jsondispup,jsonannup,jsonall,load_concepts,load_labels):
+def update_db_util(reports,pubmedfiles,labels,concepts,jsondisp,jsonann,jsondispup,jsonannup,jsonall,load_concepts,load_labels,batch):
 
     """This method is run after having checked the files inserted for the update. It updates the db."""
 
-
     filename = ''
+    today = str(date.today())
     error_location = 'database'
     usecases = []
     sem_areas = []
@@ -1468,20 +1374,34 @@ def update_db_util(reports,pubmedfiles,labels,concepts,jsondisp,jsonann,jsondisp
     cursor = connection.cursor()
     try:
         with transaction.atomic():
+
+            all_fields = []
+            fields = []
+            fields_to_ann = []
+            version = get_version()
+            if int(version) != 0:
+                json_resp = get_fields_from_json()
+                all_fields = json_resp['all_fields']
+                fields = json_resp['fields']
+                fields_to_ann = json_resp['fields_to_ann']
+
             if load_concepts is not None:
                 load_concepts = ''.join(load_concepts)
                 load_concepts = load_concepts.split(',')
                 load_concepts = list(set(load_concepts))
+                load_concepts = [x.lower() for x in load_concepts]
+
                 configure_concepts(cursor,load_concepts,'admin')
 
             if load_labels is not None:
                     load_labels = ''.join(load_labels)
                     load_labels = load_labels.split(',')
                     load_labels = list(set(load_labels))
+                    load_labels = [x.lower() for x in load_labels]
+
                     configure_update_labels(cursor,load_labels)
 
-            if (jsonannup != '') or jsondispup != '' or jsonall != '':
-
+            if jsonannup != '' or jsondispup != '' or jsonall != '':
                 data = {}
                 all_fields = []
                 fields = []
@@ -1518,14 +1438,6 @@ def update_db_util(reports,pubmedfiles,labels,concepts,jsondisp,jsonann,jsondisp
                     if el not in all_fields and el:
                         all_fields.append(el)
 
-                # added 06092021
-                # fields.extend(['volume','journal','year','authors'])
-                # fields_to_ann.extend(['abstract','title'])
-                # all_fields.extend(['volume','journal','year','authors','abstract','title'])
-                # data['fields'] = list(set(fields))
-                # data['fields_to_ann'] = list(set(fields_to_ann))
-                # data['all_fields'] = list(set(all_fields))
-
                 data['fields'] = fields
                 data['fields_to_ann'] = fields_to_ann
                 data['all_fields'] = all_fields
@@ -1537,28 +1449,18 @@ def update_db_util(reports,pubmedfiles,labels,concepts,jsondisp,jsonann,jsondisp
                     json.dump(data, outfile)
                     created_file = True
 
-            all_fields = []
-            fields = []
-            fields_to_ann = []
-            version = get_version()
-            if int(version) != 0:
-                json_resp = get_fields_from_json()
-                all_fields = json_resp['all_fields']
-                fields = json_resp['fields']
-                fields_to_ann = json_resp['fields_to_ann']
-
             cursor.execute('SELECT * FROM use_case')
             ans = cursor.fetchall()
             for el in ans:
                 if el[0] not in usecases:
                     usecases.append(el[0])
 
-
             cursor.execute('SELECT * FROM semantic_area')
             ans = cursor.fetchall()
             for el in ans:
                 sem_areas.append(el[0])
             # Popolate the report table
+
             if len(pubmedfiles) > 0:
                 rep_count_id = 1
                 error_location = 'Pubmed'
@@ -1574,58 +1476,64 @@ def update_db_util(reports,pubmedfiles,labels,concepts,jsondisp,jsonann,jsondisp
                             cursor.execute("INSERT INTO use_case VALUES (%s)",(str(el).lower(),))
 
                     count_rows = df_pubmed.shape[0]
-                    list_col_mandatory = ['ID', 'usecase']
-
-
                     i = 0
+                    json_uses = {}
+                    for name in df_pubmed.usecase.unique():
+                        json_uses[name] = 1
+                        cursor.execute("SELECT MAX(batch) FROM report WHERE name = %s and institute = %s", [name,'PUBMED'])
+                        ans = cursor.fetchone()[0]
+                        if ans is None:
+                            json_uses[name] = 1
+                        else:
+                            if batch == 'batch':
+                                json_uses[name] = ans + 1
+                            else:
+                                json_uses[name] = ans
                     var = True
-                    # print(count_rows)
                     while var:
                         st = time.time()
                         for count in range(3):
-                            count = count + 1
                             id_report_original = str(df_pubmed.loc[i, 'ID'])
                             id_report = 'PUBMED_' + str(id_report_original)
                             name = str(df_pubmed.loc[i, 'usecase'])
+                            # if batch == 'batch':
+                            #     cursor.execute("SELECT MAX(batch) FROM report WHERE name = %s",[name])
+                            #     ans = cursor.fetchone()[0]
+                            #     batch_num = ans + 1
+                            # else:
+                            #     batch_num = 1
+
                             report_json = insert_articles_of_PUBMED(id_report_original)
                             if 'error' in report_json.keys():
                                 return report_json
                             report_json = json.dumps(report_json)
                             # Duplicates are not inserted
                             cursor.execute("SELECT * FROM report WHERE id_report = %s AND language = %s;",
-                                           (str(id_report), 'English'))
+                                           (str(id_report), 'english'))
                             ans = cursor.fetchall()
                             if len(ans) == 0:
                                 cursor.execute(
-                                    "INSERT INTO report (id_report,report_json,institute,language,name) VALUES (%s,%s,%s,%s,%s);",
-                                    (str(id_report), report_json, 'PUBMED', 'English', str(name).lower()))
+                                    "INSERT INTO report (id_report,report_json,institute,language,name,batch,insertion_date) VALUES (%s,%s,%s,%s,%s,%s,%s);",
+                                    (str(id_report), report_json, 'PUBMED', 'english', str(name).lower(),json_uses[name],today))
 
                             i = i + 1
-                            # print(count)
-                            # print(i)
-
                             if count_rows == i:
                                 var = False
                                 break
-
-
-
                         try:
                             time.sleep(1 - (time.time() - st))
                         except Exception as e:
                             print(e)
                             pass
 
-
-
             if len(reports) > 0:
-                rep_count_id = 1
                 error_location = 'Reports'
                 for report in reports:
                     df_report = pd.read_csv(report)
                     df_report = df_report.where(pd.notnull(df_report), None)
                     df_report = df_report.reset_index(drop=True)
                     df_report['usecase']=df_report['usecase'].str.lower()
+                    df_report['language']=df_report['language'].str.lower()
                     df_report['institute']=df_report['institute'].str.lower()
                     # print(df_report)
                     report_use = df_report.usecase.unique()
@@ -1640,23 +1548,35 @@ def update_db_util(reports,pubmedfiles,labels,concepts,jsondisp,jsonann,jsondisp
                         if col not in list_col_mandatory:
                             list_col_not_mandatory.append(col)
 
+                    json_uses = {}
+                    for name in df_report.usecase.unique():
+                        json_uses[name] = 1
+                        cursor.execute("SELECT MAX(batch) FROM report WHERE name = %s", [name])
+                        ans = cursor.fetchone()[0]
+                        if ans is None:
+                            json_uses[name] = 1
+                        else:
+                            if batch == 'batch':
+                                json_uses[name] = ans + 1
+                            else:
+                                json_uses[name] = ans
+
                     for i in range(count_rows):
                         id_report = str(df_report.loc[i, 'id_report'])
-                        # id_report = rep_count_id
-                        # rep_count_id += 1
                         institute = str(df_report.loc[i, 'institute'])
                         language = str(df_report.loc[i, 'language'])
                         name = str(df_report.loc[i, 'usecase'])
-                        report_json = {}
-                        found = False
-                        for col in list_col_not_mandatory:
 
-                                if df_report.loc[i, col] is not None:
-                                    col1 = col.replace(' ', '_')
-                                    testo = str(df_report.loc[i, col])
-                                    filtered_characters = list(s for s in testo if s.isprintable())
-                                    testo = ''.join(filtered_characters)
-                                    report_json[col1] = testo
+
+
+                        report_json = {}
+                        for col in list_col_not_mandatory:
+                            if df_report.loc[i, col] is not None:
+                                col1 = col.replace(' ', '_')
+                                testo = str(df_report.loc[i, col])
+                                filtered_characters = list(s for s in testo if s.isprintable())
+                                testo = ''.join(filtered_characters)
+                                report_json[col1] = testo
 
                         report_json = json.dumps(report_json)
                         cursor.execute("SELECT * FROM report WHERE id_report = %s AND language = %s;",
@@ -1664,8 +1584,8 @@ def update_db_util(reports,pubmedfiles,labels,concepts,jsondisp,jsonann,jsondisp
                         ans = cursor.fetchall()
                         if len(ans) == 0:
                             cursor.execute(
-                                "INSERT INTO report (id_report,report_json,institute,language,name) VALUES (%s,%s,%s,%s,%s);",
-                                (str(id_report), report_json, str(institute), str(language), str(name).lower()))
+                                "INSERT INTO report (id_report,report_json,institute,language,name,batch,insertion_date) VALUES (%s,%s,%s,%s,%s,%s,%s);",
+                                (str(id_report), report_json, str(institute), str(language), str(name).lower(),json_uses[name],today))
 
             # Popolate the labels table
             if len(labels) > 0:
@@ -1682,15 +1602,22 @@ def update_db_util(reports,pubmedfiles,labels,concepts,jsondisp,jsonann,jsondisp
                         if el in ['colon', 'uterine cervix', 'lung']:
                             bool_arr = check_exa_lab_conc_only(str(el))
                             if bool_arr[0] == True:
-                                usecase = UseCase.objects.get(name = str(el))
-                                cursor.execute("DELETE FROM associate WHERE ns_id = %s AND seq_number > %s AND id_report IN (SELECT id_report FROM report WHERE name = %s)",['Human',20,str(el)])
-                                AnnotationLabel.objects.filter(name = usecase, seq_number__gt = 20).delete()
-                                cursor = connection.cursor()
-                                cursor.execute("DELETE FROM ground_truth_log_file WHERE ns_id = %s AND gt_type = %s AND id_report IN (SELECT id_report FROM report WHERE name = %s)",['Human','labels',str(el)])
+                                # usecase = UseCase.objects.get(name = str(el))
+                                # cursor.execute("DELETE FROM associate WHERE label IN (SELECT label FROM annotation_label where annotation_mode = %s) ",
+                                #                ['Manual'])
+
+                                cursor.execute("DELETE FROM associate where (id_report,language,label) in(select a.id_report,a.language,a.label from associate as a inner join annotation_label as al on a.label = al.label and a.seq_number = al.seq_number WHERE name = %s and ns_id = %s)",
+                                               [str(el),'Human'])
+                                cursor.execute(
+                                    "DELETE FROM ground_truth_log_file WHERE gt_type = %s and ns_id = %s AND (id_report,language) IN (SELECT id_report, language FROM associate AS a INNER JOIN annotation_label AS anno ON anno.label = a.label and a.seq_number = anno.seq_number WHERE anno.name = %s and a.ns_id = %s) ",
+                                    ['labels','Human', str(el),'Human'])
+                                cursor.execute("DELETE FROM annotation_label WHERE annotation_mode = %s",
+                                               ['Manual'])
+                                cursor.execute("UPDATE annotation_label SET annotation_mode = %s WHERE name = %s AND annotation_mode = %s",['Automatic',str(el),'Manual and Automatic'])
 
                     count_lab_rows = df_labels.shape[0]
                     for i in range(count_lab_rows):
-                        label = str(df_labels.loc[i, 'label'])
+                        label = str(df_labels.loc[i,'label'])
                         name = str(df_labels.loc[i,'usecase'])
                         cursor.execute('SELECT * FROM use_case WHERE name = %s', (str(name).lower(),))
                         ans = cursor.fetchall()
@@ -1708,27 +1635,16 @@ def update_db_util(reports,pubmedfiles,labels,concepts,jsondisp,jsonann,jsondisp
 
                             seq_number = int(ans[0][0]) + 1
 
-
-                        cursor.execute("SELECT * FROM annotation_label WHERE name = %s AND label = %s AND seq_number > %s;", (str(name),str(label),20))
+                        cursor.execute("SELECT * FROM annotation_label WHERE name = %s AND label = %s ;", (str(name),str(label)))
                         ans = cursor.fetchall()
                         if len(ans) == 0:
-                            cursor.execute("INSERT INTO annotation_label (label,seq_number,name) VALUES (%s,%s,%s);",
-                                       (str(label), int(seq_number), str(name).lower()))
+                            cursor.execute("INSERT INTO annotation_label (label,seq_number,name,annotation_mode) VALUES (%s,%s,%s,%s);",
+                                       (str(label), int(seq_number), str(name).lower(),'Manual'))
 
 
             # Popolate the concepts table
             if len(concepts) > 0:
                 error_location = 'Concepts'
-                if (load_concepts) is not None:
-                    usecases = get_presence_exa_concepts()
-                    # in questo caso l'utente ha scelto nell'update di usare i concetti di examode
-                    description = {'provenance':'EXAMODE','insertion_author':'admin'}
-                    description = json.dumps(description)
-                    cursor.execute("UPDATE concept SET json_concept = %s WHERE concept_url IN (SELECT concept_url "
-                                   "FROM concept AS c INNER JOIN concept_has_uc AS chu ON "
-                                   "chu.concept_utl = c.concept_utl WHERE chu.name IN %s)",
-                                   [description,tuple(usecases)])
-
 
                 for concept_file in concepts:
                     df_concept = pd.read_csv(concept_file)
@@ -1756,7 +1672,10 @@ def update_db_util(reports,pubmedfiles,labels,concepts,jsondisp,jsonann,jsondisp
                             bool_arr = check_exa_lab_conc_only(str(el))
                             if bool_arr[1] == True:
                                 cursor = connection.cursor()
-
+                                #delete only human! Those automatic are kept for automatic annotation
+                                cursor.execute(
+                                    "UPDATE concept SET annotation_mode = %s WHERE concept_url IN (select c.concept_url from concept as c inner join concept_has_uc as ch on ch.concept_url = c.concept_url where ch.name = %s and annotation_mode =%s) ",
+                                    [ 'Automatic',str(el),'Manual and Automatic'])
                                 cursor.execute(
                                     "DELETE FROM contains WHERE ns_id = %s AND id_report IN (SELECT id_report FROM report WHERE name = %s)",
                                     [ 'Human',str(el)])
@@ -1764,9 +1683,11 @@ def update_db_util(reports,pubmedfiles,labels,concepts,jsondisp,jsonann,jsondisp
                                     "DELETE FROM linked WHERE ns_id = %s AND id_report IN (SELECT id_report FROM report WHERE name = %s)",
                                     [ 'Human',str(el)])
                                 cursor.execute(
-                                    "DELETE FROM concept WHERE concept_url IN (SELECT concept_url FROM concept_has_uc WHERE name = %s)",
-                                    [ str(el)])
-
+                                    "DELETE FROM concept WHERE concept_url IN (SELECT concept_url FROM concept_has_uc WHERE name = %s AND annotation_mode = %s)",
+                                    [ str(el),'Manual'])
+                                cursor.execute(
+                                    "DELETE FROM ground_truth_log_file WHERE ns_id = %s AND gt_type = %s AND id_report IN (SELECT id_report FROM report WHERE name = %s)",
+                                    ['Human','concept-mention', str(el)])
                                 cursor.execute(
                                     "DELETE FROM ground_truth_log_file WHERE ns_id = %s AND gt_type = %s AND id_report IN (SELECT id_report FROM report WHERE name = %s)",
                                     ['Human','concepts', str(el)])
@@ -1778,23 +1699,20 @@ def update_db_util(reports,pubmedfiles,labels,concepts,jsondisp,jsonann,jsondisp
                         usecase = str(df_concept.loc[i, 'usecase'])
                         semantic_area = str(df_concept.loc[i, 'area'])
 
-                        cursor.execute("SELECT concept_url,name,json_concept FROM concept WHERE concept_url = %s;", (str(concept_url),))
+                        cursor.execute("SELECT concept_url,name,json_concept,annotation_mode FROM concept WHERE concept_url = %s;", (str(concept_url),))
                         ans = cursor.fetchall()
                         if len(ans) == 0:
-                            cursor.execute("INSERT INTO concept (concept_url,name) VALUES (%s,%s);",
-                                       (str(concept_url), str(concept_name)))
+                            cursor.execute("INSERT INTO concept (concept_url,name,annotation_mode) VALUES (%s,%s,%s);",
+                                       (str(concept_url), str(concept_name),'Manual'))
                         else:
                             for el in ans:
-                                desc = el[2]
-                                desc = json.loads(desc)
-                                if desc['insertion_author'] != 'admin' and desc['provenance'] == 'EXAMODE':
-                                    desc['insertion_author'] = 'admin'
-                                    desc = json.dumps(desc)
-                                    cursor.execute('UPDATE concept SET json_concept = %s WHERE concept_url = %s',
-                                                   [desc, el[0]])
+                                # desc = el[2]
+                                # desc = json.loads(desc)
+                                annotation_mode = el[3]
+                                if annotation_mode == 'Automatic':
+                                    cursor.execute('UPDATE concept SET annotation_mode = %s WHERE concept_url = %s',['Manual and Automatic', el[0]])
 
-
-
+                        cursor.execute("UPDATE concept SET annotation_mode = %s WHERE concept_url IN (SELECT c.concept_url FROM concept as c inner join concept_has_uc as ch on ch.concept_url = c.concept_url where ch.name = %s and annotation_mode = %s)",['Automatic', str(usecase),'Manual and Automatic'])
                         cursor.execute("SELECT * FROM concept_has_uc WHERE concept_url = %s AND name=%s;", (str(concept_url),str(usecase)))
                         ans = cursor.fetchall()
                         if len(ans) == 0:
@@ -1809,26 +1727,22 @@ def update_db_util(reports,pubmedfiles,labels,concepts,jsondisp,jsonann,jsondisp
 
             if ((jsonann is not None) and (jsonann != '')) or ((jsondisp is not None) and jsondisp != ''):
                 data = {}
-                fields = []
-                fields_to_ann = []
-                version = get_version()
-                if int(version) != 0:
-                    json_resp1 = get_fields_from_json()
-                    all_fields = json_resp1['all_fields']
-                    fields = json_resp1['fields']
-                    fields_to_ann = json_resp1['fields_to_ann']
+
                 jsondisp = ''.join(jsondisp)
                 jsonann = ''.join(jsonann)
                 jsondisp = jsondisp.split(',')
                 jsonann = jsonann.split(',')
-                # print(jsondisp)
-                # print(jsonann)
+
                 for el in jsondisp:
                     if len(el) > 0:
-                        if el not in fields:
-                            fields.append(el)
-                        if el not in all_fields:
-                            all_fields.append(el)
+                        fields = jsondisp
+                        for el in fields:
+                        # if el not in fields:
+                        #     fields.append(el)
+                            if el not in all_fields:
+                                all_fields.append(el)
+                    else:
+                        fields = []
                 for el in jsonann:
                     if len(el) > 0:
                         if el not in fields_to_ann:
@@ -1837,9 +1751,8 @@ def update_db_util(reports,pubmedfiles,labels,concepts,jsondisp,jsonann,jsondisp
                             all_fields.append(el)
 
                 data['fields'] = fields
-                data['fields_to_ann'] = fields_to_ann
                 data['all_fields'] = all_fields
-
+                data['fields_to_ann'] = fields_to_ann
                 version = get_version()
                 workpath = os.path.dirname(os.path.abspath(__file__))  # Returns the Path your .py file is in
                 version_new = int(version) + 1

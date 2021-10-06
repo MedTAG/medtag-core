@@ -1,0 +1,34 @@
+{
+  "labels": {
+    "Colon": [
+    "Cancer",
+    "Adenomatous polyp - high grade dysplasia",
+    "Adenomatous polyp - low grade dysplasia",
+    "Hyperplastic polyp",
+    "Non-informative"
+  ],
+
+    "Uterine cervix": [
+      "Cancer - squamous cell carcinoma invasive",
+      "Cancer - adenocarcinoma invasive",
+      "Cancer - squamous cell carcinoma in situ",
+      "Cancer - adenocarcinoma in situ",
+      "High grade dysplasia",
+      "Low grade dysplasia",
+      "HPV infection present",
+      "Koilocytes",
+      "Normal glands",
+      "Normal squamous"
+    ],
+    "Lung": [
+      "Cancer - small cell cancer",
+      "Cancer - non-small cell cancer, adenocarcinoma",
+      "Cancer - non-small cell cancer, squamous cell carcinoma",
+      "Cancer - non-small cell cancer, large cell carcinoma",
+      "No cancer"
+    ]
+  },
+  "semantic area": [
+    "Diagnosis","Anatomical Location","Test","Procedure"
+  ]
+}

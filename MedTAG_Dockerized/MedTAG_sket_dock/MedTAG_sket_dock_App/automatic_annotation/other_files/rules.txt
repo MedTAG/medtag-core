@@ -1,0 +1,5 @@
+dysplasia	mild,moderate,severe,low-grade,low grade,low,high-grade,high grade,high,strong,mild-to-moderate,mild to moderate,mild and moderate,moderate-to-severe,moderate to severe,moderate and severe	PRE	colon
+carcinoma	in situ	POST	colon,lung,cervix
+adenocarcinoma	in situ	POST	colon,lung,cervix
+rectum	nos	POST	colon
+colon	nos	POST	colon

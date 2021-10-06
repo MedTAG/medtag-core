@@ -517,13 +517,8 @@ class SKET(object):
         # set output directories
         workpath = os.path.dirname(os.path.abspath(__file__))
         proc_path_par = os.path.join(workpath, os.pardir)
-        # print(proc_path_par)
-        # print(os.listdir(proc_path_par))
         proc_out = os.path.join(proc_path_par, './dataset/processed/' + self.use_case + '/')
         trans_out = os.path.join(proc_path_par, './dataset/translated/' + self.use_case + '/')
-        # proc_out = './dataset/processed/' + self.use_case + '/'
-        # trans_out = './dataset/translated/' + self.use_case + '/'
-
         # process reports
         proc_reports = self.rep_proc.process_data(ds, debug=debug)
         if store:  # store processed reports
@@ -646,15 +641,10 @@ class SKET(object):
 
         # perform entity linking
         concepts = self.med_entity_linking(reports, sim_thr, raw, debug=debug)
-        concepts_f = self.med_entity_linking(reports, sim_thr, False, debug=debug)
-        # print(concepts)
-        # print(concepts_f)
-        labels = self.med_labeling(concepts_f)
         # print(labels)
         if store:  # store concepts
             self.store_concepts(concepts, concepts_out + 'concepts_' + ds_name + '.json')
         if raw:  # return mentions+concepts
-            # print(concepts)
             return concepts
 
         # perform labeling

@@ -1,43 +1,16 @@
-import psycopg2
-import re
-import json
-from MedTAG_sket_dock_App.models import *
-import os
-import numpy
-import hashlib
-from django.db import transaction
-from django.db import connection
-import glob
-import re
 import traceback
-from collections import defaultdict
-# from MedTAG_sket_dock_App. import *
-# from MedTAG_sket_dock_App.utentity_linkingils_CERT_1 import *
-from MedTAG_sket_dock_App.utils import *
-import time
-import owlready2
 from MedTAG_sket_dock_App.utils_configuration_and_update import *
-import argparse
-import warnings
 import shutil
 from MedTAG_sket_dock_App.sket.sket.sket import SKET
 from MedTAG_sket_dock_App.sket.sket.utils.utils import *
+from MedTAG_sket_dock import sket_pipe
 
 def run_sket_pipe(dataset,use_case):
 
     """This method runs the sket pipeline given a use case a report id and the fields"""
-    sket = SKET(use_case, 'en', 'en_core_sci_sm', True, None, None, False, 0)
-
-    concepts = sket.med_pipeline(dataset, 'en', use_case, 0.9, True, True, False)
-    # print(concepts)
-    workpath = os.path.dirname(os.path.abspath(__file__))  # Returns the Path your .py file is in
-    output_concepts_dir = os.path.join(workpath, './sket/outputs/concepts/raw/' + use_case.lower() + '/')
-    # print('is dir',os.path.isdir(output_concepts_dir))
+    # sket = SKET(use_case, 'en', 'en_core_sci_sm', True, None, None, False, 0)
+    concepts = sket_pipe.med_pipeline(dataset, 'en', use_case, 0.9, False, True, False)
     return concepts
-    #     return True
-    # except Exception as e:
-    #     print(e)
-    #     return False
 
 
 def map_labels(usecase,label):
@@ -55,6 +28,7 @@ def map_labels(usecase,label):
             return "Hyperplastic polyp"
         if label == 'ni':
             return "Non-informative"
+
     elif usecase == 'cervix':
         if label == 'cancer_scc_inv':
             return "Cancer - squamous cell carcinoma invasive"
@@ -76,6 +50,7 @@ def map_labels(usecase,label):
             return "Normal glands"
         if label == 'squamous_norm':
             return "Normal squamous"
+
     if usecase == 'lung':
         if label == 'cancer_scc':
             return "Cancer - small cell cancer"
@@ -103,37 +78,29 @@ def aux_start_end(report_string,report_field,mention,use,report):
 
         before_element = report_string.split(report_field)[0]
         after_element = report_string.split(report_field)[1]
-        until_element_value = len(before_element) + len(report_field) + len(
-            after_element.split(str(element_1))[0])
+        until_element_value = len(before_element) + len(report_field) + len(after_element.split(str(element_1))[0])
         start_element = until_element_value + 1
         end_element = start_element + len(str(element_1)) - 1
         mention_1 = inverse_sanitizers(use, report_string, start_element, end_element, mention)
         before_mention_element = str(element_1).split(mention_1)[0]
         start_mention_element = until_element_value + len(before_mention_element) + 1
         end_mention_element = start_mention_element + len(str(mention_1)) - 1
-        # print('start',str(start_mention_element))
-        # print('end',str(end_mention_element))
-        # print(mention_1)
-        # print(mention)
-        # print(len(mention_1))
+
         mention_3 = mention_1
         element_2 = re.sub("[^0-9a-zA-Z]"," ",element_1) # mi serve per non far tirare l'eccezione a regex
         mention_2 = re.sub("[^0-9a-zA-Z]", " ", mention_1)
         if element_1.count(mention_1) > 0:
             starts = [m.start() for m in re.finditer(mention_2, element_2)]
-            # print(starts)
-            # print(element_1)
+            no_collision = True
             for start in starts:
                 mention_3 = mention_1
-                # print(start)
                 # mention reprocessing: example: (mild in this case re throws an exception: it want (mild)
                 int_last_char = start + len(mention_1) -1
                 int_next_of_last = int_last_char+1
-                # print(element_1[int_last_char])
-                # print(element_1[int_next_of_last])
                 while int_next_of_last <= len(element_1)-1 and element_1[int_next_of_last] != ' ':
                     last_next_char = element_1[int_next_of_last]
-                    mention_3 = mention_1 + last_next_char
+                    mention_3 = mention_3 + last_next_char
+                    # mention_3 = mention_1 + last_next_char
                     int_next_of_last += 1
 
                 rob_ns = NameSpace.objects.get(ns_id='Robot')
@@ -150,18 +117,15 @@ def aux_start_end(report_string,report_field,mention,use,report):
                     for annot in mentions_annos:
                         mention = Mention.objects.get(start=annot.start_id,stop = annot.stop, id_report = report, language = annot.language)
                         stop = mention.stop
-
-                        if (int(start_ment) >= int(mention.start) and int(stop_ment) <= int(stop)):
-                            start_mention_element = start_ment
-                            end_mention_element = stop_ment
+                        if (int(start_ment) >= int(mention.start) and int(start_ment) <= int(stop)) or (int(stop_ment) >= int(mention.start) and int(stop_ment) <= int(stop)):
+                            no_collision = False
+                        else:
+                            no_collision = True
                             break
+                if no_collision:
+                    break
 
-        # print(mention_3)
-        # print('\n')
-        # print(start_mention_element)
-        # print(end_mention_element)
         return start_mention_element,end_mention_element,mention_3
-
 
 
 def create_concepts_all_dataset(use,rep,data_1,report_key):
@@ -169,12 +133,6 @@ def create_concepts_all_dataset(use,rep,data_1,report_key):
     """This method creates a json object needed to automatically find the labels."""
 
     workpath = os.path.dirname(os.path.abspath(__file__))  # Returns the Path your .py file is in
-    # output_concepts_dir = os.path.join(workpath, './sket/outputs/concepts/raw/' + use.lower() + '/')
-    # files_conc = os.listdir(output_concepts_dir)  # add path to each file
-    # files_conc = [os.path.join(output_concepts_dir, f) for f in files_conc]
-    # files_conc.sort(key=lambda x: os.path.getmtime(x), reverse=True)
-    # print('files',files_conc)
-
     id = rep[0]
     concepts_to_ret = {}
     concepts_to_ret[id] = {}
@@ -191,7 +149,6 @@ def create_concepts_all_dataset(use,rep,data_1,report_key):
     elif report_key == 'pubmed':
         array_key_to_extract = ['abstract','title']
     for elem in array_key_to_extract:
-
         for el in data_1[rep[0]+'_'+elem]:
             concept_ar = []
             concept = el[1]
@@ -203,14 +160,13 @@ def create_concepts_all_dataset(use,rep,data_1,report_key):
     return concepts_to_ret
 
 
-
 def create_json_to_submit(reports,fields_to_extract):
+
+    """This method creates json reports passed to sket"""
+
     json_to_submit = {}
     json_to_submit['reports'] = []
-    # print(len(reports))
     for rep in reports:
-        # print(str(reports.index(rep)))
-        # print(rep)
         report_json = json.loads(rep[2])
         for field in fields_to_extract:
             json_rep = {}
@@ -220,20 +176,17 @@ def create_json_to_submit(reports,fields_to_extract):
             json_rep['text'] = report_json[field]
             if json_rep['text'] is None:
                 json_rep['text'] = ''
-            # print(json_rep)
             json_to_submit['reports'].append(json_rep)
-    # print(json_to_submit['reports'])
     return json_to_submit
 
 
-def create_auto_gt_1(usecase,fields,report_key):
+def create_auto_gt_1(usecase,fields,report_key,batch):
 
     """This method automatically creates the groundtruths"""
 
     workpath = os.path.dirname(os.path.abspath(__file__))  # Returns the Path your .py file is in
     mode = NameSpace.objects.get(ns_id='Robot')
     ag = User.objects.get(username='Robot_user',ns_id=mode)
-
     use = ''
     # print(usecase)
     usecase_low = usecase.lower()
@@ -243,17 +196,15 @@ def create_auto_gt_1(usecase,fields,report_key):
         use = 'cervix'
     elif usecase_low == 'lung':
         use = 'lung'
-    # if use != '':
-    #     print(use)
-
     update_all = True
+
     if fields == []:
         update_all = False
+    array_key_to_extract = []
     if report_key == 'reports':
         with open(os.path.join(workpath, './automatic_annotation/auto_fields/auto_fields.json'), 'r') as outfile:
             data = json.load(outfile)
             array_key_to_extract = data['extract_fields'][usecase]
-            # print(array_key_to_extract)
     elif report_key == 'pubmed':
         array_key_to_extract = ['title','abstract']
 
@@ -261,7 +212,6 @@ def create_auto_gt_1(usecase,fields,report_key):
     try:
         with transaction.atomic():
             with connection.cursor() as cursor:
-
                 if update_all == True:
                     configure_concepts(cursor, [usecase],'robot')
 
@@ -273,54 +223,106 @@ def create_auto_gt_1(usecase,fields,report_key):
                         new_users.append(user.username)
 
                 if report_key == 'reports':
-                    cursor.execute(
-                        "SELECT id_report,language,report_json FROM report WHERE name=%s AND institute != %s AND (id_report,language) NOT IN (SELECT id_report,language FROM ground_truth_log_file WHERE username=%s)",
-                        [usecase,'PUBMED','Robot_user'])
+                    if batch == 'all' or batch is None:
+                        cursor.execute(
+                            "SELECT id_report,language,report_json FROM report WHERE name=%s AND institute != %s AND language = %s AND (id_report,language) NOT IN (SELECT id_report,language FROM ground_truth_log_file WHERE username=%s)",
+                            [usecase,'PUBMED','english','Robot_user'])
+                    else:
+                        cursor.execute(
+                            "SELECT id_report,language,report_json FROM report WHERE name=%s AND institute != %s AND batch = %s AND language = %s AND (id_report,language) NOT IN (SELECT id_report,language FROM ground_truth_log_file WHERE username=%s)",
+                            [usecase, 'PUBMED',batch,'english' ,'Robot_user'])
                     reports = cursor.fetchall()
 
                 elif report_key == 'pubmed':
-                    cursor.execute(
-                        "SELECT id_report,language,report_json FROM report WHERE name=%s AND institute = %s AND (id_report,language) NOT IN (SELECT id_report,language FROM ground_truth_log_file WHERE username=%s)",
-                        [usecase,'PUBMED','Robot_user'])
+                    if batch == 'all' or batch is None:
+                        cursor.execute(
+                            "SELECT id_report,language,report_json FROM report WHERE name=%s AND institute = %s AND language = %s AND (id_report,language) NOT IN (SELECT id_report,language FROM ground_truth_log_file WHERE username=%s)",
+                            [usecase,'PUBMED','english','Robot_user'])
+                    else:
+                        cursor.execute(
+                            "SELECT id_report,language,report_json FROM report WHERE name=%s AND institute = %s and batch = %s AND language = %s AND (id_report,language) NOT IN (SELECT id_report,language FROM ground_truth_log_file WHERE username=%s)",
+                            [usecase,'PUBMED',batch,'english','Robot_user'])
                     reports = cursor.fetchall()
-
-
 
                 if len(reports) == 0 or update_all:
                     # in questo caso l'utente decide di riannotare tutto, non ci sono report mancanti!!
                     # ELIMINO GT PREGRESSE
-                    if report_key == 'reports':
-                        cursor.execute("DELETE FROM contains WHERE (id_report,language,ns_id) IN (SELECT r.id_report,r.language,c.ns_id FROM report AS r INNER JOIN contains as c ON r.id_report = c.id_report AND r.language = c.language WHERE r.name = %s AND ns_id=%s AND r.institute != %s)",[usecase,'Robot','PUBMED'])
-                        cursor.execute("DELETE FROM annotate WHERE (id_report,language,ns_id) IN (SELECT r.id_report,r.language,c.ns_id FROM report AS r INNER JOIN annotate as c ON r.id_report = c.id_report AND r.language = c.language WHERE r.name = %s AND ns_id=%s AND r.institute != %s)",[usecase,'Robot','PUBMED'])
-                        cursor.execute("DELETE FROM associate WHERE (id_report,language,ns_id) IN (SELECT r.id_report,r.language,c.ns_id FROM report AS r INNER JOIN associate as c ON r.id_report = c.id_report AND r.language = c.language WHERE r.name = %s AND ns_id=%s AND r.institute != %s)",[usecase,'Robot','PUBMED'])
-                        cursor.execute("DELETE FROM linked WHERE (id_report,language,ns_id) IN (SELECT r.id_report,r.language,c.ns_id FROM report AS r INNER JOIN linked as c ON r.id_report = c.id_report AND r.language = c.language WHERE r.name = %s AND ns_id=%s AND r.institute != %s)",[usecase,'Robot','PUBMED'])
-                        cursor.execute("DELETE FROM ground_truth_log_file WHERE (id_report,language,ns_id) IN (SELECT r.id_report,r.language,c.ns_id FROM report AS r INNER JOIN ground_truth_log_file as c ON r.id_report = c.id_report AND r.language = c.language WHERE r.name = %s AND ns_id=%s AND r.institute != %s)",[usecase,'Robot','PUBMED'])
-                    elif report_key == 'pubmed':
-                        cursor.execute(
-                            "DELETE FROM contains WHERE (id_report,language,ns_id) IN (SELECT r.id_report,r.language,c.ns_id FROM report AS r INNER JOIN contains as c ON r.id_report = c.id_report AND r.language = c.language WHERE r.name = %s AND ns_id=%s AND r.institute = %s)",
-                            [usecase, 'Robot','PUBMED'])
-                        cursor.execute(
-                            "DELETE FROM annotate WHERE (id_report,language,ns_id) IN (SELECT r.id_report,r.language,c.ns_id FROM report AS r INNER JOIN annotate as c ON r.id_report = c.id_report AND r.language = c.language WHERE r.name = %s AND ns_id=%s AND r.institute = %s)",
-                            [usecase, 'Robot','PUBMED'])
-                        cursor.execute(
-                            "DELETE FROM associate WHERE (id_report,language,ns_id) IN (SELECT r.id_report,r.language,c.ns_id FROM report AS r INNER JOIN associate as c ON r.id_report = c.id_report AND r.language = c.language WHERE r.name = %s AND ns_id=%s AND r.institute = %s)",
-                            [usecase, 'Robot','PUBMED'])
-                        cursor.execute(
-                            "DELETE FROM linked WHERE (id_report,language,ns_id) IN (SELECT r.id_report,r.language,c.ns_id FROM report AS r INNER JOIN linked as c ON r.id_report = c.id_report AND r.language = c.language WHERE r.name = %s AND ns_id=%s AND r.institute = %s)",
-                            [usecase, 'Robot','PUBMED'])
-                        cursor.execute(
-                            "DELETE FROM ground_truth_log_file WHERE (id_report,language,ns_id) IN (SELECT r.id_report,r.language,c.ns_id FROM report AS r INNER JOIN ground_truth_log_file as c ON r.id_report = c.id_report AND r.language = c.language WHERE r.name = %s AND ns_id=%s AND r.institute = %s)",
-                            [usecase, 'Robot','PUBMED'])
+                    if batch == 'all' or batch is None:
+                        if report_key == 'reports':
+                            cursor.execute(
+                                "DELETE FROM contains WHERE (id_report,language,ns_id) IN (SELECT r.id_report,r.language,c.ns_id FROM report AS r INNER JOIN contains as c ON r.id_report = c.id_report AND r.language = c.language WHERE r.name = %s AND ns_id=%s AND r.institute != %s)",
+                                [usecase, 'Robot', 'PUBMED'])
+                            cursor.execute(
+                                "DELETE FROM annotate WHERE (id_report,language,ns_id) IN (SELECT r.id_report,r.language,c.ns_id FROM report AS r INNER JOIN annotate as c ON r.id_report = c.id_report AND r.language = c.language WHERE r.name = %s AND ns_id=%s AND r.institute != %s)",
+                                [usecase, 'Robot', 'PUBMED'])
+                            cursor.execute(
+                                "DELETE FROM associate WHERE (id_report,language,ns_id) IN (SELECT r.id_report,r.language,c.ns_id FROM report AS r INNER JOIN associate as c ON r.id_report = c.id_report AND r.language = c.language WHERE r.name = %s AND ns_id=%s AND r.institute != %s)",
+                                [usecase, 'Robot', 'PUBMED'])
+                            cursor.execute(
+                                "DELETE FROM linked WHERE (id_report,language,ns_id) IN (SELECT r.id_report,r.language,c.ns_id FROM report AS r INNER JOIN linked as c ON r.id_report = c.id_report AND r.language = c.language WHERE r.name = %s AND ns_id=%s AND r.institute != %s)",
+                                [usecase, 'Robot', 'PUBMED'])
+                            cursor.execute(
+                                "DELETE FROM ground_truth_log_file WHERE (id_report,language,ns_id) IN (SELECT r.id_report,r.language,c.ns_id FROM report AS r INNER JOIN ground_truth_log_file as c ON r.id_report = c.id_report AND r.language = c.language WHERE r.name = %s AND ns_id=%s AND r.institute != %s)",
+                                [usecase, 'Robot', 'PUBMED'])
+                        elif report_key == 'pubmed':
+                            cursor.execute(
+                                "DELETE FROM contains WHERE (id_report,language,ns_id) IN (SELECT r.id_report,r.language,c.ns_id FROM report AS r INNER JOIN contains as c ON r.id_report = c.id_report AND r.language = c.language WHERE r.name = %s AND ns_id=%s AND r.institute = %s)",
+                                [usecase, 'Robot', 'PUBMED'])
+                            cursor.execute(
+                                "DELETE FROM annotate WHERE (id_report,language,ns_id) IN (SELECT r.id_report,r.language,c.ns_id FROM report AS r INNER JOIN annotate as c ON r.id_report = c.id_report AND r.language = c.language WHERE r.name = %s AND ns_id=%s AND r.institute = %s)",
+                                [usecase, 'Robot', 'PUBMED'])
+                            cursor.execute(
+                                "DELETE FROM associate WHERE (id_report,language,ns_id) IN (SELECT r.id_report,r.language,c.ns_id FROM report AS r INNER JOIN associate as c ON r.id_report = c.id_report AND r.language = c.language WHERE r.name = %s AND ns_id=%s AND r.institute = %s)",
+                                [usecase, 'Robot', 'PUBMED'])
+                            cursor.execute(
+                                "DELETE FROM linked WHERE (id_report,language,ns_id) IN (SELECT r.id_report,r.language,c.ns_id FROM report AS r INNER JOIN linked as c ON r.id_report = c.id_report AND r.language = c.language WHERE r.name = %s AND ns_id=%s AND r.institute = %s)",
+                                [usecase, 'Robot', 'PUBMED'])
+                            cursor.execute(
+                                "DELETE FROM ground_truth_log_file WHERE (id_report,language,ns_id) IN (SELECT r.id_report,r.language,c.ns_id FROM report AS r INNER JOIN ground_truth_log_file as c ON r.id_report = c.id_report AND r.language = c.language WHERE r.name = %s AND ns_id=%s AND r.institute = %s)",
+                                [usecase, 'Robot', 'PUBMED'])
+                    else:
+                        if report_key == 'reports':
+                            cursor.execute("DELETE FROM contains WHERE (id_report,language,ns_id) IN (SELECT r.id_report,r.language,c.ns_id FROM report AS r INNER JOIN contains as c ON r.id_report = c.id_report AND r.language = c.language WHERE r.name = %s AND ns_id=%s AND r.institute != %s and batch = %s)",[usecase,'Robot','PUBMED',batch])
+                            cursor.execute("DELETE FROM annotate WHERE (id_report,language,ns_id) IN (SELECT r.id_report,r.language,c.ns_id FROM report AS r INNER JOIN annotate as c ON r.id_report = c.id_report AND r.language = c.language WHERE r.name = %s AND ns_id=%s AND r.institute != %s and batch = %s)",[usecase,'Robot','PUBMED',batch])
+                            cursor.execute("DELETE FROM associate WHERE (id_report,language,ns_id) IN (SELECT r.id_report,r.language,c.ns_id FROM report AS r INNER JOIN associate as c ON r.id_report = c.id_report AND r.language = c.language WHERE r.name = %s AND ns_id=%s AND r.institute != %s and batch = %s)",[usecase,'Robot','PUBMED',batch])
+                            cursor.execute("DELETE FROM linked WHERE (id_report,language,ns_id) IN (SELECT r.id_report,r.language,c.ns_id FROM report AS r INNER JOIN linked as c ON r.id_report = c.id_report AND r.language = c.language WHERE r.name = %s AND ns_id=%s AND r.institute != %s and batch = %s)",[usecase,'Robot','PUBMED',batch])
+                            cursor.execute("DELETE FROM ground_truth_log_file WHERE (id_report,language,ns_id) IN (SELECT r.id_report,r.language,c.ns_id FROM report AS r INNER JOIN ground_truth_log_file as c ON r.id_report = c.id_report AND r.language = c.language WHERE r.name = %s AND ns_id=%s AND r.institute != %s and batch = %s)",[usecase,'Robot','PUBMED',batch])
+                        elif report_key == 'pubmed':
+                            cursor.execute(
+                                "DELETE FROM contains WHERE (id_report,language,ns_id) IN (SELECT r.id_report,r.language,c.ns_id FROM report AS r INNER JOIN contains as c ON r.id_report = c.id_report AND r.language = c.language WHERE r.name = %s AND ns_id=%s AND r.institute = %s and batch = %s)",
+                                [usecase, 'Robot','PUBMED',batch])
+                            cursor.execute(
+                                "DELETE FROM annotate WHERE (id_report,language,ns_id) IN (SELECT r.id_report,r.language,c.ns_id FROM report AS r INNER JOIN annotate as c ON r.id_report = c.id_report AND r.language = c.language WHERE r.name = %s AND ns_id=%s AND r.institute = %s and batch = %s)",
+                                [usecase, 'Robot','PUBMED',batch])
+                            cursor.execute(
+                                "DELETE FROM associate WHERE (id_report,language,ns_id) IN (SELECT r.id_report,r.language,c.ns_id FROM report AS r INNER JOIN associate as c ON r.id_report = c.id_report AND r.language = c.language WHERE r.name = %s AND ns_id=%s AND r.institute = %s and batch = %s)",
+                                [usecase, 'Robot','PUBMED',batch])
+                            cursor.execute(
+                                "DELETE FROM linked WHERE (id_report,language,ns_id) IN (SELECT r.id_report,r.language,c.ns_id FROM report AS r INNER JOIN linked as c ON r.id_report = c.id_report AND r.language = c.language WHERE r.name = %s AND ns_id=%s AND r.institute = %s and batch = %s)",
+                                [usecase, 'Robot','PUBMED',batch])
+                            cursor.execute(
+                                "DELETE FROM ground_truth_log_file WHERE (id_report,language,ns_id) IN (SELECT r.id_report,r.language,c.ns_id FROM report AS r INNER JOIN ground_truth_log_file as c ON r.id_report = c.id_report AND r.language = c.language WHERE r.name = %s AND ns_id=%s AND r.institute = %s and batch = %s)",
+                                [usecase, 'Robot','PUBMED',batch])
 
                     if report_key == 'pubmed':
-                        cursor.execute(
-                            "SELECT id_report,language,report_json FROM report WHERE name=%s AND institute = %s",
-                            [usecase,'PUBMED'])
+                        if batch == 'all' or batch is None:
+                            cursor.execute(
+                                "SELECT id_report,language,report_json FROM report WHERE name=%s AND institute = %s AND language = %s",
+                                [usecase, 'PUBMED','english'])
+                        else:
+                            cursor.execute(
+                                "SELECT id_report,language,report_json FROM report WHERE name=%s AND institute = %s and batch = %s AND language = %s",
+                                [usecase,'PUBMED',batch,'english'])
                         reports = cursor.fetchall()
                     elif report_key == 'reports':
-                        cursor.execute(
-                            "SELECT id_report,language,report_json FROM report WHERE name=%s AND institute != %s",
-                            [usecase, 'PUBMED'])
+                        if batch == 'all' or batch is None:
+                            cursor.execute(
+                                "SELECT id_report,language,report_json FROM report WHERE name=%s AND institute != %s AND language = %s",
+                                [usecase, 'PUBMED','english'])
+                        else:
+                            cursor.execute(
+                                "SELECT id_report,language,report_json FROM report WHERE name=%s AND institute != %s and batch = %s AND language  = %s",
+                                [usecase, 'PUBMED',batch,'english'])
                         reports = cursor.fetchall()
                 # sket = SKET(use, 'en', 'en_core_sci_sm', True, None, None, False, 0)
                 json_to_submit = create_json_to_submit(reports,array_key_to_extract)
@@ -329,34 +331,24 @@ def create_auto_gt_1(usecase,fields,report_key):
                 # print('concepts_annotated',concepts_annotated)
                 for rep in reports:
                     # print(reports.index(rep))
-
                     report = Report.objects.get(id_report=rep[0], language=rep[1])
                     labels_created = False
                     concepts_created = False
                     mentions_created = False
                     linked_created = False
                     report_string = rep[2]
-                    report_json = json.loads(rep[2])
                     for elemento in array_key_to_extract:
                         if elemento in json.loads(rep[2]).keys():
 
                             data = concepts_annotated
-
                             report_field = elemento
-                            # print(elemento)
                             asso = data[rep[0] + '_' + elemento]
-                            # for el in asso:
-                            #     print(el)
-                            asso = sorted(asso, key=lambda x: len(x[0]),
-                                   reverse=True)
-                            # for el in asso:
-                            #     print(el)
+                            asso = sorted(asso, key=lambda x: len(x[0]),reverse=True)
+
                             for element in asso:
                                 mention_raw = element[0]
-                                # print(element)
                                 concept = element[1]
                                 concept_url = concept[0]
-                                concept_name = concept[1]
                                 concept_area = concept[2]
                                 if concept_url == 'SevereColonDysplasia':
                                     concept_url = 'https://w3id.org/examode/ontology/SevereColonDysplasia'
@@ -367,13 +359,9 @@ def create_auto_gt_1(usecase,fields,report_key):
                                     concept_row = concept_row.first()
                                     semantic_area = SemanticArea.objects.get(name=concept_area)
                                     start_mention_element,end_mention_element,mention = aux_start_end(report_string,report_field,mention_raw,use,report)
-                                    # print(start_mention_element)
-                                    # print(end_mention_element)
-                                    # print(mention)
-                                    if not Mention.objects.filter(mention_text=mention,
-                                                                  start=int(start_mention_element),
-                                                                  stop=int(end_mention_element), id_report=report,
-                                                                  language=rep[1]).exists():
+
+                                    if not Mention.objects.filter(mention_text=mention,start=int(start_mention_element),
+                                                                  stop=int(end_mention_element), id_report=report,language=rep[1]).exists():
 
                                         Mention.objects.create(mention_text=mention, start=int(start_mention_element),
                                                                stop=int(end_mention_element), id_report=report,
@@ -462,7 +450,8 @@ def create_auto_gt_1(usecase,fields,report_key):
                     for label in labels_keys:
                         if labels[label] == 1:
                             final_label = map_labels(use,label)
-                            labb = AnnotationLabel.objects.get(label = final_label,seq_number__lte=20,name=usecase)
+                            lab_arr = ['Automatic','Manual and Automatic']
+                            labb = AnnotationLabel.objects.get(label = final_label,annotation_mode__in=lab_arr,name=usecase)
                             seq = labb.seq_number
                             lab = AnnotationLabel.objects.get(seq_number=seq, name=usecase)
                             if (not Associate.objects.filter(id_report=report, language=rep[1], label=lab,
@@ -476,8 +465,7 @@ def create_auto_gt_1(usecase,fields,report_key):
                                     if username != 'Robot_user':
                                         user = User.objects.get(username=username, ns_id='Robot')
                                         last_asso = Associate.objects.get(username=ag, ns_id=mode,language=report.language,
-                                                                 id_report=report, seq_number=lab.seq_number,
-                                                                 label=lab)
+                                                                 id_report=report, seq_number=lab.seq_number,label=lab)
                                         Associate.objects.create(insertion_time=last_asso.insertion_time, username=user,
                                                                  ns_id=mode, language=report.language,
                                                                  id_report=report, seq_number=lab.seq_number,
@@ -536,7 +524,6 @@ def create_auto_gt_1(usecase,fields,report_key):
                                                                   id_report=report,ns_id=mode,
                                                                   language=rep[1], insertion_time=last_gt.insertion_time)
 
-
                     if linked_created:
                         if GroundTruthLogFile.objects.filter(gt_type = 'concept-mention',username=ag,ns_id=mode,id_report = report,language=rep[1]).exists():
                             GroundTruthLogFile.objects.filter(gt_type='concept-mention', username=ag, ns_id=mode, id_report=report,
@@ -554,8 +541,6 @@ def create_auto_gt_1(usecase,fields,report_key):
                                 GroundTruthLogFile.objects.create(username=user, gt_type='concept-mention', gt_json=ser_us_gt,
                                                                   id_report=report,ns_id=mode,
                                                                   language=rep[1], insertion_time=last_gt.insertion_time)
-
-
         return True,''
 
     except Exception as error:
@@ -563,43 +548,6 @@ def create_auto_gt_1(usecase,fields,report_key):
         print(traceback.format_exc())
         print('ROLLBACK')
         return False,error
-
-    finally:
-
-        workpath = os.path.dirname(os.path.abspath(__file__))  # Returns the Path your .py file is in
-        output_concepts_dir = os.path.join(workpath, './sket/outputs')
-        for root, dirs, files in os.walk(output_concepts_dir):
-            for f in files:
-                os.unlink(os.path.join(root, f))
-            for d in dirs:
-                shutil.rmtree(os.path.join(root, d))
-
-        dataset_dir = os.path.join(workpath, './sket/dataset')
-        for root, dirs, files in os.walk(dataset_dir):
-            for f in files:
-                os.unlink(os.path.join(root, f))
-            for d in dirs:
-                shutil.rmtree(os.path.join(root, d))
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 def inverse_sanitizers(use_case,rep_string,start,end,record):

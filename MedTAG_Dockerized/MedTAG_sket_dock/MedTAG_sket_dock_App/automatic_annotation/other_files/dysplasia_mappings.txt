@@ -1,0 +1,14 @@
+mild	mild	colon
+low-grade	mild	colon
+low grade	mild	colon
+low	mild	colon
+moderate	moderate	colon
+mild-to-moderate	moderate	colon
+mild to moderate	moderate	colon
+mild and moderate	moderate	colon
+severe	severe	colon
+high-grade	severe	colon
+high grade	severe	colon
+moderate-to-severe	severe	colon
+moderate to severe	severe	colon
+moderate and severe	severe	colon

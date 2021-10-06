@@ -48,17 +48,7 @@ class OntoProc(object):
 		"""
 
         disease = self.disease[use_case]
-        # sparql = "PREFIX exa: <https://w3id.org/examode/ontology/> " \
-        #          "PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#> " \
-        #          "select ?iri ?iri_label ?semantic_area_label where { " \
-        #          "?iri rdfs:label ?iri_label ; exa:AssociatedDisease ?disease . " \
-        #          "filter (langMatches( lang(?iri_label), 'en')). " \
-        #          "?disease rdfs:label '" + disease + "'@en . " \
-        #          "OPTIONAL {?iri exa:hasSemanticArea ?semantic_area . " \
-        #          "?semantic_area rdfs:label ?semantic_area_label . " \
-        #          "filter (langMatches( lang(?semantic_area_label), 'en')).} " \
-        #          "} " \
-        #          "limit 1000"
+
         sparql = "PREFIX exa: <https://w3id.org/examode/ontology/> " \
                  "PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#> " \
                  "select ?iri ?iri_label ?semantic_area_label where { " \
@@ -80,9 +70,6 @@ class OntoProc(object):
             # print(e[1].toPython())
             ontology_dict['iri'].append(e[0].toPython() if e[0] else None)
             ontology_dict['label'].append(e[1].toPython() if e[1] else None)
-            # ontology_dict['SNOMED'].append(e[2].toPython().replace('*', '') if e[2] else None)
-            # ontology_dict['UMLS'].append(e[3].toPython() if e[3] else None)
-            # ontology_dict['semantic_area'].append(e[4].toPython() if e[4] else None)
             ontology_dict['semantic_area_label'].append(e[2].toPython() if e[2] else None)
         return pd.DataFrame(ontology_dict)
 

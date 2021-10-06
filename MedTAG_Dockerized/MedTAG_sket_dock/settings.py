@@ -13,7 +13,7 @@ SECRET_KEY = '@lz@il^r84q80c)r$yl-vo7ez(rdhwjnaz-98-kj6)t@h0$wvp'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-#ALLOWED_HOSTS = ['localhost']
+#ALLOWED_HOSTS = ['localhost','exa.dei.unipd.it']
 ALLOWED_HOSTS = ['*']
 
 
