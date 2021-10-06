@@ -27,6 +27,8 @@ MedTAG provides the following functionalities:
   and “unannotated-first” policy
 - web responsive design to support mobile devices
 - download of annotations and ground truths in several formats (i.e., BioC/XML, CSV, JSON)
+  ![download](./img/screenshots/download_modal_800.png)
+
 - support for multi-label annotation
 - support for document-level annotations
 - multilingual support
@@ -34,7 +36,14 @@ MedTAG provides the following functionalities:
 - support for schema configuration, so that users can easily import data (i.e., reports, labels and concepts), as CSV files, and choose which report fields to annotate.
 - support for automatic annotation of all the annotation types for reports belonging to three use cases: colon, uterine cervix and lung. Automatic annotation is available for english reports 
 - support for annotation of PubMed articles
+- support for visualization of report's annotations
+  ![stats](./img/screenshots/annotation_stats_800.png)
+
 - support for inter-annotator agreement
+  ![majority_vote](./img/screenshots/majority_vote_900.png)
+
+- support for the upload and visualization of other team members' ground-truths
+  ![upload](./img/screenshots/upload_800.png)
 
 ## Files
 
@@ -50,7 +59,6 @@ The directory tree is organized as follows:
 # Requirements
 
 Since MedTAG is provided as a Docker container, both [docker](https://docs.docker.com/engine/reference/commandline/docker/) and [docker-compose](https://docs.docker.com/compose/) are required. To this aim, check out the [installation procedure](https://docs.docker.com/get-docker/) for your platform. Moreover, the MedTAG docker container instantiates a [PostgreSQL](https://www.postgresql.org/) database, so if you plan to insert a large amount of data make sure you have enough disk space. For what concerns the browser choice, Chrome would be the best browser to work with MedTAG. Nevertheless, both Safari and Firefox are supported as well.
-
 
 
 
