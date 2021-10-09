@@ -89,7 +89,7 @@ def upload_files(files,user_to,overwrite):
                 cols = list(df.columns)
                 labels = ['username', 'annotation_mode', 'id_report', 'language','batch', 'institute', 'usecase', 'label']
                 mentions = ['username', 'annotation_mode', 'id_report', 'language','batch', 'institute', 'usecase', 'start', 'stop',
-                         'mention_text', 'concept_name', 'concept_url', 'area']
+                         'mention_text']
                 concepts = ['username', 'annotation_mode', 'id_report', 'language','batch', 'institute', 'usecase', 'concept_url',
                          'concept_name', 'area']
                 linking = ['username', 'annotation_mode', 'id_report', 'language','batch', 'institute', 'usecase', 'start', 'stop',
