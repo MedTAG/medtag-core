@@ -1,1 +1,1 @@
-{"total_fields": {"uterine cervix": [], "colon": [], "lung": []}, "extract_fields": {"uterine cervix": [], "colon": [], "lung": []}}
+{"total_fields": {"uterine cervix": [], "colon": ["age", "codint", "gender", "materials", "report_id", "internalid", "raw_diagnoses", "report_id_hashed", "target_diagnosis"], "lung": []}, "extract_fields": {"uterine cervix": [], "colon": [], "lung": []}}
