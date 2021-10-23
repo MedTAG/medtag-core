@@ -1789,7 +1789,7 @@ def download_ground_truths(request):
         lang = None
     else:
         lang = str(lang)
-    batch = request.GET.get('batch',None)
+    batch = request.GET.get('batch','') #modified 22/10
     if batch == '' or batch == 'all':
         batch = None
     else:

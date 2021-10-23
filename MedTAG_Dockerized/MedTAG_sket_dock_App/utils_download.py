@@ -414,23 +414,7 @@ def create_csv_to_download(report_type,annotation_mode,username,use,inst,lang,ac
 
 def create_json_to_download(report_type,action,username,use,annotation_mode = None,inst = None,lang = None,all = None,batch = None):
     json_resp = {}
-    usecase = UseCase.objects.get(name=use)
-    batch_num = []
-    if batch is None:
-        b = Report.objects.filter(name=usecase).values('batch')
-        for el in b:
-            if el['batch'] not in batch_num:
-                batch_num.append(el['batch'])
-    else:
-        batch_num.append(batch)
-
-    json_resp['groundtruths'] = []
-    json_resp['username'] = username
-    json_resp['usecase'] = use
-    if annotation_mode == 'Human':
-        json_resp['annotation_mode'] = 'Manual'
-    else:
-        json_resp['annotation_mode'] = 'Automatic'
+    #modified 22/10
 
     if all != 'all' and action != None and action != '':
         json_resp['action'] = action
@@ -463,7 +447,23 @@ def create_json_to_download(report_type,action,username,use,annotation_mode = No
         return json_resp
 
     cursor = connection.cursor()
+    usecase = UseCase.objects.get(name=use)
+    batch_num = []
+    if batch is None:
+        b = Report.objects.filter(name=usecase).values('batch')
+        for el in b:
+            if el['batch'] not in batch_num:
+                batch_num.append(el['batch'])
+    else:
+        batch_num.append(batch)
 
+    json_resp['groundtruths'] = []
+    json_resp['username'] = username
+    json_resp['usecase'] = use
+    if annotation_mode == 'Human':
+        json_resp['annotation_mode'] = 'Manual'
+    else:
+        json_resp['annotation_mode'] = 'Automatic'
 
     if report_type == 'reports':
 
