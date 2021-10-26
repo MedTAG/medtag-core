@@ -7,7 +7,7 @@ pandas
 torch==1.7.1
 numpy
 tqdm==4.55.0
-rdflib
+rdflib==5.0.0
 spacy==2.3.5
 textdistance==4.2.0
 transformers==4.2.2
@@ -18,4 +18,5 @@ scikit_learn==0.24.2
 sentencepiece
 openpyxl
 lxml
+pyparsing==2.4.7
 
