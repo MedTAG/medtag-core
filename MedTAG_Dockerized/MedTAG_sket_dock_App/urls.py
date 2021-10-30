@@ -81,6 +81,7 @@ urlpatterns = [
 
     path('get_report_translations',views.get_report_translations,name='get_report_translations'),
     path('check_PUBMED_reports',views.check_PUBMED_reports,name='check_PUBMED_reports'),
+    path('check_medtag_reports', views.check_medtag_reports, name='check_medtag_reports'),  # ADDED 21/10/21
     path('check_presence_exa_conc_lab',views.check_presence_exa_conc_lab,name='check_presence_exa_conc_lab'),
     # path('get_all_mentions',views.get_all_mentions,name='get_all_mentions'),
     path('delete_reports',views.delete_reports,name='delete_reports'),

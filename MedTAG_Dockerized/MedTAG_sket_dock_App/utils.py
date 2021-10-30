@@ -1294,7 +1294,7 @@ def check_user_agent_gt_presence(username,usecase):
     return groundTruths,groundTruths1
 
 
-def copy_rows(use_case,user_from,user_to,overwrite = None):
+def copy_rows_1(use_case,user_from,user_to,overwrite = None):
 
     """This method copies the annotations performed by the robot: the automatic annotations are copied and they can be
     considered as done by the user whose name space is Robot. The user can modify them and check the auto annotations."""
@@ -2207,3 +2207,254 @@ def restore_robot_annotation(report,action,user):
         json_response = {'message': 'Robot mode, Robot GT restored.'}
         return (json_response)
 
+
+
+# ADDED 26/10/20211
+def copy_rows(use_case,user_from,user_to,overwrite = None):
+
+    """This method copies the annotations performed by the robot: the automatic annotations are copied and they can be
+    considered as done by the user whose name space is Robot. The user can modify them and check the auto annotations."""
+
+
+    try:
+        with transaction.atomic():
+            with connection.cursor() as cursor:
+                cursor.execute(
+                    "SELECT g.username,g.id_report,g.language,g.label,g.seq_number,g.insertion_time,g.ns_id FROM report AS r INNER JOIN associate AS g ON r.id_report = g.id_report AND r.language = g.language WHERE r.name = %s AND g.username = %s;",
+                    [str(use_case), str(user_from)])
+                rows_asso = cursor.fetchall()
+
+                for row in rows_asso:
+                    mode = NameSpace.objects.get(ns_id = row[6])
+                    username = User.objects.get(username=user_to, ns_id=mode)
+                    report = Report.objects.get(id_report=row[1], language=row[2])
+                    label = AnnotationLabel.objects.get(seq_number=row[4], label=row[3])
+
+                    if overwrite == True and GroundTruthLogFile.objects.filter(username=username,ns_id=mode,id_report=report,language=report.language,gt_type='labels').exists():
+                        GroundTruthLogFile.objects.filter(username=username, ns_id=mode, id_report=report,
+                                                          language=report.language,
+                                                          gt_type='labels').delete()
+                        Associate.objects.filter(username=username, ns_id=mode, id_report=report,
+                                                 language=report.language).delete()
+
+                for row in rows_asso:
+                    mode = NameSpace.objects.get(ns_id=row[6])
+                    username = User.objects.get(username=user_to, ns_id=mode)
+                    report = Report.objects.get(id_report=row[1], language=row[2])
+                    label = AnnotationLabel.objects.get(seq_number=row[4], label=row[3])
+                    if (overwrite == False and not GroundTruthLogFile.objects.filter(username=username, ns_id=mode,
+                                                     id_report=report, language=row[2],gt_type='labels').exists()) or overwrite == True or user_from == 'Robot_user':
+
+                        Associate.objects.create(username=username, ns_id=mode, insertion_time=row[5], label=label,
+                                                 seq_number=row[4],id_report=report, language=row[2])
+
+                cursor.execute(
+                    "SELECT g.insertion_time,g.gt_json,g.id_report,g.language,g.ns_id FROM report AS r INNER JOIN ground_truth_log_file AS g ON r.id_report = g.id_report AND r.language = g.language WHERE  r.name = %s AND g.username = %s AND gt_type = %s;",
+                    [str(use_case), str(user_from), 'labels'])
+                rows_gt_lab = cursor.fetchall()
+                for row in rows_gt_lab:
+                    mode = NameSpace.objects.get(ns_id=row[4])
+                    username = User.objects.get(username=user_to, ns_id=mode)
+                    report_gt = Report.objects.get(id_report = row[2], language = row[3])
+
+                    if (overwrite == False and not GroundTruthLogFile.objects.filter(username=username, ns_id=mode,
+                                                     id_report=report_gt, language=report_gt.language,gt_type = 'labels').exists()) \
+                            or overwrite == True or user_from == 'Robot_user':
+                        gt = json.loads(row[1])
+                        gt['username'] = user_to
+                        GroundTruthLogFile.objects.create(username=username, ns_id=mode, insertion_time=row[0],
+                                                          id_report=report_gt, language=report_gt.language,
+                                                          gt_json=gt, gt_type='labels')
+
+
+                cursor.execute(
+                    "SELECT g.username,g.id_report,g.language,g.start,g.stop,g.insertion_time,g.ns_id FROM report AS r INNER JOIN annotate AS g ON r.id_report = g.id_report AND r.language = g.language WHERE  r.name = %s AND g.username = %s;",
+                    [str(use_case), str(user_from)])
+                rows = cursor.fetchall()
+
+                for row in rows:
+                    mode = NameSpace.objects.get(ns_id=row[6])
+                    username = User.objects.get(username=user_to, ns_id=mode)
+                    report = Report.objects.get(id_report=row[1], language=row[2])
+                    mention = Mention.objects.get(start=row[3], stop=row[4], id_report=report, language=report.language)
+
+                    if overwrite == True and GroundTruthLogFile.objects.filter(username=username,
+                                                                               ns_id=mode,
+                                                                               id_report=report,
+                                                                               language=report.language,
+                                                                               gt_type='mentions').exists():
+                        GroundTruthLogFile.objects.filter(username=username, ns_id=mode, id_report=report,
+                                                          language=report.language,
+                                                          gt_type='mentions').delete()
+                        Annotate.objects.filter(username=username, ns_id=mode, id_report=report,
+                                                 language=report.language).delete()
+                for row in rows:
+                    mode = NameSpace.objects.get(ns_id=row[6])
+                    username = User.objects.get(username=user_to, ns_id=mode)
+                    report = Report.objects.get(id_report=row[1], language=row[2])
+                    mention = Mention.objects.get(start=row[3], stop=row[4], id_report=report,
+                                                  language=report.language)
+
+                    if (overwrite == False  and not GroundTruthLogFile.objects.filter(username=username,gt_type='mentions', ns_id=mode,
+                                                                                       id_report=report, language=row[
+                            2]).exists()) or overwrite == True or user_from == 'Robot_user':
+
+                        Annotate.objects.create(username=username, ns_id=mode, insertion_time=row[5], start=mention, stop=mention.stop,id_report=report,language=row[2])
+                cursor.execute(
+                    "SELECT g.insertion_time,g.gt_json,g.id_report,g.language,g.ns_id FROM report AS r INNER JOIN ground_truth_log_file AS g ON r.id_report = g.id_report AND r.language = g.language WHERE  r.name = %s AND g.username = %s AND gt_type = %s;",
+                    [str(use_case), str(user_from), 'mentions'])
+                rows_gt_lab = cursor.fetchall()
+                for row in rows_gt_lab:
+                    mode = NameSpace.objects.get(ns_id=row[4])
+                    username = User.objects.get(username=user_to, ns_id=mode)
+                    report_gt = Report.objects.get(id_report=row[2],language = row[3])
+                    if (overwrite == False and not GroundTruthLogFile.objects.filter(username=username,
+                                                                                       gt_type='mentions', ns_id=mode,
+                                                                                       id_report=report_gt, language=row[
+                            3]).exists()) or overwrite == True or user_from == 'Robot_user':
+                        gt = json.loads(row[1])
+                        gt['username'] = user_to
+                        GroundTruthLogFile.objects.create(username=username, ns_id=mode, insertion_time=row[0],
+                                                          id_report=report_gt, language=report_gt.language, gt_json=gt,
+                                                          gt_type='mentions')
+
+
+                cursor.execute(
+                    "SELECT g.username,g.id_report,g.language,g.concept_url,g.name,g.insertion_time,g.ns_id FROM report AS r INNER JOIN contains AS g ON r.id_report = g.id_report AND r.language = g.language WHERE  r.name = %s AND g.username = %s;",
+                    [str(use_case), str(user_from)])
+                rows = cursor.fetchall()
+
+                for row in rows:
+                    mode = NameSpace.objects.get(ns_id=row[6])
+                    username = User.objects.get(username=user_to, ns_id=mode)
+                    report = Report.objects.get(id_report=row[1], language=row[2])
+                    concept = Concept.objects.get(concept_url=row[3])
+                    sem = SemanticArea.objects.get(name=row[4])
+                    if overwrite == True and GroundTruthLogFile.objects.filter(username=username,
+                                                                               ns_id=mode,
+                                                                               id_report=report,
+                                                                               language=report.language,
+                                                                               gt_type='concepts').exists():
+                        gt = json.loads(row[1])
+                        gt['username'] = user_to
+                        GroundTruthLogFile.objects.filter(username=username, ns_id=mode, id_report=report,
+                                                          language=report.language,
+                                                          gt_type='concepts').delete()
+                        Contains.objects.filter(username=username, ns_id=mode, id_report=report,
+                                                 language=report.language).delete()
+                for row in rows:
+                    mode = NameSpace.objects.get(ns_id=row[6])
+                    username = User.objects.get(username=user_to, ns_id=mode)
+                    report = Report.objects.get(id_report=row[1], language=row[2])
+                    concept = Concept.objects.get(concept_url=row[3])
+                    sem = SemanticArea.objects.get(name=row[4])
+                    if (overwrite == False and not GroundTruthLogFile.objects.filter(username=username,gt_type='concepts', ns_id=mode,
+                                                                                       id_report=report, language=row[
+                            2]).exists()) or overwrite == True or user_from == 'Robot_user':
+
+                        Contains.objects.create(username=username, ns_id=mode, insertion_time=row[5], concept_url=concept,
+                                            name=sem,id_report=report,language=row[2])
+                cursor.execute(
+                    "SELECT g.insertion_time,g.gt_json,g.id_report,g.language,g.ns_id FROM report AS r INNER JOIN ground_truth_log_file AS g ON r.id_report = g.id_report AND r.language = g.language WHERE  r.name = %s AND g.username = %s AND gt_type = %s;",
+                    [str(use_case), str(user_from), 'concepts'])
+                rows_gt_lab = cursor.fetchall()
+                for row in rows_gt_lab:
+                    mode = NameSpace.objects.get(ns_id=row[4])
+                    username = User.objects.get(username=user_to, ns_id=mode)
+                    report = Report.objects.get(id_report=row[2],language = row[3])
+                    if (overwrite == False and not GroundTruthLogFile.objects.filter(username=username,
+                                                                                       gt_type='concepts', ns_id=mode,
+                                                                                       id_report=report, language=row[
+                            3]).exists()) or overwrite == True or user_from == 'Robot_user':
+                        gt = json.loads(row[1])
+                        gt['username'] = user_to
+                        GroundTruthLogFile.objects.create(username=username, ns_id=mode, insertion_time=row[0],
+                                                          id_report=report, language=report.language,
+                                                          gt_json=gt,
+                                                          gt_type='concepts')
+                cursor.execute(
+                    "SELECT g.username,g.id_report,g.language,g.concept_url,g.name,g.start,g.stop,g.insertion_time,g.ns_id FROM report AS r INNER JOIN linked AS g ON r.id_report = g.id_report AND r.language = g.language WHERE  r.name = %s AND username = %s;",
+                    [str(use_case), str(user_from)])
+                rows = cursor.fetchall()
+
+                for row in rows:
+                    mode = NameSpace.objects.get(ns_id=row[8])
+                    username = User.objects.get(username=user_to, ns_id=mode)
+                    username_from = User.objects.get(username=user_from, ns_id=mode)
+                    report = Report.objects.get(id_report=row[1], language=row[2])
+                    concept = Concept.objects.get(concept_url=row[3])
+                    sem = SemanticArea.objects.get(name=row[4])
+                    from_arr = []
+                    to_arr = []
+                    for el in Annotate.objects.filter(id_report = report,language = report.language, username = username_from,ns_id = mode).values('start','stop'):
+                        from_arr.append(el['start'])
+                    for el in Annotate.objects.filter(id_report=report, language=report.language,
+                                                          username=username, ns_id=mode).values('start', 'stop'):
+                        to_arr.append(el['start'])
+                    mention = Mention.objects.get(start=row[5], stop=row[6], id_report=report, language=report.language)
+                    if overwrite == True and GroundTruthLogFile.objects.filter(username=username,
+                                                                               ns_id=mode,
+                                                                               id_report=report,
+                                                                               language=report.language,
+                                                                               gt_type='concept-mention').exists():
+                        GroundTruthLogFile.objects.filter(username=username, ns_id=mode, id_report=report,
+                                                          language=report.language,
+                                                          gt_type='concept-mention').delete()
+                        Linked.objects.filter(username=username, ns_id=mode, id_report=report,
+                                                 language=report.language).delete()
+                for row in rows:
+                    mode = NameSpace.objects.get(ns_id=row[8])
+                    username = User.objects.get(username=user_to, ns_id=mode)
+                    username_from = User.objects.get(username=user_from, ns_id=mode)
+                    report = Report.objects.get(id_report=row[1], language=row[2])
+                    concept = Concept.objects.get(concept_url=row[3])
+                    sem = SemanticArea.objects.get(name=row[4])
+                    from_arr = []
+                    to_arr = []
+                    for el in Annotate.objects.filter(id_report=report, language=report.language,
+                                                      username=username_from, ns_id=mode).values('start', 'stop'):
+                        from_arr.append(el['start'])
+                    for el in Annotate.objects.filter(id_report=report, language=report.language,
+                                                      username=username, ns_id=mode).values('start', 'stop'):
+                        to_arr.append(el['start'])
+                    mention = Mention.objects.get(start=row[5], stop=row[6], id_report=report,
+                                                  language=report.language)
+                    if (overwrite == False and set(to_arr) == set(from_arr) and not GroundTruthLogFile.objects.filter(username=username,
+                                                                                       gt_type='concept-mention', ns_id=mode,
+                                                                                       id_report=report, language=row[
+                            2]).exists()) or overwrite == True or user_from == 'Robot_user':
+
+                        Linked.objects.create(username=username, ns_id=mode, insertion_time=row[7], name=sem,
+                                          start=mention, stop=mention.stop, concept_url=concept, id_report=report,
+                                          language=row[2])
+
+
+                cursor.execute(
+                    "SELECT g.insertion_time,g.gt_json,g.id_report,g.language,g.ns_id FROM report AS r INNER JOIN ground_truth_log_file AS g ON r.id_report = g.id_report AND r.language = g.language WHERE  r.name = %s AND g.username = %s AND gt_type = %s;",
+                    [str(use_case), str(user_from), 'concept-mention'])
+                rows_gt_lab = cursor.fetchall()
+                for row in rows_gt_lab:
+                    mode = NameSpace.objects.get(ns_id=row[4])
+                    username = User.objects.get(username=user_to, ns_id=mode)
+                    report = Report.objects.get(id_report=row[2],language = row[3])
+                    from_arr = []
+                    to_arr = []
+                    for el in Annotate.objects.filter(id_report=report, language=report.language,
+                                                      username=username_from, ns_id=mode).values('start', 'stop'):
+                        from_arr.append(el['start'])
+                    for el in Annotate.objects.filter(id_report=report, language=report.language,
+                                                      username=username, ns_id=mode).values('start', 'stop'):
+                        to_arr.append(el['start'])
+                    if (overwrite == False and set(to_arr) == set(from_arr) and not GroundTruthLogFile.objects.filter(username=username,
+                                                                                     gt_type='concept-mention', ns_id=mode,
+                                                                                     id_report=report, language=row[
+                                3]).exists()) or overwrite == True or user_from == 'Robot_user':
+                        gt = json.loads(row[1])
+                        gt['username'] = user_to
+                        GroundTruthLogFile.objects.create(username=username, ns_id=mode, insertion_time=row[0],
+                                                      id_report=report, language=report.language, gt_json=gt,
+                                                      gt_type='concept-mention')
+            return True
+    except Exception as e:
+        print(e)
+        return False

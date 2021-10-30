@@ -3077,6 +3077,19 @@ def check_PUBMED_reports(request):
             json_resp['count'] += 1
     return JsonResponse(json_resp,safe=False)
 
+#ADDED 21/10/21
+def check_medtag_reports(request):
+
+    """This view returns the number of pubmed articles in the db"""
+
+    json_resp = {}
+    json_resp['count'] = 0
+    medtag_arts = Report.objects.all().exclude(institute = 'PUBMED')
+    # for el in pubmed_arts:
+    #     if el.id_report.startswith('PUBMED'):
+    json_resp['count'] = medtag_arts.count()
+    return JsonResponse(json_resp,safe=False)
+
 
 def get_uses_missing_exa(request):
 
