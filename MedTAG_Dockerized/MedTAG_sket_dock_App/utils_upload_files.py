@@ -43,13 +43,16 @@ def check_uploaded_files(files):
         else:
             # check if colunns are allowed and without duplicates
             cols = list(df.columns)
-            labels = ['username', 'annotation_mode', 'id_report', 'language', 'institute', 'usecase', 'label']
-            mentions = ['username', 'annotation_mode', 'id_report', 'language', 'institute', 'usecase', 'start', 'stop',
-                     'mention_text']
-            concepts = ['username', 'annotation_mode', 'id_report', 'language', 'institute', 'usecase', 'start', 'stop',
-                     'mention_text', 'concept_name', 'concept_url', 'area']
-            linking = ['username', 'annotation_mode', 'id_report', 'language', 'institute', 'usecase', 'concept_url',
-                     'concept_name', 'area']
+            labels = ['username', 'annotation_mode', 'id_report', 'language', 'batch', 'institute', 'usecase', 'label']
+            mentions = ['username', 'annotation_mode', 'id_report', 'language', 'batch', 'institute', 'usecase',
+                        'start', 'stop',
+                        'mention_text']
+            concepts = ['username', 'annotation_mode', 'id_report', 'language', 'batch', 'institute', 'usecase',
+                        'concept_url',
+                        'concept_name', 'area']
+            linking = ['username', 'annotation_mode', 'id_report', 'language', 'batch', 'institute', 'usecase', 'start',
+                       'stop',
+                       'mention_text', 'concept_name', 'concept_url', 'area']
 
             if set(cols) != set(labels) and set(cols) != set(mentions) and set(cols) != set(concepts) and set(cols) != set(linking):
                 json_resp['message'] = 'ERROR - ' + files[
