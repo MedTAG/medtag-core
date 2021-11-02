@@ -41,10 +41,13 @@ function OptionsModal(props){
     const handleClose = () => SetShowModal(false);
     const [Reports,SetReports] = reports
     const [Options_usecases, Setoptions_usecases] = useState([])
+    const [Options_rep, Setoptions_rep] = useState([])
     const [Options_language, Setoptions_language] = useState([])
     const [Options_institute, Setoptions_institute] = useState([])
     const [Options_batch, Setoptions_batch] = useState([])
+    const [Options_Reptype, SetOptions_Reptype] = useState([])
     const [PubMedPresence,SetPubMedPresence] = useState(false)
+    const [MedTAGPresence,SetMedTAGPresence] = useState(false)
     // const [Options_ann, Setoptions_ann] = useState([])
     const [FieldsUseCasesToExtract,SetFieldsUseCasesToExtract] = useState(false)
     const [FieldsAlreadyExtracted,SetFieldsAlreadyExtracted] = useState(false)
@@ -113,6 +116,7 @@ function OptionsModal(props){
         if(UseCaseList.length > 0 && InstituteList.length > 0 && LanguageList.length > 0){
             var options_institute = []
             var options_language = []
+            var options_rep = []
             // var options_annotation = []
             // UseCaseList.map((uc)=>{
             //     options_usecases.push({value: uc, label: uc})
@@ -127,20 +131,37 @@ function OptionsModal(props){
             })
             Setoptions_institute(options_institute)
             Setoptions_language(options_language)
+            axios.get('http://0.0.0.0:8000/check_PUBMED_reports').then(function(response){
+                if(response.data['count'] > 0){
+                    SetPubMedPresence(true)
+                    options_rep.push({value: 'pubmed', label: 'PubMed articles'})
+
+                }
+
+
+            }).catch(function(error){
+                console.log('error: ',error)
+            })
+            // ADDED 21/10/21
+            axios.get('http://0.0.0.0:8000/check_medtag_reports').then(function(response){
+                if(response.data['count'] > 0){
+                    SetMedTAGPresence(true)
+                    options_rep.push({value: 'reports', label: 'MedTAG reports'})
+                }
+                else{
+                    SetMedTAGPresence(false)
+                    // SetRep('reports')
+                }
+
+            }).catch(function(error){
+                console.log('error: ',error)
+            })
+            SetOptions_Reptype(options_rep)
 
         }
         axios.get('http://0.0.0.0:8000/get_post_fields_for_auto').then(function(response){
             SetFieldsUseCasesToExtract(response.data['total_fields'])
             SetFieldsAlreadyExtracted(response.data['extract_fields'])
-
-        }).catch(function(error){
-            console.log('error: ',error)
-        })
-        axios.get('http://0.0.0.0:8000/check_PUBMED_reports').then(function(response){
-            if(response.data['count'] > 0){
-                SetPubMedPresence(true)
-            }
-
 
         }).catch(function(error){
             console.log('error: ',error)
@@ -293,8 +314,7 @@ function OptionsModal(props){
 
                             className='selection'
                             onChange={(option)=>handleChangeReportType(option)}
-                            options={PubMedPresence === true ? [{value:'reports',label:'MedTAG reports'},{value:'pubmed',label:'PUBMED articles'}] :
-                                [{value:'reports',label:'MedTAG reports'}]}
+                            options={Options_Reptype}
 
                         />
                         <hr/>

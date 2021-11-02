@@ -245,7 +245,7 @@ function MajorityVoteModal(props) {
     return (
         <div className='container-fluid'>
 
-            {(newInd !== false  && ReportString !== ''  && Reports.length > 0) ? <Row>
+            {(newInd !== false  && ReportString !== '' && (Fields.length > 0 || FieldsToAnn.length > 0) && Reports.length > 0) ? <Row>
                 <Col md={6} style={{fontSize:'1rem'}}>
                     <div className='report_modal'>
                         <ReportListUpdated report_id = {Reports[newInd].id_report} report = {Reports[newInd].report_json} action={selectedAct}/>

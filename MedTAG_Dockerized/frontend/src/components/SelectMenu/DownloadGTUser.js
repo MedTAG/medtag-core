@@ -63,6 +63,8 @@ function DownloadGTUser(props){
     const [EXAPresenceConcepts,SetEXAPresenceConcepts] = useState(false)
     const [EXAPresenceLabels,SetEXAPresenceLabels] = useState(false)
     const [AutoPresence,SetAutoPresence] = useState(false)
+    const [MedTAGPresence,SetMedTAGPresence] = useState(false)
+
     useEffect(()=>{
 
         if(UseCaseList.length > 0 && InstituteList.length > 0 && LanguageList.length > 0){
@@ -107,6 +109,19 @@ function DownloadGTUser(props){
             }
             else{
                 SetPubMedPresence(false)
+                // SetRep('reports')
+            }
+
+        }).catch(function(error){
+            console.log('error: ',error)
+        })
+        // ADDED 21/10/21
+        axios.get('http://0.0.0.0:8000/check_medtag_reports').then(function(response){
+            if(response.data['count'] > 0){
+                SetMedTAGPresence(true)
+            }
+            else{
+                SetMedTAGPresence(false)
                 // SetRep('reports')
             }
 
@@ -406,22 +421,23 @@ function DownloadGTUser(props){
         if(Use !== ''){
             var opt = []
             var batch = []
-            if(Rep === 'reports'){
-                axios.get('http://0.0.0.0:8000/get_batch_list',{params:{usecase:Use}}).then(response=>{
+            axios.get('http://0.0.0.0:8000/get_batch_list',{params:{usecase:Use}}).then(response=>{
 
-                    response.data['batch_list'].map(el=>{
-                        console.log('value',el)
-                        opt.push({value:el,label:el})
-                    })
-                    batch = response.data['batch_list']
-                    Setoptions_batch(opt)
-                    SetBatchList(response.data['batch_list'])
+                response.data['batch_list'].map(el=>{
+                    console.log('value',el)
+                    opt.push({value:el,label:el})
                 })
-                if(batch.length === 1){
-                    SetBatch(1)
-                }
+                batch = response.data['batch_list']
+                Setoptions_batch(opt)
+                SetBatchList(response.data['batch_list'])
+            })
+            if(batch.length === 1){
+                SetBatch(1)
             }
-            else if(Rep === 'pubmed'){
+
+            // ADDED 21/10/21
+            var opt = []
+            if(Rep === 'pubmed'){
                 axios.get('http://0.0.0.0:8000/get_PUBMED_batch_list',{params:{usecase:Use}}).then(response=>{
 
                     response.data['batch_list'].map(el=>{
@@ -441,7 +457,7 @@ function DownloadGTUser(props){
 
 
         }
-    },[Use])
+    },[Use,Rep])
 
     useEffect(()=>{
         console.log('batch',Options_batch)
@@ -466,7 +482,7 @@ function DownloadGTUser(props){
                                     <div><FontAwesomeIcon icon={faStickyNote}  /> Report type <i>(Mandatory)</i></div>
                                     <Form.Control value ={Rep} className='selection' as="select" onChange={(option)=>handleChangeReportType(option)}>
                                         <option value="">Select a report type...</option>
-                                        <option value='reports'>MedTAG reports</option>
+                                        {MedTAGPresence === true && <option value='reports'>MedTAG reports</option>}
                                         {PubMedPresence === true && <option value='pubmed'>PubMed articles</option>}
 
                                     </Form.Control>

@@ -10,6 +10,8 @@
 
 ::-webkit-scrollbar {
     width: 6px !important;
+    /*added 18/10*/
+    height: 6px !important;
 }
 
 /* Track */

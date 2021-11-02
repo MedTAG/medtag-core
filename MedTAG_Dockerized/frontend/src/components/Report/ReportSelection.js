@@ -12,20 +12,51 @@ import Autocomplete from '@mui/material/Autocomplete';
 import './search_select.css'
 
 function ReportSelection(props){
-    const { reportArray,reports,annotation,indexList,reportString, orderVar,index, report,action, save, insertionTimes } = useContext(AppContext);
+    const { reportArray,indexList, orderVar, insertionTimes } = useContext(AppContext);
+    const { fieldsToAnn,userchosen,finalcount,language,username,showmember,showmajority,reached,showautoannotation,reportString,fields,annotation,report,usecase,concepts,semanticArea, disButton,labelsToInsert, selectedconcepts,linkingConcepts, radio, checks,save, userLabels, labelsList, mentionsList, action, reports, index, mentionSingleWord, allMentions, tokens, associations } = useContext(AppContext);
+
     const [AnnotatedIndexList,SetAnnotatedIndexList] = indexList;
     const [OrderVar, SetOrderVar] = orderVar;
     const [Reports,SetReports] = reports
-    const [Annotation,SetAnnotation] = annotation
     const [Action,SetAction] = action
     const [Index,SetIndex] = index
     const [Report,SetReport] = report
-    const [SavedGT,SetSavedGT] = save;
     const [ArrayInsertionTimes,SetArrayInsertionTimes] = insertionTimes;
     const [SelectOptions,SetSelectOptions] = reportArray;
     const [NotAnn,SetNotAnn] = useState(false)
     const [AlreadyAnn,SetAlreadyAnn] = useState(false)
-
+    const [associations_to_show,SetAssociations_to_show] = associations;
+    const [labels, setLabels] = labelsList
+    const [Checks, setChecks] = checks;
+    const [Fields,SetFields] = fields;
+    const [FieldsToAnn,SetFieldsToAnn] = fieldsToAnn;
+    const [SavedGT,SetSavedGT] = save;
+    const [LabToInsert,SetLabToInsert] = labelsToInsert;
+    const [Annotation,SetAnnotation] = annotation
+    const [UseCase,SetUseCase] = usecase;
+    const [reportsString, setReportsString] = reportString;
+    const [FinalCount, SetFinalCount] = finalcount;
+    const [FinalCountReached, SetFinalCountReached] = reached;
+    const [ShowAutoAnn,SetShowAutoAnn] = showautoannotation;
+    const [ShowMemberGt,SetShowMemberGt] =showmember
+    const [ShowMajorityGt,SetShowMajorityGt] = showmajority
+    const [Disable_Buttons, SetDisable_Buttons] = disButton;
+    const [labels_to_show, setLabels_to_show] = userLabels;
+    const [RadioChecked, SetRadioChecked] = radio;
+    const [selectedConcepts, setSelectedConcepts] = selectedconcepts;
+    const [Children,SetChildren] = tokens;
+    const [mentions_to_show,SetMentions_to_show] = mentionsList;
+    const [WordMention, SetWordMention] = mentionSingleWord;
+    const [AllMentions, SetAllMentions] = allMentions;
+    const [UserLabels, SetUserLables] = userLabels;
+    const [Disabled,SetDisabled] = useState(true); //PER CLEAR
+    const [ExaRobot,SetExaRobot] = useState(false)
+    const [Concepts, SetConcepts] = concepts;
+    // const [SelectedLang,SetSelectedLang] = selectedLang
+    const [Username,SetUsername] = username
+    const [SemanticArea, SetSemanticArea] = semanticArea;
+    const [UserChosen,SetUserChosen] = userchosen
+    const [Language, SetLanguage] = language;
 
     useEffect(()=>{
         // console.log('ACTION',Action)
@@ -92,11 +123,14 @@ function ReportSelection(props){
         SetReport(Reports[Number(index)])
     }
 
+    // modified 24/10
     useEffect(()=>{
         var arr_to_opt = []
         var new_arr_to_opt = []
         var already_ann = []
+        var already_ann_opt = []
         var not_ann = []
+        var not_ann_opt = []
         var index_list_ann = []
         var index_list_not_ann = []
         var index_list = []
@@ -107,44 +141,13 @@ function ReportSelection(props){
             Reports.map((report,ind)=>
                 {
 
-                    console.log('insertion_times',ArrayInsertionTimes[ind])
-
-                    var str = (ind+1).toString() +' - '+ Reports[ind].id_report.toString()
-                    console.log('str',str)
-
-                    if(ArrayInsertionTimes[ind] !== 0){
-                        arr_to_opt.push({id:ind, label: str})
-                        already_ann.push(ind)
-                        // arr_to_opt.push(<option value={ind} style={{'font-size':'0.8rem'}}>{ind+1}&nbsp;-&nbsp;{Reports[ind].id_report}</option>)
-                        // already_ann.push(<option value={ind} style={{'font-size':'0.8rem'}}>{ind+1}&nbsp;-&nbsp;{Reports[ind].id_report}</option>)
-                        index_list_ann.push(ind)
-
-                    }
-                    else{
-                        // arr_to_opt.push(<option value={ind} style={{'font-weight':'bold','font-size':'0.8rem'}}>{ind+1}&nbsp;-&nbsp;{Reports[ind].id_report}</option>)
-                        // not_ann.push(<option value={ind} style={{'font-weight':'bold','font-size':'0.8rem'}}>{ind+1}&nbsp;-&nbsp;{Reports[ind].id_report}</option>)
-                        arr_to_opt.push({id:ind, label: str})
-                        not_ann.push(ind)
-                        index_list_not_ann.push(ind)
-
-                    }
-
-                }
-
-                )
-            SetNotAnn(not_ann)
-            SetAlreadyAnn(already_ann)
-        }
-        else if(Reports.length>0 && Annotation === 'Automatic' && ArrayInsertionTimes.length>0  ){
-
-            Reports.map((report,ind)=>
-                {
-
                     var str = (ind+1).toString() +' - '+ Reports[ind].id_report.toString()
                     console.log('str',str)
                     if(ArrayInsertionTimes[ind] !== 0){
                         arr_to_opt.push({id:ind, label: str})
+                        already_ann_opt.push({id:ind, label: str})
                         already_ann.push(ind)
+                        index_list.push(ind)
                         // arr_to_opt.push(<option value={ind} style={{'font-size':'0.8rem'}}>{ind+1}&nbsp;-&nbsp;{Reports[ind].id_report}</option>)
                         // already_ann.push(<option value={ind} style={{'font-size':'0.8rem'}}>{ind+1}&nbsp;-&nbsp;{Reports[ind].id_report}</option>)
                         index_list_ann.push(ind)
@@ -153,7 +156,10 @@ function ReportSelection(props){
                     }
                     else{
                         arr_to_opt.push({id:ind, label: str})
+                        not_ann_opt.push({id:ind, label: str})
                         not_ann.push(ind)
+                        index_list.push(ind)
+
                         // arr_to_opt.push(<option value={ind} style={{'font-weight':'bold','font-size':'0.8rem'}}>{ind+1}&nbsp;-&nbsp;{Reports[ind].id_report}</option>)
                         // not_ann.push(<option value={ind} style={{'font-weight':'bold','font-size':'0.8rem'}}>{ind+1}&nbsp;-&nbsp;{Reports[ind].id_report}</option>)
                         index_list_not_ann.push(ind)
@@ -165,15 +171,54 @@ function ReportSelection(props){
             )
             SetNotAnn(not_ann)
             SetAlreadyAnn(already_ann)
+            SetAnnotatedIndexList(index_list)
+        }
+        else if(Reports.length>0 && Annotation === 'Automatic' && ArrayInsertionTimes.length>0  ){
+
+            Reports.map((report,ind)=>
+                {
+
+                    var str = (ind+1).toString() +' - '+ Reports[ind].id_report.toString()
+                    console.log('str',str)
+                    if(ArrayInsertionTimes[ind] !== 0){
+                        arr_to_opt.push({id:ind, label: str})
+                        already_ann_opt.push({id:ind, label: str})
+                        already_ann.push(ind)
+                        index_list.push(ind)
+                        // arr_to_opt.push(<option value={ind} style={{'font-size':'0.8rem'}}>{ind+1}&nbsp;-&nbsp;{Reports[ind].id_report}</option>)
+                        // already_ann.push(<option value={ind} style={{'font-size':'0.8rem'}}>{ind+1}&nbsp;-&nbsp;{Reports[ind].id_report}</option>)
+                        index_list_ann.push(ind)
+
+
+                    }
+                    else{
+                        arr_to_opt.push({id:ind, label: str})
+                        not_ann_opt.push({id:ind, label: str})
+                        not_ann.push(ind)
+                        index_list.push(ind)
+
+                        // arr_to_opt.push(<option value={ind} style={{'font-weight':'bold','font-size':'0.8rem'}}>{ind+1}&nbsp;-&nbsp;{Reports[ind].id_report}</option>)
+                        // not_ann.push(<option value={ind} style={{'font-weight':'bold','font-size':'0.8rem'}}>{ind+1}&nbsp;-&nbsp;{Reports[ind].id_report}</option>)
+                        index_list_not_ann.push(ind)
+
+                    }
+
+                }
+
+            )
+            SetNotAnn(not_ann)
+            SetAlreadyAnn(already_ann)
+            SetAnnotatedIndexList(index_list)
+
         }
 
 
         if(OrderVar === 'annotation'){
-            new_arr_to_opt = [...not_ann,...already_ann]
+            new_arr_to_opt = [...not_ann_opt,...already_ann_opt]
             index_list = [...index_list_not_ann,...index_list_ann]
             SetSelectOptions(new_arr_to_opt)
             SetAnnotatedIndexList(index_list)
-            // SetReports(index_list)
+            console.log('actual rep',index_list.indexOf(Index))
 
         }
         else{
@@ -183,10 +228,128 @@ function ReportSelection(props){
 
     },[ArrayInsertionTimes,OrderVar])
 
+    const submit = (event,token) => {
+        event.preventDefault();
+        if(Action === 'labels'){
+            token = 'annotation'
+        }
+        if(Action === 'concept-mention'){
+            token = 'linked'
+        }
+        // if(Saved === false){
+        //     SetSaved(true)
+        if (token.startsWith('mentions')) {
+            SetWordMention('')
+            Children.map(child=>{
+                if(child.getAttribute('class') === 'token-selected' || child.getAttribute('class') === 'token-adj-dx' ||child.getAttribute('class') === 'token-adj-sx'){
+                    child.setAttribute('class','token')
+                }
+            })
+            var data_to_ret = {'mentions': mentions_to_show}
+            // console.log('mentions: ' ,mentions_to_show)
+
+            axios.post('http://0.0.0.0:8000/mention_insertion/insert', {
+                mentions: data_to_ret['mentions'],language:Language,
+                report_id: Reports[Index].id_report
+            })
+                .then(function (response) {
+
+                    SetSavedGT(prevState => !prevState)
+                    // console.log('RISPOSTA',response);
+                })
+                .catch(function (error) {
+                    //alert('ATTENTION')
+                    console.log(error);
+                });
+
+        }else if (token.startsWith('annotation')) {
+            //const data = new FormData(document.getElementById("annotation-form"));
+            // console.log('labtoinsert',LabToInsert)
+            axios.post('http://0.0.0.0:8000/annotationlabel/insert', {
+                //labels: data.getAll('labels'),
+                labels: LabToInsert,language:Language,
+                report_id: Reports[Index].id_report,
+            })
+                .then(function (response) {
+                    // console.log(response);
+
+                    // {concepts_list.length > 0 ? SetSavedGT(true) : SetSavedGT(false)}
+                    if (LabToInsert.length === 0) {
+                        SetRadioChecked(false)
+
+                    }
+                    // SetLabToInsert([])
+                    SetSavedGT(prevState => !prevState)
+                })
+                .catch(function (error) {
+
+                    console.log(error);
+                });
+
+        } else if (token.startsWith('linked')) {
+            const data = new FormData(document.getElementById("linked-form"));
+            //var data_to_ret = {'linked': data.getAll('linked')}
+
+
+            data_to_ret = {'linked': associations_to_show}
+            if (data_to_ret['linked'].length >= 0) {
+                axios.post('http://0.0.0.0:8000/insert_link/insert', {
+                    linked: data_to_ret['linked'],language:Language,
+                    report_id: Reports[Index].id_report
+                })
+                    .then(function (response) {
+                        // console.log(response);
+                        // {concepts_list.length > 0 ? SetSavedGT(true) : SetSavedGT(false)}
+                        SetWordMention('')
+                        // console.log('aggiornato concepts');
+
+                        SetSavedGT(prevState => !prevState)
+                    })
+                    .catch(function (error) {
+
+                        console.log(error);
+                    });
+            }
+        } else if (token.startsWith('concepts')) {
+            // console.log(selectedConcepts);
+
+            let concepts_list = []
+
+            for (let area of SemanticArea) {
+                for (let concept of selectedConcepts[area]) {
+                    concepts_list.push(concept);
+                }
+            }
+
+            // console.log(concepts_list);
+
+            axios.post('http://0.0.0.0:8000/contains/update', {
+                    concepts_list: concepts_list,language:Language,
+                    report_id: Reports[Index].id_report,
+                },
+            )
+                .then(function (response) {
+                    // console.log(response);
+                    // {concepts_list.length > 0 ? SetSavedGT(true) : SetSavedGT(false)}
+                    SetSavedGT(prevState => !prevState)
+
+                })
+                .catch(function (error) {
+
+                    console.log(error);
+                });
+        }
+
+
+
+    }
+
     useEffect(()=>{
-        console.log('notann',NotAnn)
-        console.log('already',AlreadyAnn)
-    },[NotAnn,AlreadyAnn])
+        console.log('notann',SelectOptions[AnnotatedIndexList.indexOf(Index)])
+        console.log('notann',SelectOptions)
+        console.log('notann',AnnotatedIndexList)
+        console.log('notann',Index)
+    },[AnnotatedIndexList,Index,SelectOptions])
 
     return(
 
@@ -199,9 +362,9 @@ function ReportSelection(props){
                 includeInputInList
                 size = "small"
                 options={SelectOptions}
-                value={SelectOptions[Index]}
+                value={SelectOptions[AnnotatedIndexList.indexOf(Index)]} //modified 24/10/2021
                 onChange={(event, newValue) => {
-
+                    submit(event,Action);
                     SetIndex(Number(newValue['id']))
                     SetReport(Reports[Number(newValue['id'])])
                 }}

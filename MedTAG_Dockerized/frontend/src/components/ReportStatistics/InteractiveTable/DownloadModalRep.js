@@ -151,7 +151,7 @@ function DownloadModalRep(props) {
                         }
 
 
-                    } else if (selectedFormatAll === 'csv') {
+                    } else if (selectedActAll === 'csv') {
                         if (selectedActMajor === 'concept-mention') {
                             FileDownload((response.data), 'linking_csv_ground_truth.csv');
                         } else {

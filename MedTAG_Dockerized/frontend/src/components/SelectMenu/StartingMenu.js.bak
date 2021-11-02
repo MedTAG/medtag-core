@@ -60,9 +60,11 @@ function StartingMenu(props){
     const [Options_language, Setoptions_language] = useState([])
     const [Options_institute, Setoptions_institute] = useState([])
     const [Options_batch, Setoptions_batch] = useState([])
+    const [Options_reptype, SetOptions_reptype] = useState([])
     // const [agentPresence,setAgentPresence] = useState(0)
     // const [showSelectManual,setShowSelectManual] = useState(false)
     const [Options_annotation, SetOptions_annotation] = useState([])
+    const [MedTAGPresence,SetMedTAGPresence] = useState(false) // ADDED 210/10/21
 
     const [Username,SetUsername] = username;
     // const Options_annotation = ([{value: 'manual', label: 'Manual'},{value: 'Automatic', label: 'Automatic'}])
@@ -73,6 +75,7 @@ function StartingMenu(props){
         if(UseCaseList.length > 0 && InstituteList.length > 0 && LanguageList.length > 0){
             var options_institute = []
             var options_language = []
+            var options_reps = []
 
             InstituteList.map((inst)=>{
                 if (inst !== 'PUBMED'){
@@ -92,6 +95,7 @@ function StartingMenu(props){
         axios.get('http://127.0.0.1:8000/check_PUBMED_reports').then(function(response){
             if(response.data['count'] > 0){
                 SetPubMedPresence(true)
+                options_reps.push({value: 'pubmed', label: 'PubMED articles'})
             }
             else{
                 SetPubMedPresence(false)
@@ -101,6 +105,22 @@ function StartingMenu(props){
         }).catch(function(error){
             console.log('error: ',error)
         })
+        // ADDED 21/10/21
+        axios.get('http://127.0.0.1:8000/check_medtag_reports').then(function(response){
+            if(response.data['count'] > 0){
+                SetMedTAGPresence(true)
+                options_reps.push({value: 'reports', label: 'MedTAG articles'})
+
+            }
+            else{
+                SetMedTAGPresence(false)
+                // SetRep('reports')
+            }
+
+        }).catch(function(error){
+            console.log('error: ',error)
+        })
+        SetOptions_reptype(options_reps) //Added 21/10/21
 
     },[UseCaseList,InstituteList,LanguageList])
 
@@ -110,7 +130,7 @@ function StartingMenu(props){
             SetIns('PUBMED')
             SetLang('english')
 
-            axios.get("http://127.0.0.1:8000/pubmed_missing_auto").then(response => {
+            axios.get("http://127.0.0.1:8000/pubmed_reports").then(response => {
                 (response.data['usecase'].map(uc=>{
                     options_usecases.push({value: uc, label: uc})
 
@@ -119,9 +139,13 @@ function StartingMenu(props){
             }).catch(function (error){console.log(error)})
         }
         else if(Rep==='reports'){
-            UseCaseList.map((uc)=>{
-                options_usecases.push({value: uc, label: uc})
-            })
+            axios.get("http://127.0.0.1:8000/medtag_reports").then(response => {
+                (response.data['usecase'].map(uc=>{
+                    options_usecases.push({value: uc, label: uc})
+
+                }));
+
+            }).catch(function (error){console.log(error)})
         }
         Setoptions_usecases(options_usecases)
 
@@ -277,12 +301,32 @@ function StartingMenu(props){
                 }
 
             })
+            // ADDED 21/10/2021
+            var opt = []
+            if(Rep === 'pubmed'){
+                axios.get('http://127.0.0.1:8000/get_PUBMED_batch_list',{params:{usecase:Use}}).then(response=>{
+
+                    SetBatchList(response.data['batch_list'])
+                    if(response.data['batch_list'].length === 1){
+                        SetBatch(1)
+                    }
+                    else{
+                        response.data['batch_list'].map(el=>{
+                            opt.push({value:el,label:el})
+                        })
+                    }})
+            }
+
+
+
+
+
             Setoptions_batch(opt)
 
 
 
         }
-    },[Use])
+    },[Use,Rep])
 
     return(
         <div>
@@ -309,8 +353,7 @@ function StartingMenu(props){
 
                             className='selection'
                             onChange={(option)=>handleChangeReportType(option)}
-                            options={PubMedPresence === true ? [{value:'reports',label:'MedTAG reports'},{value:'pubmed',label:'PUBMED articles'}]
-                                : [{value:'reports',label:'MedTAG reports'}]}
+                            options={Options_reptype} // ADDED 21/10/21
 
                         /><hr/></div>
 

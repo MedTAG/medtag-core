@@ -132,23 +132,56 @@ function SelectMenu(props){
         else{
             i = 'reports'
         }
-        axios.post("http://127.0.0.1:8000/new_credentials", {
-            usecase: UseCase, language: Language, institute: e.target.value, annotation: Annotation,report_type: i,batch:BatchList[0]
-        })
-            .then(function (response) {
-                SetInstitute(e.target.value)
-                SetUpdateMenu(true)
-                SetReportType(i)
-                SetBatch(BatchList[0])
-                SetBatchNumber(BatchList[0])
+
+        SetUse(e.target.value)
+        var opt_batches = []
+        if(i === 'pubmed'){
+            axios.get('http://127.0.0.1:8000/get_PUBMED_batch_list', {params: {usecase: e.target.value}}).then(response => {
+                SetBatchList(response.data['batch_list']);
+                opt_batches = response.data['batch_list']
+                axios.post("http://127.0.0.1:8000/new_credentials", {
+                    usecase: UseCase, language: Language, institute: e.target.value, annotation: Annotation,report_type: i,batch:opt_batches[0]
+                })
+                    .then(function (response) {
+                        SetInstitute(e.target.value)
+                        SetUpdateMenu(true)
+                        SetReportType(i)
+                        SetBatch(opt_batches[0])
+                        SetBatchNumber(opt_batches[0])
 
 
 
+                    })
+                    .catch(function (error) {
+
+                        console.log('ERROR', error);
+                    });
             })
-            .catch(function (error) {
+        }
+        else{
+            axios.get('http://127.0.0.1:8000/get_batch_list', {params: {usecase: e.target.value}}).then(response => {
+                SetBatchList(response.data['batch_list']);
+                opt_batches = response.data['batch_list']
+                axios.post("http://127.0.0.1:8000/new_credentials", {
+                    usecase: UseCase, language: Language, institute: e.target.value, annotation: Annotation,report_type: i,batch:opt_batches[0]
+                })
+                    .then(function (response) {
+                        SetInstitute(e.target.value)
+                        SetUpdateMenu(true)
+                        SetReportType(i)
+                        SetBatch(opt_batches[0])
+                        SetBatchNumber(opt_batches[0])
 
-                console.log('ERROR', error);
-            });
+
+
+                    })
+                    .catch(function (error) {
+
+                        console.log('ERROR', error);
+                    });
+            })
+        }
+
 
 
     }

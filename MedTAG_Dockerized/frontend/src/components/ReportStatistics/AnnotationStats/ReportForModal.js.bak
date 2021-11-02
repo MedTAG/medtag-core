@@ -145,7 +145,7 @@ function ReportForModal(props) {
     return (
           <div className='container-fluid'>
 
-            {(newInd !== false  && ReportString !== '' && props.stats !== false && ShowAnnotationsStats && Reports.length > 0) ? <Row>
+            {(newInd !== false  && ReportString !== '' && (FieldsToAnn.length > 0 || Fields.length > 0) && props.stats !== false && ShowAnnotationsStats && Reports.length > 0) ? <Row>
 
                 <Col md={6} style={{fontSize:'1rem'}}>
                     <div className='report_modal'>
