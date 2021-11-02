@@ -3209,5 +3209,23 @@ def get_report_translations(request):
         return JsonResponse(json_resp)
 
 
+def medtag_reports(request):
+    json_resp = {}
+    json_resp['usecase'] = []
+    reps = Report.objects.all()
+    for r in reps:
+        if not r.id_report.startswith('PUBMED_') and not str(r.name_id) in json_resp['usecase']:
+            json_resp['usecase'].append(str(r.name_id))
+    return JsonResponse(json_resp)
 
+
+def pubmed_reports(request):
+    json_resp = {}
+    json_resp['usecase'] = []
+    reps = Report.objects.all()
+    for r in reps:
+
+        if r.id_report.startswith('PUBMED_') and not str(r.name_id) in json_resp['usecase']:
+            json_resp['usecase'].append(str(r.name_id))
+    return JsonResponse(json_resp)
 
