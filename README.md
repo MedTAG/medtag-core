@@ -90,6 +90,8 @@ If you already have both [docker](https://docs.docker.com/engine/reference/comma
    3. `docker image ls`
    4. Then select the IMAGE ID of the image whose name is *medtag dockerized web* and run: `docker image rm <IMAGE ID>`
    5. Finally run `docker-compose up`
+ 
+ **NOTE**: If you are running docker in operating systems like CentOS and the installation can not terminate due to errors related to Cython, you can install MedTAG with a different `Dockerfile` and `docker-compose.yml` files based on Ubuntu:20.04 OS. These files can be found at: `medtag-core/docker_config_ubuntuOS/`. Copy the `Dockerfile` and the `docker-compose.yml` files in: `medtag-core/MedTAG_Dockerized` and make sure these files overwrite the existing ones. Stop the container, remove the images related to the previous installation process that threw the errors and redo the entire installation.
 
 # Getting started
 
