@@ -31,6 +31,8 @@ import UpdateConfiguration from "./components/MedConfiguration/UpdateConfigurati
 import MembersStats from "./components/SideComponents/MembersStats";
 import ConfigureResult from "./components/MedConfiguration/ConfigureResult";
 import UploadFile from "./components/SideComponents/UploadFile";
+import Prova_aseIndex from "./Prova_BaseInfex";
+import Prova_BaseInfex from "./Prova_BaseInfex";
 axios.defaults.xsrfCookieName = "csrftoken";
 axios.defaults.xsrfHeaderName = "X-CSRFTOKEN";
 
@@ -68,7 +70,7 @@ function App() {
     const [Mention, SetMention] = useState('')
     const [Outcomes,SetOutcomes] = useState([])
     const [labels, setLabels] = useState(false)
-    const [index, setIndex] = useState(0)
+    const [index, setIndex] = useState(false)
     const [report, setReport] = useState('')
     const [reports, setReports] = useState(false)
     const [reportsString, setReportsString] = useState(false)
@@ -126,6 +128,7 @@ function App() {
     const [UpdateSingleReport,SetUpdateSingleReport] = useState(false)
     const [LoadingChangeGT,SetLoadingChangeGT] = useState(false)
     const [SelectedLang,SetSelectedLang] = useState('')
+    const [UsersListAnnotations,SetUsersListAnnotations] = useState([])
 
     useEffect(()=>{
         if(ShowBar){
@@ -161,8 +164,18 @@ function App() {
         axios.get("http://127.0.0.1:8000/get_users_list")
             .then(response => {
                 if(response.data.length>0){
-                    console.log(response.data)
+                    // console.log(response.data)
                     SetUsersList(response.data)
+                }})
+            .catch(error=>{
+                console.log(error)
+            })
+
+        axios.get("http://127.0.0.1:8000/get_annotators_users_list")
+            .then(response => {
+                if(response.data.length>0){
+                    // console.log(response.data)
+                    SetUsersListAnnotations(response.data)
                 }})
             .catch(error=>{
                 console.log(error)
@@ -201,7 +214,7 @@ function App() {
 
     return (
         <div className="App">
-            <AppContext.Provider value={{makereq:[MakeReq,SetMakeReq],selectedLang:[SelectedLang,SetSelectedLang],loadingChangeGT:[LoadingChangeGT,SetLoadingChangeGT],updateSingle:[UpdateSingleReport,SetUpdateSingleReport],batchNumber:[BatchNumber,SetBatchNumber],usersList:[UsersList,SetUsersList],tablerows:[Rows,SetRows],report_type:[ReportType,SetReportType],showmajoritygt:[ShowMajorityGroundTruth,SetShowMajorityGroundTruth],
+            <AppContext.Provider value={{makereq:[MakeReq,SetMakeReq],selectedLang:[SelectedLang,SetSelectedLang],loadingChangeGT:[LoadingChangeGT,SetLoadingChangeGT],updateSingle:[UpdateSingleReport,SetUpdateSingleReport],batchNumber:[BatchNumber,SetBatchNumber],usersList:[UsersList,SetUsersList],usersListAnnotations:[UsersListAnnotations,SetUsersListAnnotations],tablerows:[Rows,SetRows],report_type:[ReportType,SetReportType],showmajoritygt:[ShowMajorityGroundTruth,SetShowMajorityGroundTruth],
                 showmajoritymodal:[ShowMajorityModal,SetShowMajorityModal],userchosen:[UserChosen,SetUserChosen],showmember:[ShowMemberGt,SetShowMemberGt],showmajority:[ShowMajorityGt,SetShowMajorityGt],showautoannotation:[ShowAutoAnn,SetShowAutoAnn],showreporttext:[showReportText,SetshowReportText],showannotations:[ShowAnnotationsStats,SetShowAnnotationsStats],annotation:[Annotation,SetAnnotation],profile:[Profile,SetProfile],clickedCheck:[ClickedCheck, SetClickedCheck],loadingLabels:[LoadingLabels, SetLoadingLabels],loadingMentions:[LoadingMentions, SetLoadingMentions],loadingColors:[LoadingMentionsColor, SetLoadingMentionsColor],loadingAssociations:[LoadingAssociations, SetLoadingAssociations],loadingConcepts:[LoadingConcepts, SetLoadingConcepts],loadingReport:[LoadingReport, SetLoadingReport],loadingReportList:[LoadingReportList, SetLoadingReportList],
                 conceptOption:[selectedOption, setSelectedOption],removedConcept:[RemovedConcept,SetRemovedConcept],indexList:[AnnotatedIndexList,SetAnnotatedIndexList],reportArray:[SelectOptions,SetSelectOptions],orderVar:[OrderVar,SetOrderVar],fields:[Fields,SetFields],fieldsToAnn:[FieldsToAnn,SetFieldsToAnn],
                 admin:[Admin, SetAdmin],showSnackMessage:[SnackMessage,SetSnackMessage],showSnack:[ShowSnack, SetShowSnack], labelsToInsert:[LabToInsert,SetLabToInsert],start:[Start,SetStart],changeConceots:[change,setChange],username:[Username,SetUsername],showOptions:[ShowModal,SetShowModal],language:[Language,SetLanguage],institute:[Institute, SetInstitute], usecase:[useCase,SetUseCase],outcomes:[Outcomes,SetOutcomes],semanticArea:[SemanticArea,SetSemanticArea],concepts:[Concepts,SetConcepts],reportString:[reportsString,setReportsString],radio:[RadioChecked, SetRadioChecked],finalcount:[FinalCount,SetFinalCount],reached:[FinalCountReached,SetFinalCountReached],
@@ -213,24 +226,58 @@ function App() {
                     <div>
 
                         <Switch>
-                            {/*<Route path="/starting_menu">*/}
-                            {/*    <StartingMenu/>*/}
-                            {/*</Route>*/}
+
+
                             {/*<Route path="/exatag/index">*/}
+                            {/*    {(LoadingMenu) ? <div className='spinnerDiv'><Spinner animation="border" role="status"/></div> : <Prova_BaseInfex />}*/}
+                            {/*</Route>*/}
+
+
+                            {/*<Route path="/exatag/credits">*/}
+                            {/*    <Credits />*/}
+                            {/*</Route>*/}
+                            {/*<Route path="/exatag/tutorial">*/}
+
+                            {/*    <Tutorial />*/}
+                            {/*</Route>*/}
+                            {/*<Route path="/exatag/my_stats">*/}
+
+                            {/*    <MyStats />*/}
+                            {/*</Route>*/}
+                            {/*<Route path="/exatag/infoAboutConfiguration">*/}
+
+                            {/*    <InfoAboutConfiguration />*/}
+                            {/*</Route>*/}
+                            {/*<Route path="/exatag/configure">*/}
+
+                            {/*    <Configure />*/}
+                            {/*</Route>*/}
+                            {/*<Route path="/exatag/updateConfiguration">*/}
+
+                            {/*    <UpdateConfiguration />*/}
+                            {/*</Route>*/}
+
+                            {/*<Route path="/exatag/team_members_stats">*/}
+
+                            {/*    <MembersStats />*/}
+                            {/*</Route>*/}
+                            {/*<Route path="/exatag/reports_stats">*/}
+
+                            {/*<ReportsStats />*/}
+                            {/*</Route>*/}
+                            {/*<Route path="/exatag/uploadFile">*/}
+
+                            {/*    <UploadFile />*/}
+                            {/*</Route>*/}
 
                             <Route path="/index">
-                                {(LoadingMenu) ? <div className='spinnerDiv'><Spinner animation="border" role="status"/></div> : <BaseIndex />}
+                                {(LoadingMenu) ? <div className='spinnerDiv'><Spinner animation="border" role="status"/></div> : <Prova_BaseInfex />}
                             </Route>
 
-                            {/*<Route path="/exatag/about">*/}
-                            {/*<Route path="/about">*/}
-                            {/*    <About />*/}
-                            {/*</Route>*/}
-                            {/*<Route path="/exatag/credits">*/}
+
                             <Route path="/credits">
                                 <Credits />
                             </Route>
-                            {/*<Route path="/exatag/tutorial">*/}
                             <Route path="/tutorial">
 
                                 <Tutorial />
@@ -258,14 +305,12 @@ function App() {
                             </Route>
                             <Route path="/reports_stats">
 
-                            <ReportsStats />
+                                <ReportsStats />
                             </Route>
                             <Route path="/uploadFile">
 
                                 <UploadFile />
                             </Route>
-
-
 
                         </Switch>
                     </div>

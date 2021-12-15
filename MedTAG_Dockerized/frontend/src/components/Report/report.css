@@ -84,7 +84,7 @@ div{
     text-decoration: underline;
 
 }
-.notSelected,.notSelectedMention{
+.notSelected,.notSelectedMention,.tokenOtherField{
     text-decoration: none;
     background-color: white;
     color: black;

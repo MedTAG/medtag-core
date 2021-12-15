@@ -51,7 +51,7 @@ function Tutorial() {
     useEffect(()=>{
         // console.log('SHOWBAR',ShowBar)
 
-        axios.get("http:/127.0.0.1:8000/get_usecase_inst_lang").then(response => {
+        axios.get("http://127.0.0.1:8000/get_usecase_inst_lang").then(response => {
             SetUseCaseList(response.data['usecase']);
             SetLanguageList(response.data['language']);
             SetInstituteList(response.data['institute']);
@@ -81,7 +81,7 @@ function Tutorial() {
                         <div style={{'text-align':'center'}}><h2>TUTORIAL</h2>
                         <h6>In this section we explain in details how MedTAG works, its main components and how you can create your own ground-truths.</h6>
                         {/*<div>In the video below Gianmaria Silvello introduces you ExaTAG and its features. </div>*/}
-                        {/*<video style={{'margin-top':'20px'}} width="60%"  controls src="http://examode.dei.unipd.it/exatag/static/videos/MedTAG_tutorial_brief.mp4" />*/}
+                        {/*<video style={{'margin-top':'20px'}} width="60%"  controls src="http://127.0.0.1:8000/static/videos/MedTAG_tutorial_brief.mp4" />*/}
                         <hr/>
                         </div>
                         <div>

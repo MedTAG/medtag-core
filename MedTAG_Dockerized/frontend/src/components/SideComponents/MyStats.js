@@ -26,11 +26,12 @@ import SideBar from "../General/SideBar";
 import ProgressiveComponent from "./ProgressiveComponent";
 import axios from "axios";
 import Spinner from "react-bootstrap/Spinner";
+import Form from "react-bootstrap/Form";
 
 function MyStats() {
 
 
-    const { showbar,username,usecaseList,annotation,reports,languageList,instituteList } = useContext(AppContext);
+    const { showbar,username,usecaseList,annotation,language,reports,languageList,instituteList } = useContext(AppContext);
     const [Annotation,SetAnnotation] = annotation;
     const [UseCaseList,SetUseCaseList] = usecaseList;
     const [LanguageList,SetLanguageList] = languageList;
@@ -45,12 +46,13 @@ function MyStats() {
     const [StatsArrayPercent,SetStatsArrayPercent] = useState(false)
     const [StatsArrayPercentPubMed,SetStatsArrayPercentPubMed] = useState(false)
     const [Actions,SetActions] = useState(['labels','mentions','concepts','concept-mention'])
-
+    const [SelectedLang,SetSelectedLang] = useState('')
     const [StatsAuto,SetStatsAuto] = useState(0)
     const [ChosenStats,SetChosenStats] = useState('')
     const [UsesExtraxcted,SetUsesExtracted] = useState([])
+    const [Language,SetLanguage] = language;
+
     useEffect(()=>{
-        console.log('entro qua')
         axios.get("http://0.0.0.0:8000/get_usecase_inst_lang").then(response => {
             SetUseCaseList(response.data['usecase']);
             SetUsesExtracted(response.data['usecase']);
@@ -89,11 +91,19 @@ function MyStats() {
         }).catch(function(error){
             console.log('error: ',error)
         })
-    },[])
 
+    },[])
+    useEffect(()=>{
+        SetSelectedLang(Language)
+    },[Language])
 
     useEffect(()=>{
-        if(ChosenStats !== ''){
+        console.log('selected_lang',SelectedLang)
+        console.log('selected_lang',Language)
+    },[SelectedLang,Language])
+
+    useEffect(()=>{
+        if(ChosenStats !== '' && SelectedLang !== ''){
             SetStatsArray(false)
             SetStatsArrayPercent(false)
             // if (ChosenStats === 'Robot'){
@@ -115,7 +125,7 @@ function MyStats() {
             //         SetUsesExtracted(UseCaseList)
             //     }
 
-            axios.get("http://0.0.0.0:8000/get_stats_array_per_usecase",{params:{mode:ChosenStats}}).then(response => {
+            axios.get("http://0.0.0.0:8000/get_stats_array_per_usecase",{params:{mode:ChosenStats,language:SelectedLang}}).then(response => {
                 SetStatsArrayPercent(response.data['medtag']['percent'])
                 SetStatsArray(response.data['medtag']['original'])
                 SetStatsArrayPercentPubMed(response.data['pubmed']['percent'])
@@ -126,7 +136,7 @@ function MyStats() {
                 })
         }
 
-    },[ChosenStats])
+    },[ChosenStats,SelectedLang])
 
     useEffect(()=>{
         console.log('stat',StatsArray)
@@ -154,6 +164,11 @@ function MyStats() {
             SetChosenStats('Human')
         }
     }
+    function handleChangeLangSelected(option){
+        console.log('selected_lang',SelectedLang)
+        SetSelectedLang(option.target.value)
+    }
+
     return (
         <div className="App">
             <div>
@@ -179,15 +194,30 @@ function MyStats() {
 
 
                         </div>}
-                    {(ChosenStats !== '' || StatsAuto === false) && <div style={{'text-align':'center'}}>
+
+                    {(ChosenStats !== '' || StatsAuto === false) && SelectedLang !== '' && <div style={{'text-align':'center'}}>
                         {(StatsArray && StatsArrayPercent && StatsArrayPubMed && StatsArrayPercentPubMed) ? <div>
                             {StatsAuto === true && <div style={{marginTop:'2%',marginBottom:'2%'}}>Check the <Button size = 'sm' variant='info' onClick={()=>changeStatsChosen()}>{ChosenStats === 'Human' ? <b>Automatic</b> : <b>Manual</b>} annotations</Button><hr/></div>}
+                            {SelectedLang !== ''  &&
+                            <><div>Select the language of the reports you want to check the statistics of</div>
+                                <Row><Col md={4}></Col>
+                                    <Col md={4}><Form.Control style={{'text-align':'center'}}  as="select" onChange={(option)=>handleChangeLangSelected(option)} placeholder="Select a language...">
+                                        <option value="">Choose a language</option>
+                                        {LanguageList.map((language)=>
+                                            <option value={language}>{language}</option>
+                                        )}
+                                    </Form.Control>
+                                    </Col><Col md={4}></Col></Row><hr/></>}
+
+
                             <div>{UsesExtraxcted.map((usecase,ind)=>
                                 <div>
-                                    {StatsArray[usecase]['all_reports'] > 0 && <div>
+                                    {StatsArray && StatsArray[usecase]['all_reports'] > 0 && <div>
                                     <div style={{'font-size':'1.5rem','margin':'5px'}}>USE CASE <span style={{'font-weight':'bold'}}>{usecase}</span>: {StatsArray[usecase]['all_reports']} reports</div>
-                                    <div style={{'text-align':'center'}}>
-                                        <Row>
+                                        {ChosenStats === 'Human' ? <div><b>Language: <i style={{color: 'royalblue'}}>{SelectedLang}</i></b></div> : <div><b>Language: <i style={{color: 'royalblue'}}>english</i></b></div>}
+
+                                        <div style={{'text-align':'center'}}>
+                                        {SelectedLang !== '' && <Row>
                                         {
                                             Actions.map((o,indice)=>
                                                 <Col md={3}>
@@ -196,22 +226,25 @@ function MyStats() {
                                             )
                                         }
 
-                                        </Row>
+                                        </Row>}
                                         <hr/></div></div>}
 
                                 </div>
                             )}</div>
                             <div>
+
+
                         {UsesExtraxcted.map((usecase,ind)=>
                             <div>
-                                {StatsArrayPubMed[usecase]['all_reports'] > 0 && <div>
+                                {StatsArrayPubMed && StatsArrayPubMed[usecase]['all_reports'] > 0 && <div>
                                     <div style={{'font-size':'1.5rem','margin':'5px'}}><span style={{color:'royalblue'}}><b>PUBMED</b></span> - USE CASE <span style={{'font-weight':'bold'}}>{usecase}</span>: {StatsArrayPubMed[usecase]['all_reports']} reports</div>
+                                    <div><b>Language: <i style={{color: 'royalblue'}}> english</i></b></div>
                                     <div style={{'text-align':'center'}}>
                                         <Row>
                                             {
                                                 Actions.map((o,indice)=>
                                                     <Col md={3}>
-                                                        <ProgressiveComponent stats_array_percent={StatsArrayPubMed[usecase]} stats_array={StatsArrayPubMed[usecase]} action={o} index={indice}/>
+                                                        <ProgressiveComponent stats_array_percent={StatsArrayPercentPubMed[usecase]} stats_array={StatsArrayPubMed[usecase]} action={o} index={indice}/>
                                                     </Col>
                                                 )
                                             }
@@ -236,6 +269,5 @@ function MyStats() {
 
     );
 }
-
 
 export default MyStats;

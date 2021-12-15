@@ -167,7 +167,6 @@ function OptionsModal(props){
             console.log('error: ',error)
         })
 
-
     },[])
 
     useEffect(()=>{
@@ -186,7 +185,7 @@ function OptionsModal(props){
                 Setoptions_usecases(options_usecases)
             }).catch(function (error){console.log(error)})
         }
-        else{
+        else if(Rep === 'reports'){
             UseCaseList.map((uc)=>{
                 options_usecases.push({value: uc, label: uc})
             })
@@ -308,7 +307,7 @@ function OptionsModal(props){
                 {ShowErrorReports === true && <h5>There are not reports for this configuration, please change it. </h5>}
                 <div>
 
-                    <div >
+                    {<div >
                         <div><FontAwesomeIcon icon={faStickyNote}  /> Report type</div>
                         <Select
 
@@ -319,8 +318,8 @@ function OptionsModal(props){
                         />
                         <hr/>
 
-                    </div>
-                    {Options_usecases.length > 0 && <div><div><FontAwesomeIcon icon={faMicroscope}  /> Use Case</div>
+                    </div>}
+                    {Rep !== '' && Options_usecases.length > 0 && <div><div><FontAwesomeIcon icon={faMicroscope}  /> Use Case</div>
                     <Select
 
                         className='selection'
@@ -357,7 +356,7 @@ function OptionsModal(props){
 
 
                     </div>}
-                    {Rep !== '' && Use !== '' && Ins !== '' && Lang !== '' && Batch !== '' && Options_annotation.length>0 && <div><div><FontAwesomeIcon icon={faRobot} /> Annotation mode</div>
+                    {Rep !== '' && Use !== '' && Lang !== '' && Batch !== '' && Options_annotation.length>0 && <div><div><FontAwesomeIcon icon={faRobot} /> Annotation mode</div>
                         <div ><Select
                             className='selection'
                             onChange={(option)=>handleChangeMode(option)}

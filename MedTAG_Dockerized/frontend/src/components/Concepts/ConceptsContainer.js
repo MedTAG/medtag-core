@@ -3,7 +3,7 @@ import ReactDOM from "react-dom";
 import WindowedSelect from "react-windowed-select";
 import ListSelectedConcepts from "./ListSelectedConcepts";
 import {AppContext}  from "../../App";
-import {ConceptContext} from '../../BaseIndex'
+import {ConceptContext} from '../../Prova_BaseInfex'
 import {Col, Modal, OverlayTrigger, Row} from "react-bootstrap";
 import Button from "react-bootstrap/Button";
 import ConceptList from "./ConceptList";
@@ -29,6 +29,7 @@ export default function ConceptsContainer(props) {
     const [options_array,SetOptions_array] = useState([])
     const [ShowMemberGt,SetShowMemberGt] =showmember
     const [ShowMajorityGt,SetShowMajorityGt] = showmajority
+
     useEffect(()=>{
         setCurrentSemanticArea('All')
         setSelectedOption('')
@@ -135,7 +136,7 @@ export default function ConceptsContainer(props) {
 
             {/*{currentSemanticArea === 'All' && <ConceptList semanticArea="All"/>}*/}
 
-            <ConceptList area={currentSemanticArea}/>
+                {currentSemanticArea !== '' && <ConceptList area={currentSemanticArea}/>}
 
             </div>}
 

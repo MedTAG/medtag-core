@@ -36,3 +36,9 @@
 .annotations_li{
     margin-bottom: 4%;
 }
+
+.annotators{
+    padding: 0 !important;
+    box-shadow: none !important;
+    color: darkcyan !important;
+}

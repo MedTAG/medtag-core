@@ -148,10 +148,13 @@ function MajorityVoteModal(props) {
             }
         })
         // console.log('chos',chosen_users)
-        if (user !== ''){
+        if (user !== '' && user !== 'all'){
             chosen_users.push(user)
             SetChosenUsers(chosen_users)
             // arr_new_users = arr_new_users.filter(username=>username!==user)
+        }
+        else if(user === 'all'){
+            SetChosenUsers(UsersList)
         }
         // SetUsersList(arr_new_users)
 
@@ -274,7 +277,8 @@ function MajorityVoteModal(props) {
                         {selectedAct !== 'none' && selectedMode !== '' && (UsersList.length > 0 || ChosenUsers.length > 0 || Username === 'Test') &&<div style={{'padding-left':'1%','padding-right':'1%'}}>
                             <div>Select at least two users you want to consider to create the ground-truth based on majority vote </div>
                             {UsersList.length > 0 &&<Form.Control as="select" onChange={(e)=>changeChosenList(e)} defaultValue="choose the annotation mode..." >
-                                 <option value = ''>Select a user...</option>
+                                <option value = ''>Select a user...</option>
+                                <option value = 'all'>All</option>
 
                                 {UsersList.map(user=>
                                     <option disabled={ChosenUsers.indexOf(user)!==-1} value={user}>{user}</option>
@@ -433,24 +437,25 @@ function MajorityVoteModal(props) {
                                 </div>
                             </div>
                         </div>}
-                        <div style={{position:'absolute',bottom:0}}>
-                            <div>
+                        <div style={{position:'absolute',bottom:0,width:'100%'}}>
                                 <span><Button variant='success' size='sm' onClick={()=>{SetSelectedFormat('');SetselectedMode('');SetselectedAct('none');SetToDownload(false);SetMajorGT(false)}}>Change configuration</Button>
                                 </span>&nbsp;&nbsp;
                                 <div>
-
-                                    <span style={{'margin':'2%','display':'inline-block','width':'55%','padding-left':'1%','padding-right':'1%'}}><Form.Control value={SelectedFormat} as="select" defaultValue="Select a format..." onChange={(e)=>{SetSelectedFormat(e.target.value)}}>&nbsp;&nbsp;
-                                        <option value = ''>Select a format...</option>
+                                    <Row>
+                                        <Col md={6}><span ><Form.Control value={SelectedFormat} as="select" defaultValue="Select a format..." onChange={(e)=>{SetSelectedFormat(e.target.value)}}>&nbsp;&nbsp;
+                                            <option value = ''>Select a format...</option>
                                         <option value = 'json'>json</option>
                                         <option value = 'csv'>csv</option>
-                                        {(selectedAct === 'mentions' || selectedAct === 'concept-mention') && <option value = 'biocxml'>BioC XML</option>}
-                                        {(selectedAct === 'mentions' || selectedAct === 'concept-mention') && <option value = 'biocjson'>BioC JSON</option>}
+                                            {(selectedAct === 'mentions' || selectedAct === 'concept-mention') && <option value = 'biocxml'>BioC XML</option>}
+                                            {(selectedAct === 'mentions' || selectedAct === 'concept-mention') && <option value = 'biocjson'>BioC JSON</option>}
                                     </Form.Control>
-                                    </span>
+                                        </span></Col>
+                                        <Col md={3}><span><Button variant='primary' size='sm' disabled={SelectedFormat === ''} onClick={()=>download_majority_report()}>Download</Button></span>&nbsp;&nbsp;
+                                        </Col>
+                                    </Row>
 
 
-                                    <span><Button variant='primary' size='sm' disabled={SelectedFormat === ''} onClick={()=>download_majority_report()}>Download</Button></span>&nbsp;&nbsp;
-                                </div>
+
                             </div>
 
 

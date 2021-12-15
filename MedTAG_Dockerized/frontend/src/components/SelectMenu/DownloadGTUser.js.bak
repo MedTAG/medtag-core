@@ -143,15 +143,20 @@ function DownloadGTUser(props){
                     options_usecases.push({value:el,label:el})
 
                 }));
-
+                Setoptions_usecases(options_usecases)
             }).catch(function (error){console.log(error)})
         }
         else{
-            UseCaseList.map(el=>{
-                options_usecases.push({value:el,label:el})
-            })
+            if(UseCaseList.length > 0){
+                UseCaseList.map(el=>{
+                    options_usecases.push({value:el,label:el})
+                })
+                Setoptions_usecases(options_usecases)
+            }
+
         }
-        Setoptions_usecases(options_usecases)
+
+
 
     },[Rep])
 
@@ -172,7 +177,7 @@ function DownloadGTUser(props){
             SetBiocError(true)
         }
         else if(Format !== '' || token === 'all') {
-            axios.get('http://127.0.0.1:8000/get_gt_list',{params:{token:token,action:Act,inst:Ins,lang:Lang,use:Use,annotation_mode:Anno}})
+            axios.get('http://127.0.0.1:8000/get_gt_list',{params:{reptype:Rep,token:token,action:Act,inst:Ins,lang:Lang,use:Use,annotation_mode:Anno}})
                 .then(response => {
                     if (response.data['ground_truths'] === 0) {
                         SetShowNotDownload(true)
@@ -482,6 +487,7 @@ function DownloadGTUser(props){
                                     <div><FontAwesomeIcon icon={faStickyNote}  /> Report type <i>(Mandatory)</i></div>
                                     <Form.Control value ={Rep} className='selection' as="select" onChange={(option)=>handleChangeReportType(option)}>
                                         <option value="">Select a report type...</option>
+                                        {/*{MedTAGPresence === true && <option value='reports'>MedTAG reports</option>}*/}
                                         {MedTAGPresence === true && <option value='reports'>MedTAG reports</option>}
                                         {PubMedPresence === true && <option value='pubmed'>PubMed articles</option>}
 

@@ -677,7 +677,7 @@ def configure_data(pubmedfiles,reports, labels, concepts, jsondisp, jsonann, jso
             for el in jsonann:
                 if len(el) > 0:
                     fields_to_ann.append(el)
-
+            languages = ['English','english']
             error_location = 'Pubmed'
             for pubfile in pubmedfiles:
                 df_pubmed = pd.read_csv(pubfile)
@@ -711,13 +711,19 @@ def configure_data(pubmedfiles,reports, labels, concepts, jsondisp, jsonann, jso
                             return report_json
                         report_json = json.dumps(report_json)
                         # Duplicates are not inserted
-                        cursor.execute("SELECT * FROM report WHERE id_report = %s AND language = %s;",
-                                       (str(id_report), 'english'))
+                        cursor.execute("SELECT * FROM report WHERE id_report = %s AND language in %s;",
+                                       (str(id_report), tuple(languages)))
                         ans = cursor.fetchall()
+                        cursor.execute("SELECT DISTINCT(language) FROM report")
+                        langs = cursor.fetchall()
+                        lang = 'english'
+                        for l in langs:
+                            if l[0].lower() == 'english':
+                                lang = l[0]
                         if len(ans) == 0:
                             cursor.execute(
                                 "INSERT INTO report (id_report,report_json,institute,language,name,batch,insertion_date) VALUES (%s,%s,%s,%s,%s,%s,%s);",
-                                (str(id_report), report_json, 'PUBMED', 'english', str(name).lower(),1,today))
+                                (str(id_report), report_json, 'PUBMED', lang, str(name).lower(),1,today))
 
                         i = i + 1
                         if count_rows == i:
@@ -760,8 +766,8 @@ def configure_data(pubmedfiles,reports, labels, concepts, jsondisp, jsonann, jso
                 for i in range(count_rows):
                     id_report = str(df_report.loc[i, 'id_report'])
                     institute = str(df_report.loc[i, 'institute'])
-                    language = str(df_report.loc[i, 'language'])
-                    name = str(df_report.loc[i, 'usecase'])
+                    language = str(df_report.loc[i, 'language']).lower()
+                    name = str(df_report.loc[i, 'usecase']).lower()
                     report_json = {}
 
                     # Check if all the not mandatory cols have at least one value != None
@@ -923,7 +929,7 @@ def check_for_update(type_req, pubmedfiles, reports, labels, concepts, jsonDisp,
     keys = get_fields_from_json()
     ann = keys['fields_to_ann']
     disp = keys['fields']
-
+    languages = ['english','English']
     if jsonDispUp is not None and jsonAnnUp is not None:
         jsonDispUp = ''.join(jsonDispUp)
         jsonAnnUp = ''.join(jsonAnnUp)
@@ -1157,8 +1163,8 @@ def check_for_update(type_req, pubmedfiles, reports, labels, concepts, jsonDisp,
                         for ind in range(df.shape[0]):
                             found = False
                             id_report = 'PUBMED_'+str(df.loc[ind, 'ID'])
-                            cursor.execute('SELECT COUNT(*) FROM report WHERE id_report = %s AND language = %s',
-                                           [str(id_report), 'english'])
+                            cursor.execute('SELECT COUNT(*) FROM report WHERE id_report = %s AND language in %s',
+                                           [str(id_report), tuple(languages)])
                             num = cursor.fetchone()
                             if num[0] > 0:
                                 message = 'WARNING PUBMED FILE - ' + pubmedfiles[i].name + ' - The report: ' + str(id_report) + ' is already present in the database. It will be ignored.'
@@ -1371,6 +1377,7 @@ def update_db_util(reports,pubmedfiles,labels,concepts,jsondisp,jsonann,jsondisp
     usecases = []
     sem_areas = []
     created_file = False
+    languages = ['English','english']
     cursor = connection.cursor()
     try:
         with transaction.atomic():
@@ -1508,13 +1515,19 @@ def update_db_util(reports,pubmedfiles,labels,concepts,jsondisp,jsonann,jsondisp
                                 return report_json
                             report_json = json.dumps(report_json)
                             # Duplicates are not inserted
-                            cursor.execute("SELECT * FROM report WHERE id_report = %s AND language = %s;",
-                                           (str(id_report), 'english'))
+                            cursor.execute("SELECT * FROM report WHERE id_report = %s AND language in %s;",
+                                           (str(id_report), tuple(languages)))
                             ans = cursor.fetchall()
+                            cursor.execute('SELECT DISTINCT(language) FROM report')
+                            langs = cursor.fetchall()
+                            lang = 'english'
+                            for l in langs:
+                                if l[0].lower() == 'english':
+                                    lang = l[0]
                             if len(ans) == 0:
                                 cursor.execute(
                                     "INSERT INTO report (id_report,report_json,institute,language,name,batch,insertion_date) VALUES (%s,%s,%s,%s,%s,%s,%s);",
-                                    (str(id_report), report_json, 'PUBMED', 'english', str(name).lower(),json_uses[name],today))
+                                    (str(id_report), report_json, 'PUBMED', lang, str(name).lower(),json_uses[name],today))
 
                             i = i + 1
                             if count_rows == i:

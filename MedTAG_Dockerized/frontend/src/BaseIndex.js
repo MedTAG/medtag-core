@@ -303,7 +303,8 @@ function BaseIndex() {
                 else{
                     SetNoReports(false)
                 }
-                setReport(response.data['report'][0]);
+                setReport(response.data['report'][response.data['index']]);
+                console.log('trans',response.data['report'][0])
                 SetGTreport(true);
                 SetLoadingReportList(false)
             })
@@ -379,64 +380,7 @@ function BaseIndex() {
 
 
 
-    // useEffect(()=>{
-    //     if(Reports.length>0 ) {
-    //         SetSavedGT(prevState => !prevState)
-    //         if (Action === 'labels' && MakeReq) {
-    //             SetLoadingLabels(true)
-    //
-    //             axios.get("http://0.0.0.0:8000/annotationlabel/user_labels", {params: {language:Language,report_id: Reports[Index].id_report.toString()}}).then(response => {SetMakeReq(false);setLabels_to_show(response.data[Action.toString()]);
-    //                 SetLoadingLabels(false);
-    //
-    //
-    //
-    //             })
-    //
-    //         }
-    //         else if (Action === 'concepts' && MakeReq){
-    //             SetLoadingConcepts(true)
-    //             axios.get("http://0.0.0.0:8000/contains", {params: {language:Language,report_id: Reports[Index].id_report.toString()}}).then(response => {
-    //                 SetMakeReq(false);
-    //                 setSelectedConcepts(response.data);
-    //                 SetLoadingConcepts(false)})
-    //
-    //         }
-    //     }
-    //     if (Reports.length>0 && reportsString !== false) {
-    //         // console.log('reportString',reportsString)
-    //
-    //
-    //         if (Action === 'mentions' && MakeReq ) {
-    //
-    //             SetLoadingMentions(true)
-    //             axios.get("http://0.0.0.0:8000/mention_insertion", {params: {language:Language,report_id: Reports[Index].id_report.toString()}}).then(response => {
-    //                 var mentions = (response.data[Action.toString()])
-    //                 SetMakeReq(false);
-    //                 var ordered = order_array(mentions)
-    //                 SetMentions_to_show(ordered);
-    //                 SetLoadingMentions(false);
-    //
-    //             })
-    //         } else if (Action === 'concept-mention' && MakeReq){
-    //             SetLoadingAssociations(true)
-    //             axios.get("http://0.0.0.0:8000/insert_link/linked", {params: {language:Language,report_id: Reports[Index].id_report.toString()}}).then(response => {SetAssociations_to_show(response.data['associations']);SetMakeReq(false);})
-    //             axios.get("http://0.0.0.0:8000/insert_link/mentions", {params: {language:Language,report_id: Reports[Index].id_report.toString()}}).then(response => {
-    //                 var mentions = (response.data['mentions1']);
-    //                 var ordered = order_array(mentions)
-    //                 SetMakeReq(false);
-    //                 SetAllMentions(ordered);
-    //                 SetLoadingAssociations(false)})
-    //         }
-    //     }
-    // },[MakeReq])
-
     useEffect(() => {
-        // var json_arr = {}
-        // SemanticArea.map(val=>{
-        //     json_arr[val] = []
-        // })
-        // console.log('selected cambio qua 5')
-        // setSelectedConcepts(json_arr)
 
         if (Reports.length>0 && Action === 'labels' && MakeReq) {
 

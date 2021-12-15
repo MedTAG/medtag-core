@@ -170,9 +170,10 @@ function Mention(props){
     function mouseHover(e,mention,action){
         // GESTIONE HOVER NEL REPORTLISTUPDATED DELLE MODALI
         var token_list = fromMentionToArray(mention.mention,mention.start)
+        var doc = document.getElementById(token_list[0].startToken)
         console.log('hover')
         if(action === 'hover'){
-
+            doc.scrollIntoView()
             // var tokens_butt = Array.from(document.getElementById(mention.start))
             token_list.map((ment,ind)=>{
                 var token_sel = document.getElementById(ment.startToken)

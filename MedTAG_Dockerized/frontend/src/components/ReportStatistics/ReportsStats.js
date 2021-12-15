@@ -21,7 +21,7 @@ import Spinner from "react-bootstrap/Spinner";
 function ReportsStats() {
 
 
-    const { showbar,username,tablerows,usecaseList,reports,languageList,instituteList } = useContext(AppContext);
+    const { showbar,username,admin,usecaseList,reports,languageList,instituteList } = useContext(AppContext);
     const [hiddenColumns,sethiddenColumns]  = useState([])
     const [UseCaseList,SetUseCaseList] = usecaseList;
     const [LanguageList,SetLanguageList] = languageList;
@@ -48,6 +48,7 @@ function ReportsStats() {
     const [deletedRows, setDeletedRows] = useState([]);
     const [purgeMode, setPurgeMode] = useState(true);
     const [defaultColumnWidths,setdefaultColumnWidths] = useState([]);
+    const [Admin, SetAdmin] = admin;
 
     useEffect(()=>{
         var opt = []
@@ -161,6 +162,14 @@ function ReportsStats() {
 
     return (
         <div className="App">
+            {Username !== Admin ?
+            <div><h1>FORBIDDEN</h1>
+                <div>
+                    <a href="http://0.0.0.0:8000/index">
+                        Back
+                    </a>
+                </div>
+            </div>:
             <div>
                 <Container fluid>
 
@@ -185,7 +194,7 @@ function ReportsStats() {
 
                     </div> : <div className='spinnerDiv'><Spinner animation="border" role="status"/></div>}
                 </Container>
-            </div>
+            </div>}
 
         </div>
 

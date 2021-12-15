@@ -151,8 +151,8 @@ function DownloadModalRep(props) {
                         }
 
 
-                    } else if (selectedActAll === 'csv') {
-                        if (selectedActMajor === 'concept-mention') {
+                    } else if (selectedFormatAll === 'csv') {
+                        if (selectedActAll === 'concept-mention') {
                             FileDownload((response.data), 'linking_csv_ground_truth.csv');
                         } else {
                             FileDownload((response.data), selectedActAll.toString() + '_csv_ground_truth.csv');
@@ -162,7 +162,7 @@ function DownloadModalRep(props) {
 
 
                     } else if (selectedFormatAll === 'biocxml') {
-                        if (selectedActMajor === 'concept-mention') {
+                        if (selectedActAll === 'concept-mention') {
                             FileDownload((response.data), 'linking_bioc_ground_truth.xml');
                         } else {
                             FileDownload((response.data), 'mentions_bioc_ground_truth.xml');
@@ -171,7 +171,7 @@ function DownloadModalRep(props) {
 
 
                     } else if (selectedFormatAll === 'biocjson') {
-                        if (selectedActMajor === 'concept-mention') {
+                        if (selectedActAll === 'concept-mention') {
                             FileDownload((JSON.stringify(response.data)), 'linking_bioc_ground_truth.json');
                         } else {
                             FileDownload((JSON.stringify(response.data)), 'mentions_bioc_ground_truth.json');

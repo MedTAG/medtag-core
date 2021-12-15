@@ -64,17 +64,19 @@ def map_labels(usecase,label):
             return "No cancer"
 
 
-def aux_start_end(report_string,report_field,mention,use,report):
+def aux_start_end(report_field,mention,use,report):
 
     """This method returns the start and end char of the mention found by sket."""
 
-    report_json = json.loads(report_string)
+    # report_json = Report.objects.get(id_report=report, language='english')
+    languages = ['English','english']
+    report_json = report.report_json
+    report_string = json.dumps(report_json)
     if (report_json.get(report_field) is not None and report_json.get(report_field) != ""):
         element = report_json[report_field]
-
         element_1 = json.dumps(element)
         if element_1.startswith('"') and element_1.endswith('"'):
-            element_1 = element_1.replace('"', '')
+            element_1 = element_1.replace('"','')
 
         before_element = report_string.split(report_field)[0]
         after_element = report_string.split(report_field)[1]
@@ -188,6 +190,7 @@ def create_auto_gt_1(usecase,fields,report_key,batch):
     mode = NameSpace.objects.get(ns_id='Robot')
     ag = User.objects.get(username='Robot_user',ns_id=mode)
     use = ''
+    languages = ['english','English']
     # print(usecase)
     usecase_low = usecase.lower()
     if usecase_low == 'colon':
@@ -225,23 +228,23 @@ def create_auto_gt_1(usecase,fields,report_key,batch):
                 if report_key == 'reports':
                     if batch == 'all' or batch is None:
                         cursor.execute(
-                            "SELECT id_report,language,report_json FROM report WHERE name=%s AND institute != %s AND language = %s AND (id_report,language) NOT IN (SELECT id_report,language FROM ground_truth_log_file WHERE username=%s)",
-                            [usecase,'PUBMED','english','Robot_user'])
+                            "SELECT id_report,language,report_json FROM report WHERE name=%s AND institute != %s AND language in %s AND (id_report,language) NOT IN (SELECT id_report,language FROM ground_truth_log_file WHERE username=%s)",
+                            [usecase,'PUBMED',tuple(languages),'Robot_user'])
                     else:
                         cursor.execute(
-                            "SELECT id_report,language,report_json FROM report WHERE name=%s AND institute != %s AND batch = %s AND language = %s AND (id_report,language) NOT IN (SELECT id_report,language FROM ground_truth_log_file WHERE username=%s)",
-                            [usecase, 'PUBMED',batch,'english' ,'Robot_user'])
+                            "SELECT id_report,language,report_json FROM report WHERE name=%s AND institute != %s AND batch = %s AND language in %s AND (id_report,language) NOT IN (SELECT id_report,language FROM ground_truth_log_file WHERE username=%s)",
+                            [usecase, 'PUBMED',batch,tuple(languages) ,'Robot_user'])
                     reports = cursor.fetchall()
 
                 elif report_key == 'pubmed':
                     if batch == 'all' or batch is None:
                         cursor.execute(
-                            "SELECT id_report,language,report_json FROM report WHERE name=%s AND institute = %s AND language = %s AND (id_report,language) NOT IN (SELECT id_report,language FROM ground_truth_log_file WHERE username=%s)",
-                            [usecase,'PUBMED','english','Robot_user'])
+                            "SELECT id_report,language,report_json FROM report WHERE name=%s AND institute = %s AND language in %s AND (id_report,language) NOT IN (SELECT id_report,language FROM ground_truth_log_file WHERE username=%s)",
+                            [usecase,'PUBMED',tuple(languages),'Robot_user'])
                     else:
                         cursor.execute(
-                            "SELECT id_report,language,report_json FROM report WHERE name=%s AND institute = %s and batch = %s AND language = %s AND (id_report,language) NOT IN (SELECT id_report,language FROM ground_truth_log_file WHERE username=%s)",
-                            [usecase,'PUBMED',batch,'english','Robot_user'])
+                            "SELECT id_report,language,report_json FROM report WHERE name=%s AND institute = %s and batch = %s AND language in %s AND (id_report,language) NOT IN (SELECT id_report,language FROM ground_truth_log_file WHERE username=%s)",
+                            [usecase,'PUBMED',batch,tuple(languages),'Robot_user'])
                     reports = cursor.fetchall()
 
                 if len(reports) == 0 or update_all:
@@ -307,22 +310,22 @@ def create_auto_gt_1(usecase,fields,report_key,batch):
                     if report_key == 'pubmed':
                         if batch == 'all' or batch is None:
                             cursor.execute(
-                                "SELECT id_report,language,report_json FROM report WHERE name=%s AND institute = %s AND language = %s",
-                                [usecase, 'PUBMED','english'])
+                                "SELECT id_report,language,report_json FROM report WHERE name=%s AND institute = %s AND language in %s",
+                                [usecase, 'PUBMED',tuple(languages)])
                         else:
                             cursor.execute(
-                                "SELECT id_report,language,report_json FROM report WHERE name=%s AND institute = %s and batch = %s AND language = %s",
-                                [usecase,'PUBMED',batch,'english'])
+                                "SELECT id_report,language,report_json FROM report WHERE name=%s AND institute = %s and batch = %s AND language in %s",
+                                [usecase,'PUBMED',batch,tuple(languages)])
                         reports = cursor.fetchall()
                     elif report_key == 'reports':
                         if batch == 'all' or batch is None:
                             cursor.execute(
-                                "SELECT id_report,language,report_json FROM report WHERE name=%s AND institute != %s AND language = %s",
-                                [usecase, 'PUBMED','english'])
+                                "SELECT id_report,language,report_json FROM report WHERE name=%s AND institute != %s AND language in %s",
+                                [usecase, 'PUBMED',tuple(languages)])
                         else:
                             cursor.execute(
-                                "SELECT id_report,language,report_json FROM report WHERE name=%s AND institute != %s and batch = %s AND language  = %s",
-                                [usecase, 'PUBMED',batch,'english'])
+                                "SELECT id_report,language,report_json FROM report WHERE name=%s AND institute != %s and batch = %s AND language in %s",
+                                [usecase, 'PUBMED',batch,tuple(languages)])
                         reports = cursor.fetchall()
                 # sket = SKET(use, 'en', 'en_core_sci_sm', True, None, None, False, 0)
                 json_to_submit = create_json_to_submit(reports,array_key_to_extract)
@@ -358,7 +361,7 @@ def create_auto_gt_1(usecase,fields,report_key,batch):
                                 if concept_row.exists():
                                     concept_row = concept_row.first()
                                     semantic_area = SemanticArea.objects.get(name=concept_area)
-                                    start_mention_element,end_mention_element,mention = aux_start_end(report_string,report_field,mention_raw,use,report)
+                                    start_mention_element,end_mention_element,mention = aux_start_end(report_field,mention_raw,use,report)
 
                                     if not Mention.objects.filter(mention_text=mention,start=int(start_mention_element),
                                                                   stop=int(end_mention_element), id_report=report,language=rep[1]).exists():

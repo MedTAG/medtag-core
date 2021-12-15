@@ -65,6 +65,7 @@ function AddMention(props){
 
 
     const handleClick=(event,mention)=> {
+        console.log('mentions_cur',mention)
         SetWordMention([])
         SetMentionToAdd('')
         if (Action === 'mentions') {
@@ -164,11 +165,12 @@ function AddMention(props){
         var start = 0
         var stop = 0
         if (WordMention.length >0){
-            // console.log('toadd',WordMention)
+            console.log('toadd',WordMention)
 
             WordMention.map(mention =>{
                 //props.mention_to_add.map(mention =>{
-                // console.log('mnt',mention)
+                console.log('mnt',mention)
+
                 if(text === ''){
                     start  = mention.startToken
                     text = mention.word
@@ -179,12 +181,14 @@ function AddMention(props){
 
                 }
                 stop = stop > mention.stopToken ? stop : mention.stopToken
+                // console.log('mnt',start)
+                // console.log('mnt',stop)
             })
         }
 
         SetText(text)
         SetMentionToAdd({'mention_text':text,'start':start,'stop':stop})
-        // console.log('txt',text)
+        console.log('txt',{'mention_text':text,'start':start,'stop':stop})
 
     },[WordMention])
 

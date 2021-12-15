@@ -27,11 +27,12 @@ import ProgressiveComponent from "./ProgressiveComponent";
 import axios from "axios";
 import Spinner from "react-bootstrap/Spinner";
 import Form from "react-bootstrap/Form";
+import Buttons from "../General/Buttons";
 
 function MembersStats() {
 
 
-    const { showbar,username,usecaseList,annotation,reports,languageList,instituteList } = useContext(AppContext);
+    const { showbar,username,admin,usecaseList,language,annotation,reports,languageList,instituteList } = useContext(AppContext);
     const [Annotation,SetAnnotation] = annotation;
     const [UseCaseList,SetUseCaseList] = usecaseList;
     const [LanguageList,SetLanguageList] = languageList;
@@ -54,9 +55,16 @@ function MembersStats() {
     const [UsesExtraxcted,SetUsesExtracted] = useState([])
     const [Options_users,SetOptions_users] = useState([])
     const [ShowSelectUser,SetShowSelectUser] = useState(false)
+    const [Admin, SetAdmin] = admin;
+    const [SelectedLang,SetSelectedLang] = useState('')
+    const [Language,SetLanguage] = language;
 
     useEffect(()=>{
-        console.log('entro qua')
+        SetSelectedLang(Language)
+    },[Language])
+
+    useEffect(()=>{
+        // console.log('entro qua')
         axios.get('http://0.0.0.0:8000/get_users_list').then(response=>{
             var opt = []
             response.data.map((val,i)=>{
@@ -105,7 +113,7 @@ function MembersStats() {
     },[])
 
     useEffect(()=>{
-        if(ChosenStats !== '' && Member !== ''){
+        if(ChosenStats !== '' && Member !== '' && SelectedLang !== ''){
             SetStatsArray(false)
             SetStatsArrayPercent(false)
             SetShowSelectUser(false)
@@ -127,7 +135,7 @@ function MembersStats() {
             // else{
             //     SetUsesExtracted(UseCaseList)
             // }
-            axios.get("http://0.0.0.0:8000/get_stats_array_per_usecase",{params:{mode:ChosenStats,member:Member}}).then(response => {
+            axios.get("http://0.0.0.0:8000/get_stats_array_per_usecase",{params:{mode:ChosenStats,member:Member,language:SelectedLang}}).then(response => {
                 SetStatsArrayPercent(response.data['medtag']['percent'])
                 SetStatsArray(response.data['medtag']['original'])
                 SetStatsArrayPercentPubMed(response.data['pubmed']['percent'])
@@ -138,7 +146,7 @@ function MembersStats() {
                 })
         }
 
-    },[ChosenStats,Member])
+    },[ChosenStats,Member,SelectedLang])
 
     // useEffect(()=>{
     //     if(StatsAuto !== 0){
@@ -173,8 +181,22 @@ function MembersStats() {
         SetMember(option.target.value.toString())
     }
 
+    function handleChangeLangSelected(option){
+        console.log('selected_lang',SelectedLang)
+        SetSelectedLang(option.target.value)
+    }
+
     return (
+
         <div className="App">
+            {Username !== Admin ?
+                <div><h1>FORBIDDEN</h1>
+                    <div>
+                        <a href="http://0.0.0.0:8000/index">
+                            Back
+                        </a>
+                    </div>
+                </div>:
             <div>
                 <Container fluid>
                     {ShowBar && <SideBar />}
@@ -219,7 +241,8 @@ function MembersStats() {
                     </div>}
                     {(ChosenStats !== '' || StatsAuto === false) && Member !== '' && <div style={{'text-align':'center'}}>
                         <div>You are checking the statistics of: <span><b>{Member}</b></span></div>
-                        <Row><Col md={4}></Col><Col md={4}><Form.Control style={{'text-align':'center'}}  as="select" onChange={(option)=>handleChangeUser(option)} placeholder="Select a member...">
+                        <Row><Col md={4}></Col>
+                            <Col md={4}><Form.Control style={{'text-align':'center'}}  as="select" onChange={(option)=>handleChangeUser(option)} placeholder="Select a member...">
                             <option value="">Choose a member</option>
                             {Options_users.map((option)=>
                                 <option value={option.value}>{option.label}</option>
@@ -228,10 +251,22 @@ function MembersStats() {
                         {(StatsArray && StatsArrayPercent && StatsArrayPubMed && StatsArrayPercentPubMed) ?
                             <div>
                             {StatsAuto === true && <div style={{marginTop:'2%',marginBottom:'2%'}}>Check the <Button size = 'sm' variant='info' onClick={()=>changeStatsChosen()}>{ChosenStats === 'Human' ? <b>Automatic</b> : <b>Manual</b>} annotations</Button><hr/></div>}
+                            {SelectedLang !== ''  &&
+                            <><div>Select the language of the reports you want to check the statistics of</div>
+                                <Row><Col md={4}></Col>
+                                    <Col md={4}><Form.Control style={{'text-align':'center'}}  as="select" onChange={(option)=>handleChangeLangSelected(option)} placeholder="Select a language...">
+                                        <option value="">Choose a language</option>
+                                        {LanguageList.map((language)=>
+                                            <option value={language}>{language}</option>
+                                        )}
+                                    </Form.Control>
+                                    </Col><Col md={4}></Col></Row><hr/></>}
                             <div>{UsesExtraxcted.map((usecase,ind)=>
                                 <div>
                                     {StatsArray[usecase]['all_reports'] > 0 && <div>
                                         <div style={{'font-size':'1.5rem','margin':'5px'}}>USE CASE <span style={{'font-weight':'bold'}}>{usecase}</span>: {StatsArray[usecase]['all_reports']} reports</div>
+                                        {ChosenStats === 'Human' ? <div><b>Language: <i style={{color: 'royalblue'}}>{SelectedLang}</i></b></div> : <div><b>Language: <i style={{color: 'royalblue'}}>english</i></b></div>}
+
                                         <div style={{'text-align':'center'}}>
                                             <Row>
                                                 {
@@ -251,13 +286,16 @@ function MembersStats() {
                                 {UsesExtraxcted.map((usecase,ind)=>
                                     <div>
                                         {StatsArrayPubMed[usecase]['all_reports'] > 0 && <div>
+
                                             <div style={{'font-size':'1.5rem','margin':'5px'}}><span style={{color:'royalblue'}}><b>PUBMED</b></span> - USE CASE <span style={{'font-weight':'bold'}}>{usecase}</span>: {StatsArrayPubMed[usecase]['all_reports']} reports</div>
+                                            <div><b>Language: <i style={{color: 'royalblue'}}> english</i></b></div>
+
                                             <div style={{'text-align':'center'}}>
                                                 <Row>
                                                     {
                                                         Actions.map((o,indice)=>
                                                             <Col md={3}>
-                                                                <ProgressiveComponent stats_array_percent={StatsArrayPubMed[usecase]} stats_array={StatsArrayPubMed[usecase]} action={o} index={indice}/>
+                                                                <ProgressiveComponent stats_array_percent={StatsArrayPercentPubMed[usecase]} stats_array={StatsArrayPubMed[usecase]} action={o} index={indice}/>
                                                             </Col>
                                                         )
                                                     }
@@ -273,7 +311,7 @@ function MembersStats() {
 
                 </Container>
 
-            </div>
+            </div>}
 
 
         </div>
@@ -282,6 +320,7 @@ function MembersStats() {
 
     );
 }
+
 
 
 export default MembersStats;

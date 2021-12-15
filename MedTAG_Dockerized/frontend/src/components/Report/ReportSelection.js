@@ -57,68 +57,65 @@ function ReportSelection(props){
     const [SemanticArea, SetSemanticArea] = semanticArea;
     const [UserChosen,SetUserChosen] = userchosen
     const [Language, SetLanguage] = language;
+    const [Update,SetUpdate] = useState(false)
+
+    useEffect(()=>{
+        SetUpdate(true)
+    },[Action,Reports,SavedGT])
 
     useEffect(()=>{
         // console.log('ACTION',Action)
         // console.log('Indice',Index)
-        if(Reports.length > 0 && (Action === 'mentions' || Action === 'labels' || Action === 'concepts' || Action === 'concept-mention')){
-            axios.get("http://0.0.0.0:8000/get_reports_from_action", {params: {action:Action}}).then(response => {
-                var array_annotated = response.data['reports_presence']
-                // SetAutomaticAnnotatedChecked(response.data['auto_checked'])
-                console.log('arrayanno',array_annotated)
-                // var array_bool = []
-                var array_insert = []
+        if(Update){
+            if(Reports.length > 0 && (Action === 'mentions' || Action === 'labels' || Action === 'concepts' || Action === 'concept-mention')){
+                axios.get("http://0.0.0.0:8000/get_reports_from_action", {params: {action:Action}}).then(response => {
+                    var array_annotated = response.data['reports_presence']
+                    // console.log('arrayanno',array_annotated)
+                    var array_insert = []
 
-                Reports.map(report=>{
-                    var check = false
-                    //var report = JSON.parse(report1)
-                    array_annotated.map(element=>{
-                        if(report['id_report'].toString() === element[0].toString()){ //Row modified by Ornella
-                            check = true
-                            var date = element[1].split('T')
-                            var hour = date[1].split('.')
-                            var temp = 'date: ' + date[0] + '  time: '+ hour[0] + '(GMT+1)'
-                            // console.log('temp',temp)
-                            // console.log('temp',hour)
-                            // console.log('temp',date)
-                            array_insert.push(temp)
+                    Reports.map(report=>{
+                        var check = false
+                        array_annotated.map(element=>{
+                            if(report['id_report'].toString() === element[0].toString()){ //Row modified by Ornella
+                                check = true
+                                var date = element[1].split('T')
+                                var hour = date[1].split('.')
+                                var temp = 'date: ' + date[0] + '  time: '+ hour[0] + '(GMT+1)'
+
+                                array_insert.push(temp)
+
+                            }
+                        })
+                        if(check === false){
+
+                            array_insert.push(0) // in questo caso non c'è groundtruth! Non ho nemmeno insertion date
 
                         }
+
                     })
-                    if(check === false){
-
-                        array_insert.push(0) // in questo caso non c'è groundtruth! Non ho nemmeno insertion date
-
-                    }
-                    // if(check === true){
-                    //     array_bool.push(true)
-                    // }
-                    // else{
-                    //     array_bool.push(false)
-                    //     array_insert.push(0) // in questo caso non c'è groundtruth! Non ho nemmeno insertion date
-                    //
-                    // }
+                    // SetArrayBool(array_bool);
+                    SetArrayInsertionTimes(array_insert);
                 })
+                SetUpdate(false)
+            }
+            else{
+                // var array_bool = new Array(reports.length).fill(false)
+                console.log('ACTION NONE')
+                var array_insert = new Array(Reports.length).fill(0)
                 // SetArrayBool(array_bool);
+                SetNotAnn(false)
+                SetAlreadyAnn(false)
                 SetArrayInsertionTimes(array_insert);
-            })
-        }
-        else{
-            // var array_bool = new Array(reports.length).fill(false)
-            console.log('ACTION NONE')
-            var array_insert = new Array(Reports.length).fill(0)
-            // SetArrayBool(array_bool);
-            SetNotAnn(false)
-            SetAlreadyAnn(false)
-            SetArrayInsertionTimes(array_insert);
-
+                SetUpdate(false)
+            }
         }
 
-    },[Action,Reports,SavedGT]) //C'era anche Index ma troppe chiamate
+
+    },[Update]) //C'era anche Index ma troppe chiamate
 
     const handleChange = (event) =>{
         var index = (event.target);
-        console.log('INDEX!!',(index))
+        // console.log('INDEX!!',(index))
         SetIndex(Number(index))
         SetReport(Reports[Number(index)])
     }
@@ -218,7 +215,7 @@ function ReportSelection(props){
             index_list = [...index_list_not_ann,...index_list_ann]
             SetSelectOptions(new_arr_to_opt)
             SetAnnotatedIndexList(index_list)
-            console.log('actual rep',index_list.indexOf(Index))
+            // console.log('actual rep',index_list.indexOf(Index))
 
         }
         else{
@@ -229,127 +226,130 @@ function ReportSelection(props){
     },[ArrayInsertionTimes,OrderVar])
 
     const submit = (event,token) => {
-        event.preventDefault();
-        if(Action === 'labels'){
-            token = 'annotation'
-        }
-        if(Action === 'concept-mention'){
-            token = 'linked'
-        }
-        // if(Saved === false){
-        //     SetSaved(true)
-        if (token.startsWith('mentions')) {
-            SetWordMention('')
-            Children.map(child=>{
-                if(child.getAttribute('class') === 'token-selected' || child.getAttribute('class') === 'token-adj-dx' ||child.getAttribute('class') === 'token-adj-sx'){
-                    child.setAttribute('class','token')
-                }
-            })
-            var data_to_ret = {'mentions': mentions_to_show}
-            // console.log('mentions: ' ,mentions_to_show)
-
-            axios.post('http://0.0.0.0:8000/mention_insertion/insert', {
-                mentions: data_to_ret['mentions'],language:Language,
-                report_id: Reports[Index].id_report
-            })
-                .then(function (response) {
-
-                    SetSavedGT(prevState => !prevState)
-                    // console.log('RISPOSTA',response);
-                })
-                .catch(function (error) {
-                    //alert('ATTENTION')
-                    console.log(error);
-                });
-
-        }else if (token.startsWith('annotation')) {
-            //const data = new FormData(document.getElementById("annotation-form"));
-            // console.log('labtoinsert',LabToInsert)
-            axios.post('http://0.0.0.0:8000/annotationlabel/insert', {
-                //labels: data.getAll('labels'),
-                labels: LabToInsert,language:Language,
-                report_id: Reports[Index].id_report,
-            })
-                .then(function (response) {
-                    // console.log(response);
-
-                    // {concepts_list.length > 0 ? SetSavedGT(true) : SetSavedGT(false)}
-                    if (LabToInsert.length === 0) {
-                        SetRadioChecked(false)
-
+        if(ShowMemberGt === false && ShowAutoAnn === false){
+            event.preventDefault();
+            if(Action === 'labels'){
+                token = 'annotation'
+            }
+            if(Action === 'concept-mention'){
+                token = 'linked'
+            }
+            // if(Saved === false){
+            //     SetSaved(true)
+            if (token.startsWith('mentions')) {
+                SetWordMention('')
+                Children.map(child=>{
+                    if(child.getAttribute('class') === 'token-selected' || child.getAttribute('class') === 'token-adj-dx' ||child.getAttribute('class') === 'token-adj-sx'){
+                        child.setAttribute('class','token')
                     }
-                    // SetLabToInsert([])
-                    SetSavedGT(prevState => !prevState)
                 })
-                .catch(function (error) {
+                var data_to_ret = {'mentions': mentions_to_show}
+                // console.log('mentions: ' ,mentions_to_show)
 
-                    console.log(error);
-                });
-
-        } else if (token.startsWith('linked')) {
-            const data = new FormData(document.getElementById("linked-form"));
-            //var data_to_ret = {'linked': data.getAll('linked')}
-
-
-            data_to_ret = {'linked': associations_to_show}
-            if (data_to_ret['linked'].length >= 0) {
-                axios.post('http://0.0.0.0:8000/insert_link/insert', {
-                    linked: data_to_ret['linked'],language:Language,
+                axios.post('http://0.0.0.0:8000/mention_insertion/insert', {
+                    mentions: data_to_ret['mentions'],language:Language,
                     report_id: Reports[Index].id_report
                 })
                     .then(function (response) {
-                        // console.log(response);
-                        // {concepts_list.length > 0 ? SetSavedGT(true) : SetSavedGT(false)}
-                        SetWordMention('')
-                        // console.log('aggiornato concepts');
 
+                        SetSavedGT(prevState => !prevState)
+                        // console.log('RISPOSTA',response);
+                    })
+                    .catch(function (error) {
+                        //alert('ATTENTION')
+                        console.log(error);
+                    });
+
+            }else if (token.startsWith('annotation')) {
+                //const data = new FormData(document.getElementById("annotation-form"));
+                // console.log('labtoinsert',LabToInsert)
+                axios.post('http://0.0.0.0:8000/annotationlabel/insert', {
+                    //labels: data.getAll('labels'),
+                    labels: LabToInsert,language:Language,
+                    report_id: Reports[Index].id_report,
+                })
+                    .then(function (response) {
+                        // console.log(response);
+
+                        // {concepts_list.length > 0 ? SetSavedGT(true) : SetSavedGT(false)}
+                        if (LabToInsert.length === 0) {
+                            SetRadioChecked(false)
+
+                        }
+                        // SetLabToInsert([])
                         SetSavedGT(prevState => !prevState)
                     })
                     .catch(function (error) {
 
                         console.log(error);
                     });
-            }
-        } else if (token.startsWith('concepts')) {
-            // console.log(selectedConcepts);
 
-            let concepts_list = []
+            } else if (token.startsWith('linked')) {
+                const data = new FormData(document.getElementById("linked-form"));
+                //var data_to_ret = {'linked': data.getAll('linked')}
 
-            for (let area of SemanticArea) {
-                for (let concept of selectedConcepts[area]) {
-                    concepts_list.push(concept);
+
+                data_to_ret = {'linked': associations_to_show}
+                if (data_to_ret['linked'].length >= 0) {
+                    axios.post('http://0.0.0.0:8000/insert_link/insert', {
+                        linked: data_to_ret['linked'],language:Language,
+                        report_id: Reports[Index].id_report
+                    })
+                        .then(function (response) {
+                            // console.log(response);
+                            // {concepts_list.length > 0 ? SetSavedGT(true) : SetSavedGT(false)}
+                            SetWordMention('')
+                            // console.log('aggiornato concepts');
+
+                            SetSavedGT(prevState => !prevState)
+                        })
+                        .catch(function (error) {
+
+                            console.log(error);
+                        });
                 }
+            } else if (token.startsWith('concepts')) {
+                // console.log(selectedConcepts);
+
+                let concepts_list = []
+
+                for (let area of SemanticArea) {
+                    for (let concept of selectedConcepts[area]) {
+                        concepts_list.push(concept);
+                    }
+                }
+
+                // console.log(concepts_list);
+
+                axios.post('http://0.0.0.0:8000/contains/update', {
+                        concepts_list: concepts_list,language:Language,
+                        report_id: Reports[Index].id_report,
+                    },
+                )
+                    .then(function (response) {
+                        // console.log(response);
+                        // {concepts_list.length > 0 ? SetSavedGT(true) : SetSavedGT(false)}
+                        SetSavedGT(prevState => !prevState)
+
+                    })
+                    .catch(function (error) {
+
+                        console.log(error);
+                    });
             }
-
-            // console.log(concepts_list);
-
-            axios.post('http://0.0.0.0:8000/contains/update', {
-                    concepts_list: concepts_list,language:Language,
-                    report_id: Reports[Index].id_report,
-                },
-            )
-                .then(function (response) {
-                    // console.log(response);
-                    // {concepts_list.length > 0 ? SetSavedGT(true) : SetSavedGT(false)}
-                    SetSavedGT(prevState => !prevState)
-
-                })
-                .catch(function (error) {
-
-                    console.log(error);
-                });
         }
+
 
 
 
     }
 
-    useEffect(()=>{
-        console.log('notann',SelectOptions[AnnotatedIndexList.indexOf(Index)])
-        console.log('notann',SelectOptions)
-        console.log('notann',AnnotatedIndexList)
-        console.log('notann',Index)
-    },[AnnotatedIndexList,Index,SelectOptions])
+    // useEffect(()=>{
+    //     console.log('notann',SelectOptions[AnnotatedIndexList.indexOf(Index)])
+    //     console.log('notann',SelectOptions)
+    //     console.log('notann',AnnotatedIndexList)
+    //     console.log('notann',Index)
+    // },[AnnotatedIndexList,Index,SelectOptions])
 
     return(
 

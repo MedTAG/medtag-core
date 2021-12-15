@@ -11,6 +11,7 @@ import ReportSection from "./ReportSection";
 import ReportSelection from "./ReportSelection";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import ErrorSnack from "./ErrorSnack";
+import Spinner from "react-bootstrap/Spinner";
 // axios.defaults.xsrfCookieName = "csrftoken";
 // axios.defaults.xsrfHeaderName = "X-CSRFTOKEN";
 function ReportListUpdated(props) {
@@ -55,7 +56,14 @@ function ReportListUpdated(props) {
     const [SelectedLang,SetSelectedLang] = selectedLang
     const [SavedGT,SetSavedGT] = save;
     const [ReportText,SetReportText] = useState(false)
-
+    const [ShowErrorSnack, SetShowErrorSnack] = errorSnack;
+    const [Institute,SetInstitute] = institute
+    //Report sections
+    const [Age, SetAge] = useState('')
+    const [Gender, SetGender] = useState('')
+    const [Diagnosis, SetDiagnosis] = useState('')
+    const [Outcomes, SetOutcomes] = useState([])
+    const [Error,SetError] = useState(0)
 
     useEffect(()=>{
         if(Translation === false && ReportString !== false && ReportString !== ''&& ReportString !== undefined){
@@ -66,9 +74,12 @@ function ReportListUpdated(props) {
         }
 
     },[ReportString,Translation])
+
     useEffect(()=>{
         console.log('ccc',Children)
     },[ReportString,Translation])
+
+
 
 
 
@@ -180,28 +191,48 @@ function ReportListUpdated(props) {
 
     },[OrderVar,ReportString])
 
+    function ticketFunc(event){
+        SetShowErrorSnack(true)
+        event.preventDefault()
+        axios.post('http://0.0.0.0:8000/signals_malfunctions',{
+            report_id_hashed: ReportString.report_id_hashed.text,report_id: ReportString.report_id.text, target_diagnosis: ReportString.target_diagnosis.text, internalid: ReportString.internalid.text, raw_diagnoses:ReportString.raw_diagnoses.text
+        }).then(function (response) {
+            SetShowErrorSnack(true)
+            SetError(false)
+        })
+            .catch(function (error) {
+                SetShowErrorSnack(true)
+                SetError(true)
+
+            });
+    }
+
     useEffect(()=>{
-        console.log('trans')
+
         if(ReportString !== undefined && ShowAnnotationsStats === false && ShowMajorityModal === false && showReportText === false){
-            axios.get('http://0.0.0.0:8000/get_report_translations',{params:{id_report:Report.id_report}}).then(response=>{
+            axios.get('http://0.0.0.0:8000/get_report_translations',{params:{id_report:Reports[Index].id_report}}).then(response=>{
                 SetReportTranslation(response.data['languages'])
-                console.log('respp',response.data['languages'])
+                // console.log('respp',response.data['languages'])
             })
         }
     },[ReportString])
 
 
     function get_trans(rep){
-        SetSelectedLang(rep)
+
         if(rep !== Language){
             // SetLoadingReport(true)
             axios.get("http://0.0.0.0:8000/report_start_end", {params: {language:rep,report_id: Reports[Index].id_report.toString()}}).then(response => {
-                SetTranslation(response.data['rep_string']); SetFinalCount(response.data['final_count']);SetFinalCountReached(false);
+                SetTranslation(response.data['rep_string']); SetFinalCount(response.data['final_count']);SetFinalCountReached(false);SetSelectedLang(rep)
                 // SetLoadingReport(false)
             })
         }
         else{
-            SetTranslation(false)
+
+            axios.get("http://0.0.0.0:8000/report_start_end", {params: {language:Language,report_id: Reports[Index].id_report.toString()}}).then(response => {
+                SetFinalCount(response.data['final_count']);SetFinalCountReached(false);SetTranslation(false);SetSelectedLang(rep)
+                // SetLoadingReport(false)
+            })
         }
 
     }
@@ -275,39 +306,48 @@ function ReportListUpdated(props) {
                 <hr/></div>}
 
             <div>
-                {ReportText !== false  &&  <div>
+                {(LoadingReport) ? <Spinner animation="border" role="status"/> : <div>
+                    {ReportText !== false  &&  <div>
 
-                    {FieldsToAnn.map((field,ind)=><div>
-                            {ReportText[field] !== undefined && ReportText[field] !== null  && <Row>
-                                {((props.action === 'mentions' || props.action === 'concept-mention') && (ShowAnnotationsStats === false && ShowMajorityModal === false && Translation === false)) ? <Col md={4} className="titles no-click"><div><FontAwesomeIcon style={{'width':'0.8rem'}} icon={faPencilAlt}/> {field}:</div></Col> : <Col md={4} className="titles no-click"><div>{field}:</div></Col>}
-                                {ShowAnnotationsStats === false && ShowMajorityModal === false && Translation === false && <Col md={8}><ReportSection action={props.action} stop={ReportText[field].stop} start={ReportText[field].start} text={ReportText[field].text}  report = {props.report}/></Col>}
-                                {(ShowAnnotationsStats === true || ShowMajorityModal === true || Translation !== false) && <Col md={8}><ReportSection action='noAction' stop={ReportText[field].stop} start={ReportText[field].start} text={ReportText[field].text}  report = {props.report}/></Col>}
-                            </Row>}
-                        </div>
-                    )}
-                    {(ShowAnnotationsStats === true || ShowMajorityModal === true ) && ExtractFields.length > 0 && <div>
-                        {ExtractFields.map((field,ind)=><div>
-                                {ReportText[field] !== undefined && FieldsToAnn.indexOf(field) === -1 && Fields.indexOf(field) === -1 &&  ReportText[field] !== null  && <Row>
-                                    {((props.action === 'mentions' || props.action === 'concept-mention') && (ShowAnnotationsStats === false && ShowMajorityModal === false)) ? <Col md={4} className="titles no-click"><div><FontAwesomeIcon style={{'width':'0.8rem'}} icon={faPencilAlt}/> {field}:</div></Col> : <Col md={4} className="titles no-click"><div>{field}:</div></Col>}
-                                    {ShowAnnotationsStats === false && ShowMajorityModal === false && <Col md={8}><ReportSection action={props.action} stop={ReportText[field].stop} start={ReportText[field].start} text={ReportText[field].text}  report = {props.report}/></Col>}
-                                    {(ShowAnnotationsStats === true || ShowMajorityModal === true ) && <Col md={8}><ReportSection action='noAction' stop={ReportText[field].stop} start={ReportText[field].start} text={ReportText[field].text}  report = {props.report}/></Col>}
+                        {FieldsToAnn.map((field,ind)=><div>
+                                {ReportText[field] !== undefined && ReportText[field] !== null  && <Row>
+                                    {((props.action === 'mentions' || props.action === 'concept-mention') && (ShowAnnotationsStats === false && ShowMajorityModal === false && Translation === false)) ? <Col md={4} className="titles no-click"><div><FontAwesomeIcon style={{'width':'0.8rem'}} icon={faPencilAlt}/> {field}:</div></Col> : <Col md={4} className="titles no-click"><div>{field}:</div></Col>}
+                                    {ShowAnnotationsStats === false && ShowMajorityModal === false && Translation === false && <Col md={8}><ReportSection action={props.action} stop={ReportText[field].stop} start={ReportText[field].start} text={ReportText[field].text}  report = {props.report}/></Col>}
+                                    {(ShowAnnotationsStats === true || ShowMajorityModal === true || Translation !== false) && <Col md={8}><ReportSection action='noAction' stop={ReportText[field].stop} start={ReportText[field].start} text={ReportText[field].text}  report = {props.report}/></Col>}
                                 </Row>}
                             </div>
                         )}
+                        {(ShowAnnotationsStats === true || ShowMajorityModal === true ) && ExtractFields.length > 0 && <div>
+                            {ExtractFields.map((field,ind)=><div>
+                                    {ReportText[field] !== undefined && FieldsToAnn.indexOf(field) === -1 && Fields.indexOf(field) === -1 &&  ReportText[field] !== null  && <Row>
+                                        {((props.action === 'mentions' || props.action === 'concept-mention') && (ShowAnnotationsStats === false && ShowMajorityModal === false)) ? <Col md={4} className="titles no-click"><div><FontAwesomeIcon style={{'width':'0.8rem'}} icon={faPencilAlt}/> {field}:</div></Col> : <Col md={4} className="titles no-click"><div>{field}:</div></Col>}
+                                        {ShowAnnotationsStats === false && ShowMajorityModal === false && <Col md={8}><ReportSection action={props.action} stop={ReportText[field].stop} start={ReportText[field].start} text={ReportText[field].text}  report = {props.report}/></Col>}
+                                        {(ShowAnnotationsStats === true || ShowMajorityModal === true ) && <Col md={8}><ReportSection action='noAction' stop={ReportText[field].stop} start={ReportText[field].start} text={ReportText[field].text}  report = {props.report}/></Col>}
+                                    </Row>}
+                                </div>
+                            )}
+                        </div>}
+                        {Fields.map((field,ind)=><div>
+                                {ReportText[field] !== undefined && ReportText[field] !== null  && FieldsToAnn.indexOf(field) === -1 && <Row>
+
+                                    <Col md={4} className="titles no-click"><div>{field}:</div></Col>
+                                    <Col md={8}><ReportSection action='noAction' stop={ReportText[field].stop} start={ReportText[field].start} text={ReportText[field].text} report = {props.report}/></Col>
+
+                                </Row>}
+                            </div>
+                        )}
+
+
+
+
                     </div>}
-                    {Fields.map((field,ind)=><div>
-                            {ReportText[field] !== undefined && ReportText[field] !== null  && FieldsToAnn.indexOf(field) === -1 && <Row>
-
-                                <Col md={4} className="titles no-click"><div>{field}:</div></Col>
-                                <Col md={8}><ReportSection action='noAction' stop={ReportText[field].stop} start={ReportText[field].start} text={ReportText[field].text} report = {props.report}/></Col>
-
-                            </Row>}
-                        </div>
-                    )}
-
-
-
-
+                    <div>
+                        <hr/>
+                        <Row>
+                            <Col md={12} className="titles no-click raw_diagnoses"><div>Does the <span style={{'font-style':'italic'}}>target diagnosis</span> correspond to the one
+                                whose index is the <span style={{'font-style':'italic'}}>internal id</span> in the <span style={{'font-style':'italic'}}>raw diagnoses</span> (note that if the internal ID/block number is 1 then it may be not reported, but it is not an error in this case)? If it does not, <Button className='errorNotify' size='sm' onClick={(event)=>ticketFunc(event)} variant='danger'>click here</Button></div></Col>
+                        </Row>
+                    </div>
                 </div>}
                 {/*{Translation !== false && <div>*/}
                 {/*    {FieldsToAnn.map((field,ind)=><div>*/}

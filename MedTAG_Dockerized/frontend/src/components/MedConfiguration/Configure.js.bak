@@ -1024,6 +1024,17 @@ function Configure() {
 
     return (
         <div className="App">
+
+            {Username !== Admin ?
+                <div><h1>FORBIDDEN</h1>
+                    <div>
+                        <a href="http://127.0.0.1:8000/index">
+                            Back
+                        </a>
+                    </div>
+                </div>:
+
+                <div>
             <ConfigureContext.Provider value={{pubmedusesinserted:[PubMedUsesInserted,SetPubMedUsesInserted],fieldsextra:[FieldsUseCasesToExtract,SetFieldsUseCasesToExtract],usesinserted:[UsesInserted,SetUsesInserted],errormessage:[ErrorMessage,SetErrorMessage],message:[Message,SetMessage],loadingresponse:[LoadingResponse,SetLoadingResponse],warningmessage:[WarningMessage,SetWarningMessage]}}
             >
             {/*{(LoadingResponse === true ) ? <div className='spinnerDiv'><Spinner animation="border" role="status"/></div>:*/}
@@ -1165,6 +1176,7 @@ function Configure() {
 
             {/*    </div>}*/}
             {/*{ <div >*/}
+
             {(LoadingResponse === false && Message === '' && ErrorMessage === '' && WarningMessage === '') ? <div >
                 <Container fluid>
                     <Row>
@@ -1488,7 +1500,7 @@ function Configure() {
             </Modal>}
 
             </ConfigureContext.Provider>
-
+                </div>}
 
         </div>
 

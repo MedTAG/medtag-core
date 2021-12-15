@@ -11,7 +11,7 @@ import { faTimesCircle,faEye, faInfoCircle,faUser} from '@fortawesome/free-solid
 import './linked.css';
 import '../General/first_row.css';
 import {AppContext}  from "../../App";
-import {LinkedContext, MentionContext} from '../../BaseIndex'
+import {LinkedContext, MentionContext} from '../../Prova_BaseInfex'
 import {Container,Row,Col} from "react-bootstrap";
 import Zoom from "@material-ui/core/Zoom";
 
@@ -31,7 +31,7 @@ import LinkDialogNew from "./LinkDialogNew";
 function Association(props){
     const [WordsMention, SetWordsMention] = useState([])
     const { tokens, color, language,disButton,showSnackMention,showautoannotation,showmember,showSnackMessage, allMentions, associations,action,highlightMention,reports,index } = useContext(AppContext);
-    const { mountForm,area,conceptchosen,enable_select,show} = useContext(LinkedContext);
+    const { mountForm,conceptchosen,enable_select,show} = useContext(LinkedContext);
     //const [WordsMention, SetWordsMention] = mentionSingleWord;
     const [Disable_Buttons, SetDisable_Buttons] = disButton;
     const [ShowSnackMention,SetShowSnackMention] = showSnackMention;
@@ -41,7 +41,7 @@ function Association(props){
     const [AllMentions,SetAllMentions] = allMentions;
     const [Children, SetChildren] = tokens;
     const [Color, SetColor] = color
-    const [Area, SetArea] = area;
+    // const [Area, SetArea] = area;
     const [ShowAutoAnn,SetShowAutoAnn] = showautoannotation;
     const [ShowMemberGt,SetShowMemberGt] =showmember
     const [HighlightMention, SetHighlightMention] = highlightMention;

@@ -12,6 +12,7 @@ def generate_bioc(json_keys,json_keys_to_ann,username,action,language,usecase,in
     """This method creates the BioC files both XML and JSON depending on the language, usecase, institute chosen"""
 
     try:
+        languages = ['English','english']
         usec = UseCase.objects.get(name=usecase)
         batch_num = []
         if batch is None:
@@ -58,16 +59,14 @@ def generate_bioc(json_keys,json_keys_to_ann,username,action,language,usecase,in
                 elif report_type == 'pubmed':
                     if annotation_mode == 'Human':
                         cursor.execute(
-                            "SELECT DISTINCT r.name,r.id_report,r.language,r.institute FROM report AS r INNER JOIN annotate AS a ON r.id_report = a.id_report AND r.language = a.language WHERE a.username = %s AND r.language = %s AND r.name = %s AND r.institute = %s AND a.ns_id = %s  AND r.batch = COALESCE(%s,r.batch) AND r.language = =%s",
-                            [str(username), str('english'), str(usecase), str('PUBMED'), str(annotation_mode),
-                             batch,'english'])
+                            "SELECT DISTINCT r.name,r.id_report,r.language,r.institute FROM report AS r INNER JOIN annotate AS a ON r.id_report = a.id_report AND r.language = a.language WHERE a.username = %s AND r.language in %s AND r.name = %s AND r.institute = %s AND a.ns_id = %s  AND r.batch = COALESCE(%s,r.batch) AND r.language in %s",
+                            [str(username), tuple(languages), str(usecase), str('PUBMED'), str(annotation_mode),
+                             batch,tuple(languages)])
                     elif annotation_mode == 'Robot':
                         cursor.execute(
-                            "SELECT  DISTINCT r.name,r.id_report,r.language,r.institute FROM report AS r INNER JOIN annotate AS a ON r.id_report = a.id_report AND r.language = a.language  INNER JOIN mention as m on m.id_report = a.id_report and m.language = a.language and m.start = a.start and m.stop = a.stop  WHERE r.name = %s and a.ns_id = %s and a.username = %s AND r.institute = %s and r.language = %s and (a.id_report,a.language) IN (select g.id_report,g.language FROM ground_truth_log_file as g inner join ground_truth_log_file as gg on g.id_report = gg.id_report and g.language = gg.language and g.gt_type = gg.gt_type and g.ns_id = gg.ns_id where g.gt_type = %s and g.ns_id = %s and gg.insertion_time != g.insertion_time and gg.username = %s and g.username =%s AND r.batch = COALESCE(%s,r.batch) AND r.language = =%s  ",
-                            [str(usecase), 'Robot', str(username), 'PUBMED', str(language), 'mentions',
-                             'Robot',
-                             'Robot_user',
-                             str(username), batch,'english'])
+                            "SELECT  DISTINCT r.name,r.id_report,r.language,r.institute FROM report AS r INNER JOIN annotate AS a ON r.id_report = a.id_report AND r.language = a.language   INNER JOIN mention as m on m.id_report = a.id_report and m.language = a.language and m.start = a.start and m.stop = a.stop  WHERE r.name = %s and  a.ns_id = %s and a.username = %s  and (a.id_report,a.language) IN (select g.id_report,g.language FROM ground_truth_log_file as g inner join ground_truth_log_file as gg on g.id_report = gg.id_report and g.language = gg.language and g.gt_type = gg.gt_type and g.ns_id = gg.ns_id where g.gt_type = %s and g.ns_id = %s and gg.insertion_time != g.insertion_time and gg.username = %s and g.username =%s AND r.batch = COALESCE (%s,r.batch) AND r.institute = COALESCE(%s,r.institute) AND r.language = COALESCE(%s,r.language) AND r.institute = %s)",
+                            [str(usecase), 'Robot', str(username), 'mentions', 'Robot', 'Robot_user', str(username),
+                             batch, institute, tuple(languages), 'PUBMED'])
 
 
                     reports = cursor.fetchall()
@@ -162,8 +161,8 @@ def generate_bioc(json_keys,json_keys_to_ann,username,action,language,usecase,in
                     if language is not None and institute is not None and usecase is not None:
                         if annotation_mode == 'Human':
                             cursor.execute(
-                            "SELECT DISTINCT r.name,r.id_report,r.language,r.institute FROM report AS r INNER JOIN linked AS a ON r.id_report = a.id_report AND r.language = a.language WHERE a.username = %s AND r.language = %s AND r.name = %s AND r.institute = %s AND a.ns_id = %s  AND r.batch IN %s",
-                            [str(username), str('english'), str(usecase), str('PUBMED'),str(annotation_mode),tuple(batch_num)])
+                            "SELECT DISTINCT r.name,r.id_report,r.language,r.institute FROM report AS r INNER JOIN linked AS a ON r.id_report = a.id_report AND r.language = a.language WHERE a.username = %s AND r.language in %s AND r.name = %s AND r.institute = %s AND a.ns_id = %s  AND r.batch IN %s",
+                            [str(username), tuple(languages), str(usecase), str('PUBMED'),str(annotation_mode),tuple(batch_num)])
                         elif annotation_mode == 'Robot':
                             cursor.execute(
                                 "SELECT  DISTINCT r.name,r.id_report,r.language,r.institute FROM report AS r INNER JOIN linked AS a ON r.id_report = a.id_report AND r.language = a.language INNER JOIN mention as m on m.id_report = a.id_report and m.language = a.language and a.start = m.start and a.stop = m.stop INNER JOIN concept as c on c.concept_url = a.concept_url inner join semantic_area as s on s.name = a.name WHERE r.name = %s AND a.ns_id = %s and a.username = %s AND r.institute = %s and r.language = %s and (a.id_report,a.language) IN (select g.id_report,g.language FROM ground_truth_log_file as g inner join ground_truth_log_file as gg on g.id_report = gg.id_report and g.language = gg.language and g.gt_type = gg.gt_type and g.ns_id = gg.ns_id where g.gt_type = %s and g.ns_id = %s and gg.insertion_time != g.insertion_time and gg.username = %s and g.username =%s  AND r.batch IN %s)  ",
@@ -266,7 +265,7 @@ def create_csv_to_download(report_type,annotation_mode,username,use,inst,lang,ac
                 batch_num.append(el['batch'])
     else:
         batch_num.append(batch)
-
+    languages = ['English','english']
     row_list = []
     if action == 'labels':
         row_list.append(['username', 'annotation_mode','id_report', 'language','batch', 'institute', 'usecase', 'label'])
@@ -348,25 +347,25 @@ def create_csv_to_download(report_type,annotation_mode,username,use,inst,lang,ac
                 if annotation_mode == 'Human':
                     if action == 'labels':
                         cursor.execute(
-                            "SELECT DISTINCT a.username,a.ns_id,r.id_report,r.language,r.batch,r.institute,r.name, a.label FROM report AS r INNER JOIN associate AS a ON r.id_report = a.id_report AND r.language = a.language WHERE a.username = %s AND r.language = %s AND r.name = %s AND r.institute = %s AND a.ns_id = %s AND r.batch =COALESCE(%s,r.batch)",
-                            [str(username), 'english', str(use), 'PUBMED','Human',batch])
+                            "SELECT DISTINCT a.username,a.ns_id,r.id_report,r.language,r.batch,r.institute,r.name, a.label FROM report AS r INNER JOIN associate AS a ON r.id_report = a.id_report AND r.language = a.language WHERE a.username = %s AND r.language in %s AND r.name = %s AND r.institute = %s AND a.ns_id = %s AND r.batch =COALESCE(%s,r.batch)",
+                            [str(username), tuple(languages), str(use), 'PUBMED','Human',batch])
                     if action == 'mentions':
                         cursor.execute(
-                            "SELECT DISTINCT a.username,a.ns_id,r.id_report,r.language,r.batch,r.institute,r.name,a.start,a.stop,m.mention_text FROM report AS r INNER JOIN annotate AS a ON r.id_report = a.id_report AND r.language = a.language INNER JOIN mention AS m ON m.id_report = a.id_report AND m.language = a.language AND a.start = m.start AND a.stop = m.stop WHERE a.username = %s AND r.language = %s AND r.name = %s AND r.institute = %s AND a.ns_id = %s AND r.batch =COALESCE(%s,r.batch)",
-                            [str(username), 'english', str(use), 'PUBMED','Human',batch])
+                            "SELECT DISTINCT a.username,a.ns_id,r.id_report,r.language,r.batch,r.institute,r.name,a.start,a.stop,m.mention_text FROM report AS r INNER JOIN annotate AS a ON r.id_report = a.id_report AND r.language = a.language INNER JOIN mention AS m ON m.id_report = a.id_report AND m.language = a.language AND a.start = m.start AND a.stop = m.stop WHERE a.username = %s AND r.language in %s AND r.name = %s AND r.institute = %s AND a.ns_id = %s AND r.batch =COALESCE(%s,r.batch)",
+                            [str(username), tuple(languages), str(use), 'PUBMED','Human',batch])
                     if action == 'concepts':
                         cursor.execute(
-                            "SELECT DISTINCT a.username,a.ns_id,r.id_report,r.language,r.batch,r.institute,r.name,c.concept_url, c.name, a.name FROM report AS r INNER JOIN contains AS a ON r.id_report = a.id_report  AND r.language = a.language INNER JOIN concept AS c ON c.concept_url = a.concept_url WHERE a.username = %s AND r.language = %s AND r.name = %s AND r.institute = %s AND a.ns_id = %s AND r.batch =COALESCE(%s,r.batch)",
-                            [str(username), 'english', str(use), 'PUBMED','Human',batch])
+                            "SELECT DISTINCT a.username,a.ns_id,r.id_report,r.language,r.batch,r.institute,r.name,c.concept_url, c.name, a.name FROM report AS r INNER JOIN contains AS a ON r.id_report = a.id_report  AND r.language = a.language INNER JOIN concept AS c ON c.concept_url = a.concept_url WHERE a.username = %s AND r.language in %s AND r.name = %s AND r.institute = %s AND a.ns_id = %s AND r.batch =COALESCE(%s,r.batch)",
+                            [str(username), tuple(languages), str(use), 'PUBMED','Human',batch])
                     if action == 'concept-mention':
                         cursor.execute(
-                            "SELECT DISTINCT a.username,a.ns_id,r.id_report,r.language,r.batch,r.institute,r.name,a.start,a.stop,m.mention_text,c.name,c.concept_url,a.name FROM report AS r INNER JOIN linked AS a ON r.id_report = a.id_report AND r.language = a.language INNER JOIN concept as c ON a.concept_url = c.concept_url INNER JOIN mention AS m ON m.id_report = a.id_report AND m.language = a.language AND a.start = m.start AND a.stop = m.stop WHERE a.username = %s AND r.language = %s AND r.name = %s AND r.institute = %s AND a.ns_id = %s AND r.batch =COALESCE(%s,r.batch)",
-                            [str(username), 'english', str(use), 'PUBMED','Human',batch])
+                            "SELECT DISTINCT a.username,a.ns_id,r.id_report,r.language,r.batch,r.institute,r.name,a.start,a.stop,m.mention_text,c.name,c.concept_url,a.name FROM report AS r INNER JOIN linked AS a ON r.id_report = a.id_report AND r.language = a.language INNER JOIN concept as c ON a.concept_url = c.concept_url INNER JOIN mention AS m ON m.id_report = a.id_report AND m.language = a.language AND a.start = m.start AND a.stop = m.stop WHERE a.username = %s AND r.language in %s AND r.name = %s AND r.institute = %s AND a.ns_id = %s AND r.batch =COALESCE(%s,r.batch)",
+                            [str(username), tuple(languages), str(use), 'PUBMED','Human',batch])
                 elif annotation_mode == 'Robot':
                     if action == 'labels':
                         cursor.execute(
-                            "SELECT  a.username,a.ns_id,r.id_report,r.language,r.batch,r.institute,r.name,a.label FROM report AS r INNER JOIN associate AS a ON r.id_report = a.id_report AND r.language = a.language  WHERE r.name = %s AND a.ns_id = %s and a.username = %s AND r.institute = %s and r.language = %s and (a.id_report,a.language) IN (select g.id_report,g.language FROM ground_truth_log_file as g inner join ground_truth_log_file as gg on g.id_report = gg.id_report and g.language = gg.language and g.gt_type = gg.gt_type and g.ns_id = gg.ns_id where g.gt_type = %s and g.ns_id = %s and gg.insertion_time != g.insertion_time and gg.username = %s and g.username =%s AND r.batch =COALESCE(%s,r.batch))  ",
-                            [str(use), 'Robot', str(username), 'PUBMED', 'english', 'labels', 'Robot',
+                            "SELECT  a.username,a.ns_id,r.id_report,r.language,r.batch,r.institute,r.name,a.label FROM report AS r INNER JOIN associate AS a ON r.id_report = a.id_report AND r.language = a.language  WHERE r.name = %s AND a.ns_id = %s and a.username = %s AND r.institute = %s and r.language in %s and (a.id_report,a.language) IN (select g.id_report,g.language FROM ground_truth_log_file as g inner join ground_truth_log_file as gg on g.id_report = gg.id_report and g.language = gg.language and g.gt_type = gg.gt_type and g.ns_id = gg.ns_id where g.gt_type = %s and g.ns_id = %s and gg.insertion_time != g.insertion_time and gg.username = %s and g.username =%s AND r.batch =COALESCE(%s,r.batch))  ",
+                            [str(use), 'Robot', str(username), 'PUBMED', tuple(languages), 'labels', 'Robot',
                              'Robot_user', str(username),batch])
 
                     if action == 'mentions':
@@ -414,13 +413,8 @@ def create_csv_to_download(report_type,annotation_mode,username,use,inst,lang,ac
 
 def create_json_to_download(report_type,action,username,use,annotation_mode = None,inst = None,lang = None,all = None,batch = None):
     json_resp = {}
-    #modified 22/10
 
-    if all != 'all' and action != None and action != '':
-        json_resp['action'] = action
-        if action == 'concept-mention':
-            json_resp['action'] = 'linking'
-
+    #added 22/10/2021
     if all == 'all':
         json_resp['groundtruths'] = {}
         types = ['labels','mentions','concepts','concept-mention']
@@ -464,6 +458,11 @@ def create_json_to_download(report_type,action,username,use,annotation_mode = No
         json_resp['annotation_mode'] = 'Manual'
     else:
         json_resp['annotation_mode'] = 'Automatic'
+
+    if all != 'all' and action != None and action != '':
+        json_resp['action'] = action
+        if action == 'concept-mention':
+            json_resp['action'] = 'linking'
 
     if report_type == 'reports':
 
@@ -551,11 +550,11 @@ def create_json_to_download(report_type,action,username,use,annotation_mode = No
     elif report_type == 'pubmed':
         cursor.execute(
             "SELECT DISTINCT r.id_report,r.language,r.institute FROM report AS r INNER JOIN ground_truth_log_file AS g ON r.id_report = g.id_report AND g.language = r.language WHERE gt_type = %s AND r.name = %s AND g.ns_id = %s AND institute = %s and r.language = %s AND r.batch = COALESCE(%s,r.batch)",
-            [str(action), str(use), str(annotation_mode), str(lang), str(inst),batch])
+            [str(action), str(use), str(annotation_mode),str(inst), str(lang), batch])
         if annotation_mode == 'Robot':
             cursor.execute(
                 "SELECT DISTINCT r.id_report,r.language,r.institute FROM report AS r INNER JOIN ground_truth_log_file AS g ON r.id_report = g.id_report AND g.language = r.language inner join ground_truth_log_file as gg on gg.id_report = g.id_report and gg.language = g.language and gg.gt_type = g.gt_type and gg.ns_id = g.ns_id WHERE gg.insertion_time != g.insertion_time and g.gt_type = %s AND r.name = %s AND g.ns_id = %s AND institute = %s and r.language = %s and g.username != %s and gg.username = %s AND r.batch = COALESCE(%s,r.batch)",
-                [str(action), str(use), str(annotation_mode), str(lang), str(inst), 'Robot_user', 'Robot_user',batch])
+                [str(action), str(use), str(annotation_mode), str(inst),str(lang),  'Robot_user', 'Robot_user',batch])
         ids = cursor.fetchall()
         id_rep = []
         for el in ids:
@@ -758,7 +757,7 @@ def download_majority_gt(chosen_users,report_list,action,mode,format,response = 
                         passage.put_infon('section', key)
                         check = False
                         keys = json_dict['rep_string'].keys()
-                        if key in keys:
+                        if key in list(keys):
                             if json_dict['rep_string'].get(key) != '':
                                 passage.text = json_dict['rep_string'][key]['text']
                                 start = str(json_dict['rep_string'][key]['start'])
@@ -823,14 +822,13 @@ def download_majority_gt(chosen_users,report_list,action,mode,format,response = 
                     document.put_infon('language', report.language)
                     document.put_infon('institute', report.institute)
                     gt_dict = create_majority_vote_gt(action, chosen_users, mode, report)
-
                     annotations = []
                     count = 0
                     maj_annotations = []
                     for val in gt_dict[mode]:
-                        data = get_fields_from_json()
-                        json_keys_to_display = data['fields']
-                        json_keys_to_ann = data['fields_to_ann']
+                        # data = get_fields_from_json()
+                        # json_keys_to_display = data['fields']
+                        # json_keys_to_ann = data['fields_to_ann']
 
                         json_dict = report_get_start_end(json_keys, json_keys_to_ann, report.id_report, report.language)
 
@@ -857,7 +855,7 @@ def download_majority_gt(chosen_users,report_list,action,mode,format,response = 
                         check = False
 
                         keys = json_dict['rep_string'].keys()
-                        if key in keys:
+                        if key in list(keys):
                             if json_dict['rep_string'].get(key) != '':
                                 # if json_dict['rep_string'].get(key) is not None and json_dict['rep_string'].get(key) != '':
                                 passage.text = json_dict['rep_string'][key]['text']
@@ -868,12 +866,15 @@ def download_majority_gt(chosen_users,report_list,action,mode,format,response = 
                                         if int(el[1]) >= int(json_dict['rep_string'][key]['start']) and int(
                                                 el[2]) <= int(json_dict['rep_string'][key]['end']):
                                             check = True
+                                            print('annoto')
+                                            print(el)
                                             passage.add_annotation(el[0])
                                             seen.append(el)
                                 if check:
                                     document.add_passage(passage)
                     collection.add_document(document)
                     collection1.add_document(document)
+
                     # documents.append(document)
 
             # workpath = os.path.dirname(os.path.abspath(__file__))  # Returns the Path your .py file is in

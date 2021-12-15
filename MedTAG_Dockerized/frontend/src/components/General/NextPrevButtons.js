@@ -84,7 +84,6 @@ function NextPrevButtons(props){
 
 
     function submit(event,token){
-
         event.preventDefault();
         if(ShowAutoAnn === false && ShowMemberGt === false){
             // console.log('clickedcheck',ClickedCheck)
@@ -215,6 +214,7 @@ function NextPrevButtons(props){
     }
 
     const getNext = () => {
+        SetLoadingReport(true)
         if(OrderVar === 'lexic'){
             var a = Index
             if (Index === Reports.length - 1) {
@@ -249,6 +249,7 @@ function NextPrevButtons(props){
     }
 
     const getPrev = () => {
+        SetLoadingReport(true)
         // console.log(Index)
         // submit(event,'annotation')
         if(OrderVar === 'lexic'){
@@ -320,10 +321,10 @@ function NextPrevButtons(props){
 
         <span  className='two_buttons_div_rep'>
 
-                        <Button id='but_dx' size='sm' className="btn prevbtn" type="submit" onClick={(e)=>submit(e,TokenNextPrev[1])} name = "prev"  variant="info"><FontAwesomeIcon icon={faChevronLeft} /></Button>&nbsp;&nbsp;
+                        <Button id='but_dx' size='sm' disabled={LoadingReport} className="btn prevbtn" type="submit" onClick={(e)=>submit(e,TokenNextPrev[1])} name = "prev"  variant="info"><FontAwesomeIcon icon={faChevronLeft} /></Button>&nbsp;&nbsp;
             {/*<Button  size='sm' className="btn prevbtn" type="submit" onClick={(e)=>onSubSx(e)} name = "prev"  variant="info"><FontAwesomeIcon icon={faChevronLeft} /></Button>&nbsp;&nbsp;*/}
             {/*<Button  size='sm' className="btn nextbtn"  type="submit" onClick={(e)=>onSubDx(e)}  name = "next"  variant="info"><FontAwesomeIcon icon={faChevronRight} /></Button>*/}
-            <Button id='but_sx' size='sm' className="btn nextbtn"  type="submit" onClick={(e)=>submit(e,TokenNextPrev[0])}  name = "next"  variant="info"><FontAwesomeIcon icon={faChevronRight} /></Button>
+            <Button id='but_sx' size='sm' className="btn nextbtn" disabled={LoadingReport} type="submit" onClick={(e)=>submit(e,TokenNextPrev[0])}  name = "next"  variant="info"><FontAwesomeIcon icon={faChevronRight} /></Button>
             </span>
 
     );

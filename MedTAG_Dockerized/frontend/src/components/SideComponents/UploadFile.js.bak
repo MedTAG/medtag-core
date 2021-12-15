@@ -143,7 +143,7 @@ function UploadFile() {
                 }
 
                 SetChecked(true)})
-                SetShowModal(false)
+                // SetShowModal(false)
                 .catch(error=>{SetLoadingTransfer(false);
                 })
         }

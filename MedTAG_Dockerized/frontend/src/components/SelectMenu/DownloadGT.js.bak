@@ -25,11 +25,12 @@ import axios from "axios";
 import './selectMenu.css'
 
 function DownloadGT(props){
-    const { showDownload,action,reportString,institute,language,usecase,updateMenu,usecaseList,languageList,instituteList } = useContext(AppContext);
+    const { showDownload,action,reportString,report_type,language,usecase,updateMenu,usecaseList,languageList,instituteList } = useContext(AppContext);
     const [UseCaseList,SetUseCaseList] = usecaseList;
     const [LanguageList,SetLanguageList] = languageList;
     const [InstituteList,SetInstituteList] = instituteList;
     // const [UpdateMenu, SetUpdateMenu] = updateMenu;
+    const [ReportType, SetReportType] = report_type
     const [ShowModalDownload, SetShowModalDownload] = showDownload;
     // const [Institute, SetInstitute] = institute;
     // const [Language, SetLanguage] = language;
@@ -118,7 +119,7 @@ function DownloadGT(props){
             SetBiocError(true)
         }
         else if(Format !== '' || token === 'all') {
-            axios.get('http://127.0.0.1:8000/get_gt_list',{params:{token:token,action:Act,inst:Ins,lang:Lang,use:Use}})
+            axios.get('http://127.0.0.1:8000/get_gt_list',{params:{reptype:ReportType,token:token,action:Act,inst:Ins,lang:Lang,use:Use}})
                 .then(response => {
                     if (response.data['ground_truths'] === 0) {
                         SetShowNotDownload(true)
@@ -149,7 +150,7 @@ function DownloadGT(props){
                                         }
                                         SetShowNotDownload(false)
                                         SetShowFormat(false)
-                                        SetShowModalDownload(false)
+                                        // SetShowModalDownload(false)
                                         SetIns('')
                                         SetUse('')
                                         SetLang('')
@@ -165,7 +166,7 @@ function DownloadGT(props){
                                         }
                                         SetShowNotDownload(false)
                                         SetShowFormat(false)
-                                        SetShowModalDownload(false)
+                                        // SetShowModalDownload(false)
                                         SetIns('')
                                         SetUse('')
                                         SetLang('')
@@ -181,7 +182,7 @@ function DownloadGT(props){
                                         }
                                         SetShowNotDownload(false)
                                         SetShowFormat(false)
-                                        SetShowModalDownload(false)
+                                        // SetShowModalDownload(false)
                                         SetIns('')
                                         SetUse('')
                                         SetLang('')
@@ -198,7 +199,7 @@ function DownloadGT(props){
                                         }
                                         SetShowNotDownload(false)
                                         SetShowFormat(false)
-                                        SetShowModalDownload(false)
+                                        // SetShowModalDownload(false)
                                         SetIns('')
                                         SetUse('')
                                         SetLang('')
@@ -227,7 +228,7 @@ function DownloadGT(props){
 
                                     SetShowNotDownload(false)
                                     SetShowFormat(false)
-                                    SetShowModalDownload(false)
+                                    // SetShowModalDownload(false)
                                     SetIns('')
                                     SetUse('')
                                     SetLang('')

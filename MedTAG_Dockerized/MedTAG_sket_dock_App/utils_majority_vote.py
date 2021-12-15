@@ -90,18 +90,22 @@ def create_majority_vote_gt(action,users,mode,report):
             annotations = AnnotationLabel.objects.filter(name = report.name,annotation_mode = 'Manual and Automatic')
             human_gt = GroundTruthLogFile.objects.filter(gt_type='labels', ns_id=ns_human, id_report=report,
                                                          language=report.language, username__in=users1)
-            rob_gt = GroundTruthLogFile.objects.get(gt_type='labels', id_report=report, language=report.language,
+            rob_gt = GroundTruthLogFile.objects.filter(gt_type='labels', id_report=report, language=report.language,
                                                     username=agent, ns_id=ns_robot)
-            robot_gt = GroundTruthLogFile.objects.filter(gt_type='labels', ns_id=ns_robot, id_report=report,
-                                                         language=report.language, username__in=users1).exclude(
-                insertion_time=rob_gt.insertion_time)
+            robot_gt_count = 0
+            if rob_gt.count() > 0:
+                rob_gt = GroundTruthLogFile.objects.get(gt_type='labels', id_report=report, language=report.language,
+                                                           username=agent, ns_id=ns_robot)
+                robot_gt = GroundTruthLogFile.objects.filter(gt_type='labels', ns_id=ns_robot, id_report=report,
+                                                         language=report.language, username__in=users1).exclude(insertion_time=rob_gt.insertion_time)
+                robot_gt_count = robot_gt.count()
 
             for label in annotations:
                 json_val = {}
                 json_val['users_list'] = []
                 json_val['total_human_gt'] = human_gt.count()
-                json_val['total_robot_gt'] = robot_gt.count()
-                json_val['total_gt'] = robot_gt.count() + human_gt.count()
+                json_val['total_robot_gt'] = robot_gt_count
+                json_val['total_gt'] = robot_gt_count + human_gt.count()
                 ins_time = '0001-01-01 00:00:00.000000+00'
 
                 robot_anno = Associate.objects.filter(username=agent, ns_id=ns_robot, id_report=report, label=label,
@@ -207,16 +211,23 @@ def create_majority_vote_gt(action,users,mode,report):
             annotations = Annotate.objects.filter(username__in=users1,id_report = report,language = report.language).distinct('start')
             human_gt = GroundTruthLogFile.objects.filter(gt_type='mentions', ns_id=ns_human, id_report=report,
                                                          language=report.language, username__in=users1)
-            rob_gt = GroundTruthLogFile.objects.get(gt_type = 'mentions',id_report = report,language = report.language,username=agent,ns_id=ns_robot)
-            robot_gt = GroundTruthLogFile.objects.filter(gt_type='mentions', ns_id=ns_robot, id_report=report,
-                                                         language=report.language, username__in=users1).exclude(insertion_time = rob_gt.insertion_time)
+            rob_gt = GroundTruthLogFile.objects.filter(gt_type='mentions', id_report=report, language=report.language,
+                                                       username=agent, ns_id=ns_robot)
+            robot_gt_count = 0
+            if rob_gt.count() > 0:
+                rob_gt = GroundTruthLogFile.objects.get(gt_type='mentions', id_report=report, language=report.language,
+                                                        username=agent, ns_id=ns_robot)
+                robot_gt = GroundTruthLogFile.objects.filter(gt_type='mentions', ns_id=ns_robot, id_report=report,
+                                                             language=report.language, username__in=users1).exclude(
+                    insertion_time=rob_gt.insertion_time)
+                robot_gt_count = robot_gt.count()
 
             for mention in annotations:
                 json_val = {}
                 json_val['users_list'] = []
                 json_val['total_human_gt'] = human_gt.count()
-                json_val['total_robot_gt'] = robot_gt.count()
-                json_val['total_gt'] = robot_gt.count() + human_gt.count()
+                json_val['total_robot_gt'] = robot_gt_count
+                json_val['total_gt'] = robot_gt_count + human_gt.count()
                 ins_time = '0001-01-01 00:00:00.000000+00'
                 ment = Mention.objects.get(id_report=report, language=report.language, start=mention.start_id,
                                            stop=mention.stop)
@@ -330,9 +341,15 @@ def create_majority_vote_gt(action,users,mode,report):
             annotations = Contains.objects.filter(username__in=users1,id_report = report,language = report.language).distinct('concept_url', 'name')
             human_gt = GroundTruthLogFile.objects.filter(gt_type='concepts', ns_id=ns_human, id_report=report,
                                                          language=report.language, username__in=users1)
-            rob_gt = GroundTruthLogFile.objects.get(gt_type = 'concepts',id_report = report,language = report.language,username=agent,ns_id=ns_robot)
-            robot_gt = GroundTruthLogFile.objects.filter(gt_type='concepts', ns_id=ns_robot, id_report=report,
-                                                         language=report.language, username__in=users1).exclude(insertion_time = rob_gt.insertion_time)
+            rob_gt = GroundTruthLogFile.objects.filter(gt_type = 'concepts',id_report = report,language = report.language,username=agent,ns_id=ns_robot)
+            robot_gt_count = 0
+            if rob_gt.count() > 0:
+                rob_gt = GroundTruthLogFile.objects.get(gt_type='concepts', id_report=report, language=report.language,
+                                                        username=agent, ns_id=ns_robot)
+                robot_gt = GroundTruthLogFile.objects.filter(gt_type='concepts', ns_id=ns_robot, id_report=report,
+                                                             language=report.language, username__in=users1).exclude(
+                    insertion_time=rob_gt.insertion_time)
+                robot_gt_count = robot_gt.count()
             # json_val = {}
             # json_val['total_human_gt'] = majority_gt['Human'][0]['total_gt']
             # json_val['total_robot_gt'] = majority_gt['Robot'][0]['total_gt']
@@ -342,8 +359,8 @@ def create_majority_vote_gt(action,users,mode,report):
                 json_val = {}
                 json_val['users_list'] = []
                 json_val['total_human_gt'] = human_gt.count()
-                json_val['total_robot_gt'] = robot_gt.count()
-                json_val['total_gt'] = robot_gt.count() + human_gt.count()
+                json_val['total_robot_gt'] = robot_gt_count
+                json_val['total_gt'] = robot_gt_count + human_gt.count()
                 ins_time = '0001-01-01 00:00:00.000000+00'
                 concept = Concept.objects.get(concept_url=el.concept_url_id)
                 area = SemanticArea.objects.get(name=el.name_id)
@@ -469,16 +486,22 @@ def create_majority_vote_gt(action,users,mode,report):
             annotations = Linked.objects.filter(username__in=users1, id_report=report,language=report.language).distinct('concept_url', 'name','start')
             human_gt = GroundTruthLogFile.objects.filter(gt_type='concept-mention', ns_id=ns_human, id_report=report,
                                                          language=report.language, username__in=users1)
-            rob_gt = GroundTruthLogFile.objects.get(gt_type='concept-mention', id_report=report, language=report.language,
-                                                    username=agent, ns_id=ns_robot)
-            robot_gt = GroundTruthLogFile.objects.filter(gt_type='concept-mention', ns_id=ns_robot, id_report=report,
-                                                         language=report.language, username__in=users1).exclude(insertion_time=rob_gt.insertion_time)
+            rob_gt = GroundTruthLogFile.objects.filter(gt_type='concept-mention', id_report=report, language=report.language,
+                                                       username=agent, ns_id=ns_robot)
+            robot_gt_count = 0
+            if rob_gt.count() > 0:
+                rob_gt = GroundTruthLogFile.objects.get(gt_type='concept-mention', id_report=report, language=report.language,
+                                                        username=agent, ns_id=ns_robot)
+                robot_gt = GroundTruthLogFile.objects.filter(gt_type='concept-mention', ns_id=ns_robot, id_report=report,
+                                                             language=report.language, username__in=users1).exclude(
+                    insertion_time=rob_gt.insertion_time)
+                robot_gt_count = robot_gt.count()
             for el in annotations:
                 json_val = {}
                 json_val['users_list'] = []
                 json_val['total_human_gt'] = human_gt.count()
-                json_val['total_robot_gt'] = robot_gt.count()
-                json_val['total_gt'] = robot_gt.count() + human_gt.count()
+                json_val['total_robot_gt'] = robot_gt_count
+                json_val['total_gt'] = robot_gt_count + human_gt.count()
                 ins_time = '0001-01-01 00:00:00.000000+00'
                 concept = Concept.objects.get(concept_url=el.concept_url_id)
                 area = SemanticArea.objects.get(name=el.name_id)
@@ -688,6 +711,8 @@ def create_majority_csv(users,reports,action,mode):
 
             norm = ''
             row = []
+            if 'Robot_user' in val['users_list']:
+                val['users_list'].remove('Robot_user')
             if mode == 'both':
                 norm = 'manual_and_auto'
                 if 'Robot_user' in val['robot_annotators']:
@@ -713,6 +738,7 @@ def create_majority_csv(users,reports,action,mode):
             row.append(rep.name_id)
             if action == 'labels':
                 row.append(val['label'])
+                row.append(', '.join(val['users_list']))
                 if mode == 'Human':
                     row.append(', '.join(val['users_list']))
                     row.append(0)
@@ -727,7 +753,7 @@ def create_majority_csv(users,reports,action,mode):
                 row.append(val['start'])
                 row.append(val['stop'])
                 row.append(val['mention'])
-
+                row.append(', '.join(val['users_list']))
                 if mode == 'Human':
                     row.append(', '.join(val['users_list']))
                     row.append(0)
@@ -742,6 +768,7 @@ def create_majority_csv(users,reports,action,mode):
                 row.append(val['concept_url'])
                 row.append(val['concept_name'])
                 row.append(val['area'])
+                row.append(', '.join(val['users_list']))
                 if mode == 'Human':
                     row.append(', '.join(val['users_list']))
                     row.append(0)
@@ -759,6 +786,7 @@ def create_majority_csv(users,reports,action,mode):
                 row.append(val['concept_name'])
                 row.append(val['concept_url'])
                 row.append(val['area'])
+                row.append(', '.join(val['users_list']))
                 if mode == 'Human':
                     row.append(', '.join(val['users_list']))
                     row.append(0)

@@ -57,6 +57,7 @@ function StartingMenu(props){
     // const handleClose = () => SetShowModal(false);
     // const handleCloseAgent = () => setShowModalAgent(false);
     const [Options_usecases, Setoptions_usecases] = useState([])
+    const [PubOptions_usecases, SetPuboptions_usecases] = useState([])
     const [Options_language, Setoptions_language] = useState([])
     const [Options_institute, Setoptions_institute] = useState([])
     const [Options_batch, Setoptions_batch] = useState([])
@@ -75,6 +76,7 @@ function StartingMenu(props){
         if(UseCaseList.length > 0 && InstituteList.length > 0 && LanguageList.length > 0){
             var options_institute = []
             var options_language = []
+            var options_usecases = []
             var options_reps = []
 
             InstituteList.map((inst)=>{
@@ -109,7 +111,8 @@ function StartingMenu(props){
         axios.get('http://127.0.0.1:8000/check_medtag_reports').then(function(response){
             if(response.data['count'] > 0){
                 SetMedTAGPresence(true)
-                options_reps.push({value: 'reports', label: 'MedTAG articles'})
+                // options_reps.push({value: 'reports', label: 'MedTAG articles'})
+                options_reps.push({value: 'reports', label: 'MedTAG reports'})
 
             }
             else{
@@ -122,32 +125,52 @@ function StartingMenu(props){
         })
         SetOptions_reptype(options_reps) //Added 21/10/21
 
+        var options_usecases = []
+        var pub_options_usecases = []
+
+        axios.get("http://127.0.0.1:8000/pubmed_reports").then(response => {
+            (response.data['usecase'].map(uc=>{
+                pub_options_usecases.push({value: uc, label: uc})
+
+            }));
+            SetPuboptions_usecases(pub_options_usecases)
+        }).catch(function (error){console.log(error)})
+
+        axios.get("http://127.0.0.1:8000/medtag_reports").then(response => {
+            (response.data['usecase'].map(uc=>{
+                options_usecases.push({value: uc, label: uc})
+
+            }));
+            Setoptions_usecases(options_usecases)
+        }).catch(function (error){console.log(error)})
+
     },[UseCaseList,InstituteList,LanguageList])
 
     useEffect(()=>{
         var options_usecases = []
         if(Rep==='pubmed'){
+
             SetIns('PUBMED')
             SetLang('english')
 
-            axios.get("http://127.0.0.1:8000/pubmed_reports").then(response => {
-                (response.data['usecase'].map(uc=>{
-                    options_usecases.push({value: uc, label: uc})
-
-                }));
-
-            }).catch(function (error){console.log(error)})
+            // axios.get("http://127.0.0.1:8000/pubmed_reports").then(response => {
+            //     (response.data['usecase'].map(uc=>{
+            //         options_usecases.push({value: uc, label: uc})
+            //
+            //     }));
+            //     Setoptions_usecases(options_usecases)
+            // }).catch(function (error){console.log(error)})
         }
         else if(Rep==='reports'){
-            axios.get("http://127.0.0.1:8000/medtag_reports").then(response => {
-                (response.data['usecase'].map(uc=>{
-                    options_usecases.push({value: uc, label: uc})
-
-                }));
-
-            }).catch(function (error){console.log(error)})
+            // axios.get("http://127.0.0.1:8000/medtag_reports").then(response => {
+            //     (response.data['usecase'].map(uc=>{
+            //         options_usecases.push({value: uc, label: uc})
+            //
+            //     }));
+            //     Setoptions_usecases(options_usecases)
+            // }).catch(function (error){console.log(error)})
         }
-        Setoptions_usecases(options_usecases)
+
 
     },[Rep])
 
@@ -335,7 +358,6 @@ function StartingMenu(props){
             <Col md={8}></Col>
             <Col md={4} style={{'text-align':'right'}}>
                 <span className='userInfo'><span > {Username} </span><FontAwesomeIcon icon={faUser} size='2x'/> <a href="http://127.0.0.1:8000/logout" className="badge badge-secondary" >Logout <FontAwesomeIcon icon={faSignOutAlt}/></a></span>
-
             </Col>
         </Row>
         <div style={{'text-align':'center','margin-top':'20px'}}>
@@ -344,10 +366,9 @@ function StartingMenu(props){
             </div>
             {ShowError === true && <div style={{'font-size':'18px','color':'red'}}><FontAwesomeIcon icon={faTimesCircle}/> Please fill all the fields <FontAwesomeIcon icon={faTimesCircle}/></div>}
             {ShowErrorReports === true && <h5>There are not reports for this configuration, please change it. </h5>}
-
             <Row>
                 <Col md={12}>
-                    <div style={{'text-align':'center','margin-top':'40px'}}>
+                    {Options_reptype !== [] && <div style={{'text-align':'center','margin-top':'40px'}}>
                         <div><FontAwesomeIcon icon={faStickyNote}  /> Report type</div>
                         <div style={{'margin-left':'20%','margin-right':'20%'}}><Select
 
@@ -356,22 +377,29 @@ function StartingMenu(props){
                             options={Options_reptype} // ADDED 21/10/21
 
                         /><hr/></div>
-
-
-                    </div>
+                    </div>}
                 </Col>
             </Row>
             <Row>
                 <Col md={12}>
-                    <div style={{'text-align':'center'}}>
-                        {Options_usecases !== [] && <>
+                    {Rep === 'reports'  && <div style={{'text-align':'center'}}>
+                        <>
                             <div><FontAwesomeIcon icon={faMicroscope}  /> Use Case</div>
                             <div style={{'margin-left':'20%','margin-right':'20%'}}><Select
                                 className='selection'
                                 onChange={(option)=>handleChangeUseCase(option)}
                                 options={Options_usecases}
-                            /><hr/></div></>}
-                         </div>
+                            /><hr/></div></>
+                         </div>}
+                    {Rep === 'pubmed'  && <div style={{'text-align':'center'}}>
+                        <>
+                            <div><FontAwesomeIcon icon={faMicroscope}  /> Use Case</div>
+                            <div style={{'margin-left':'20%','margin-right':'20%'}}><Select
+                                className='selection'
+                                onChange={(option)=>handleChangeUseCase(option)}
+                                options={PubOptions_usecases}
+                            /><hr/></div></>
+                    </div>}
                 </Col></Row>
             {Use !== '' && BatchList.length > 1 && <Row>
                 <Col md={12}>
@@ -427,7 +455,6 @@ function StartingMenu(props){
                             className='selection'
                             onChange={(option)=>handleChangeMode(option)}
                             options={Options_annotation}
-
                         /></div><hr/>
                     </div>}
                 </Col>
@@ -442,13 +469,9 @@ function StartingMenu(props){
         </div>
         </div>
 
-
-
     );
-
-
 
 }
 
 
-export default (StartingMenu);
+export default StartingMenu;

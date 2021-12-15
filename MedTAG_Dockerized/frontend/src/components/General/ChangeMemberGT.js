@@ -20,7 +20,7 @@ import Tooltip from "react-bootstrap/Tooltip";
 
 
 function ChangeMemberGT(props){
-    const { fieldsToAnn,makereq,userchosen,selectedLang,loadingChangeGT,batchNumber,report_type,institute,language,finalcount,username,showmember,showmajority,reached,showautoannotation,reportString,fields,annotation,report,usecase,concepts,semanticArea, disButton,labelsToInsert, selectedconcepts,linkingConcepts, radio, checks,save, userLabels, labelsList, mentionsList, action, reports, index, mentionSingleWord, allMentions, tokens, associations } = useContext(AppContext);
+    const { fieldsToAnn,makereq,userchosen,selectedLang,usersListAnnotations,loadingChangeGT,batchNumber,report_type,institute,language,finalcount,username,showmember,showmajority,reached,showautoannotation,reportString,fields,annotation,report,usecase,concepts,semanticArea, disButton,labelsToInsert, selectedconcepts,linkingConcepts, radio, checks,save, userLabels, labelsList, mentionsList, action, reports, index, mentionSingleWord, allMentions, tokens, associations } = useContext(AppContext);
     const [associations_to_show,SetAssociations_to_show] = associations;
     // const [SelectedLang,SetSelectedLang] = selectedLang
     const [labels, setLabels] = labelsList
@@ -38,7 +38,7 @@ function ChangeMemberGT(props){
     const [FinalCount, SetFinalCount] = finalcount;
     const [FinalCountReached, SetFinalCountReached] = reached;
     const [ClickBottomMenu,SetClickBottomMenu] = useState(false)
-
+    const [UsersListAnnotations,SetUsersListAnnotations] = usersListAnnotations
     const [ShowAutoAnn,SetShowAutoAnn] = showautoannotation;
     const [ShowMemberGt,SetShowMemberGt] =showmember
     const [ShowMajorityGt,SetShowMajorityGt] = showmajority
@@ -92,9 +92,18 @@ function ChangeMemberGT(props){
         return ordered
     }
 
+    // useEffect(()=>{
+    //     SetMakeReq(true)
+    // },[ShowAutoAnn,ShowMemberGt,UserChosen])
+
     useEffect(()=>{
-        SetMakeReq(true)
-    },[ShowAutoAnn,ShowMemberGt,UserChosen])
+        // SetMakeReq(true)
+        but1.current.className = 'btn btn-outline-primary btn-sm'
+        but2.current.className = 'btn btn-outline-primary btn-sm'
+        but3.current.className = 'btn btn-outline-primary btn-sm'
+
+
+    },[])
 
     useEffect(()=>{
         SetMakeReq(true)
@@ -163,18 +172,20 @@ function ChangeMemberGT(props){
         but_mentions.map(el=>{
             el.style.fontWeight = 'normal'
         })
-        if(Action === 'mentions' || Action === 'concept-mention'){
+        if(but_mentions.length > 0 && (Action === 'mentions' || Action === 'concept-mention')){
             var all = (document.getElementById('select_all_butt'))
             all.style.fontWeight = 'normal'
         }
-        SetClickBottomMenu(true)
+
+
         Children.map(child=>{
             child.style.fontWeight = 'normal'
         })
         SetShowAutoAnn(false)
-        SetClickBottomMenu(true)
+        SetUserGT(true)
         SetShowMemberGt(false)
         SetChangeButton(false)
+        SetClickBottomMenu(true)
     }
 
     function RobotGT(){
@@ -184,6 +195,7 @@ function ChangeMemberGT(props){
         but3.current.className = 'btn btn-outline-primary btn-sm'
         if(ShowMemberGt === false && ShowAutoAnn === false){
             submit(Action)
+
         }
         Children.map(child=>{
             child.setAttribute('fontWeight','normal')
@@ -192,7 +204,7 @@ function ChangeMemberGT(props){
         but_mentions.map(el=>{
             el.style.fontWeight = 'normal'
         })
-        if(Action === 'mentions' || Action === 'concept-mention'){
+        if(but_mentions.length > 0 && (Action === 'mentions' || Action === 'concept-mention')){
             var all = (document.getElementById('select_all_butt'))
             all.style.fontWeight = 'normal'
         }
@@ -201,19 +213,14 @@ function ChangeMemberGT(props){
             child.style.fontWeight = 'normal'
         })
         SetShowMemberGt(false)
-        SetClickBottomMenu(true)
-        if(ShowAutoAnn === false) {
+        // SetClickBottomMenu(true)
 
-            SetLoadingChangeGT(true)
-        }
         SetShowAutoAnn(true)
         SetChangeButton(false)
         SetUserGT(false)
 
-
-
-
     }
+
     function MemberGT(){
         SetMakeReq(true)
         but1.current.className = 'btn btn-outline-primary btn-sm'
@@ -230,7 +237,7 @@ function ChangeMemberGT(props){
         but_mentions.map(el=>{
             el.style.fontWeight = 'normal'
         })
-        if(Action === 'mentions' || Action === 'concept-mention'){
+        if(but_mentions.length > 0 && (Action === 'mentions' || Action === 'concept-mention')){
             var all = (document.getElementById('select_all_butt'))
             all.style.fontWeight = 'normal'
         }
@@ -238,22 +245,32 @@ function ChangeMemberGT(props){
         Children.map(child=>{
             child.style.fontWeight = 'normal'
         })
-        if(ShowMemberGt === false){
-            SetLoadingChangeGT(true)
-        }
         SetShowMemberGt(true)
+        // SetClickBottomMenu(true)
 
-        SetClickBottomMenu(true)
         SetShowAutoAnn(false)
         SetChangeButton(false)
         SetUserGT(false)
+
+
 
     }
 
 
     useEffect(()=>{
+        SetClickBottomMenu(true)
+        SetChangeButton(false)
+        Children.map(child=>{
+            child.setAttribute('font-weight','normal')
+        })
+    },[UserChosen])
+
+
+    useEffect(()=>{
         // console.log('userchosen',MakeReq)
         var username_to_call = Username
+        console.log('clickbut',ClickBottomMenu)
+
         if (Annotation === 'Automatic'){
             var ns_id = 'Robot'
         }
@@ -268,19 +285,22 @@ function ChangeMemberGT(props){
             username_to_call = UserChosen
 
         }
-        // console.log('CONCEPTS',ClickBottomMenu)
+        console.log('CONCEPTS',ClickBottomMenu)
+        console.log('CONCEPTS',username_to_call)
+        console.log('CONCEPTS',ns_id)
+        console.log('CONCEPTS',ShowAutoAnn)
+        console.log('CONCEPTS',ShowMemberGt)
 
         if(ClickBottomMenu){
             SetLoadingChangeGT(true)
-            console.log('load true')
             // if(MakeReq && ChangeButton){
             axios.get("http://0.0.0.0:8000/report_start_end", {params: {ns_id:ns_id,report_id: Reports[Index].id_report.toString()}}).then(response => {
                 SetFinalCount(response.data['final_count']);SetFinalCountReached(false);SetChangeButton(true)
             })
-            axios.get("http://0.0.0.0:8000/get_fields",{params:{ns_id:ns_id}}).then(response => {SetFields(response.data['fields']);SetFieldsToAnn(response.data['fields_to_ann']);})
+            // axios.get("http://0.0.0.0:8000/get_fields",{params:{ns_id:ns_id}}).then(response => {SetFields(response.data['fields']);SetFieldsToAnn(response.data['fields_to_ann']);})
 
             if(Action === 'labels' ){
-                axios.get("http://0.0.0.0:8000/annotationlabel/all_labels",{params:{ns_id:ns_id}}).then(response => {setLabels(response.data['labels'])})
+                // axios.get("http://0.0.0.0:8000/annotationlabel/all_labels",{params:{ns_id:ns_id}}).then(response => {setLabels(response.data['labels'])})
                 axios.get("http://0.0.0.0:8000/annotationlabel/user_labels", {params: {language:Language,ns_id:ns_id,username:username_to_call,report_id: Reports[Index].id_report.toString()}}).then(response => {
                     setLabels_to_show(response.data[Action.toString()]);
                     SetLoadingChangeGT(false);console.log('load false 1');SetMakeReq(false);console.log('falso');
@@ -289,35 +309,88 @@ function ChangeMemberGT(props){
             }
             else if(Action === 'concepts' ){
                 // console.log('CONCEPTS')
-                axios.get("http://0.0.0.0:8000/get_semantic_area",{params: {ns_id:ns_id}}).then(response => SetSemanticArea(response.data['area']))
-                axios.get("http://0.0.0.0:8000/conc_view",{params: {ns_id:ns_id}}).then(response => {SetConcepts(response.data['concepts'])})
+                // axios.get("http://0.0.0.0:8000/get_semantic_area",{params: {ns_id:ns_id}}).then(response => SetSemanticArea(response.data['area']))
+                // axios.get("http://0.0.0.0:8000/conc_view",{params: {ns_id:ns_id}}).then(response => {SetConcepts(response.data['concepts'])})
                 axios.get("http://0.0.0.0:8000/contains", {params: {language:Language,ns_id:ns_id,username:username_to_call,report_id: Reports[Index].id_report.toString()}}).then(response => {setSelectedConcepts(response.data);SetLoadingChangeGT(false);console.log('load false 2');})
                 SetMakeReq(false)
             }
+            console.log('click setto 1')
+
             SetClickBottomMenu(false)
             SetLoadingChangeGT(false)
         }
 
 
 
-    },[ClickBottomMenu,UserChosen])
+    },[ClickBottomMenu,UserChosen,ShowAutoAnn,ShowMemberGt,userGT])
+
+    // useEffect(()=>{
+    //     // console.log('userchosen',MakeReq)
+    //     var username_to_call = Username
+    //     if (Annotation === 'Automatic'){
+    //         var ns_id = 'Robot'
+    //     }
+    //     else{
+    //         var ns_id = 'Human'
+    //     }
+    //     if(ShowAutoAnn){
+    //         username_to_call = Username
+    //         ns_id = 'Robot'
+    //     }
+    //     else if(ShowMemberGt){
+    //         username_to_call = UserChosen
+    //
+    //     }
+    //     // console.log('CONCEPTS',ClickBottomMenu)
+    //
+    //     if(ClickBottomMenu){
+    //         SetLoadingChangeGT(true)
+    //         console.log('load true')
+    //         // if(MakeReq && ChangeButton){
+    //         axios.get("http://0.0.0.0:8000/report_start_end", {params: {ns_id:ns_id,report_id: Reports[Index].id_report.toString()}}).then(response => {
+    //             SetFinalCount(response.data['final_count']);SetFinalCountReached(false);SetChangeButton(true)
+    //         })
+    //         axios.get("http://0.0.0.0:8000/get_fields",{params:{ns_id:ns_id}}).then(response => {SetFields(response.data['fields']);SetFieldsToAnn(response.data['fields_to_ann']);})
+    //
+    //         if(Action === 'labels' ){
+    //             axios.get("http://0.0.0.0:8000/annotationlabel/all_labels",{params:{ns_id:ns_id}}).then(response => {setLabels(response.data['labels'])})
+    //             axios.get("http://0.0.0.0:8000/annotationlabel/user_labels", {params: {language:Language,ns_id:ns_id,username:username_to_call,report_id: Reports[Index].id_report.toString()}}).then(response => {
+    //                 setLabels_to_show(response.data[Action.toString()]);
+    //                 SetLoadingChangeGT(false);console.log('load false 1');SetMakeReq(false);console.log('falso');
+    //
+    //             })
+    //         }
+    //         else if(Action === 'concepts' ){
+    //             // console.log('CONCEPTS')
+    //             axios.get("http://0.0.0.0:8000/get_semantic_area",{params: {ns_id:ns_id}}).then(response => SetSemanticArea(response.data['area']))
+    //             axios.get("http://0.0.0.0:8000/conc_view",{params: {ns_id:ns_id}}).then(response => {SetConcepts(response.data['concepts'])})
+    //             axios.get("http://0.0.0.0:8000/contains", {params: {language:Language,ns_id:ns_id,username:username_to_call,report_id: Reports[Index].id_report.toString()}}).then(response => {setSelectedConcepts(response.data);SetLoadingChangeGT(false);console.log('load false 2');})
+    //             SetMakeReq(false)
+    //         }
+    //         SetClickBottomMenu(false)
+    //         SetLoadingChangeGT(false)
+    //     }
+    //
+    //
+    //
+    // },[ClickBottomMenu,UserChosen])
 
 
-    useEffect(()=>{
-        SetShowMajorityGt(false)
-        SetShowAutoAnn(false)
-        SetShowMemberGt(false)
-        SetClickBottomMenu(false)
-    },[Report,Index,Action])
+    // useEffect(()=>{
+    //     SetShowMajorityGt(false)
+    //     SetShowAutoAnn(false)
+    //     SetShowMemberGt(false)
+    //     SetClickBottomMenu(false)
+    // },[Index,Action])
 
-    useEffect(()=>{
-        SetClickBottomMenu(true)
-        SetChangeButton(false)
-    },[UserChosen])
+    // useEffect(()=>{
+    //     SetClickBottomMenu(true)
+    //     SetChangeButton(false)
+    // },[UserChosen])
 
     useEffect(()=>{
         console.log('change',ChangeButton)
-        if(ChangeButton && (Fields.length > 0 || FieldsToAnn.length > 0) ){ // Adedd 18/10
+        if(ChangeButton === true && (Fields.length > 0 || FieldsToAnn.length > 0) ){ // Adedd 3092021
             var username = Username
             if(Annotation === 'Automatic'){
                 var mode = 'Robot'
@@ -335,20 +408,25 @@ function ChangeMemberGT(props){
             }
             // if((ShowAutoAnn === true || ShowMemberGt === true) && ChangeButton === true){
             if(Action === 'mentions' ){
-                console.log('ordered1')
-
+                SetLoadingChangeGT(true)
+                SetLoadingChangeGT(false);console.log('load true 1');
                 axios.get("http://0.0.0.0:8000/mention_insertion", {params: {language:Language,username:username,ns_id:mode,report_id: Reports[Index].id_report.toString()}}).then(response => {
                     var mentions = (response.data[Action.toString()])
-                    SetLoadingChangeGT(false)
+                    // SetLoadingChangeGT(false);
+                    SetLoadingChangeGT(false);console.log('load false 3');
+                    console.log('falso')
+
                     var ordered = order_array(mentions)
                     console.log('ordered',ordered)
                     SetMentions_to_show(ordered);
                     SetMakeReq(false)
 
                 })
+                SetLoadingChangeGT(true)
             }
 
             else if(Action === 'concept-mention' ){
+                SetLoadingChangeGT(true)
                 axios.get("http://0.0.0.0:8000/insert_link/linked", {params: {language:Language,username:username,ns_id:mode,report_id: Reports[Index].id_report.toString()}}).then(response => {
                     SetAssociations_to_show(response.data['associations']);SetLoadingChangeGT(false);SetMakeReq(false)
                 })
@@ -356,15 +434,67 @@ function ChangeMemberGT(props){
                     var mentions = (response.data['mentions1']);
                     var ordered = order_array(mentions)
                     console.log('ordered2',ordered)
-                    SetLoadingChangeGT(false)
+                    // SetLoadingChangeGT(false);
+                    SetLoadingChangeGT(false);console.log('load false 4');
+                    console.log('falso')
                     SetMakeReq(false)
                     SetAllMentions(ordered)
                 })
+                SetLoadingChangeGT(true)
             }
         }
-
-
     },[ChangeButton])
+
+    // useEffect(()=>{
+    //     console.log('change',ChangeButton)
+    //     if(ChangeButton && (Fields.length > 0 || FieldsToAnn.length > 0) ){ // Adedd 18/10
+    //         var username = Username
+    //         if(Annotation === 'Automatic'){
+    //             var mode = 'Robot'
+    //         }
+    //         else if (Annotation === 'Manual'){
+    //             var mode = 'Human'
+    //         }
+    //
+    //         if(ShowAutoAnn){
+    //             mode = 'Robot'
+    //         }
+    //         if(ShowMemberGt){
+    //             username = UserChosen
+    //
+    //         }
+    //         // if((ShowAutoAnn === true || ShowMemberGt === true) && ChangeButton === true){
+    //         if(Action === 'mentions' ){
+    //             console.log('ordered1')
+    //
+    //             axios.get("http://0.0.0.0:8000/mention_insertion", {params: {language:Language,username:username,ns_id:mode,report_id: Reports[Index].id_report.toString()}}).then(response => {
+    //                 var mentions = (response.data[Action.toString()])
+    //                 SetLoadingChangeGT(false)
+    //                 var ordered = order_array(mentions)
+    //                 console.log('ordered',ordered)
+    //                 SetMentions_to_show(ordered);
+    //                 SetMakeReq(false)
+    //
+    //             })
+    //         }
+    //
+    //         else if(Action === 'concept-mention' ){
+    //             axios.get("http://0.0.0.0:8000/insert_link/linked", {params: {language:Language,username:username,ns_id:mode,report_id: Reports[Index].id_report.toString()}}).then(response => {
+    //                 SetAssociations_to_show(response.data['associations']);SetLoadingChangeGT(false);SetMakeReq(false)
+    //             })
+    //             axios.get("http://0.0.0.0:8000/insert_link/mentions", {params: {language:Language,username:username,ns_id:mode,report_id: Reports[Index].id_report.toString()}}).then(response => {
+    //                 var mentions = (response.data['mentions1']);
+    //                 var ordered = order_array(mentions)
+    //                 console.log('ordered2',ordered)
+    //                 SetLoadingChangeGT(false)
+    //                 SetMakeReq(false)
+    //                 SetAllMentions(ordered)
+    //             })
+    //         }
+    //     }
+    //
+    //
+    // },[ChangeButton])
 
 
     const submit = (token) => {
@@ -517,7 +647,7 @@ function ChangeMemberGT(props){
                             </Tooltip>
                         }
                     >
-                    <Button disabled={UsersList.length < 2} ref = {but3} onClick={()=>MemberGT()} id='mate' size = 'sm' variant="secondary">
+                    <Button disabled={UsersListAnnotations.length === 0} ref = {but3} onClick={()=>MemberGT()} id='mate' size = 'sm' variant="secondary">
                         <FontAwesomeIcon icon={faUserEdit} />
                     </Button></OverlayTrigger>
                 </ButtonGroup>

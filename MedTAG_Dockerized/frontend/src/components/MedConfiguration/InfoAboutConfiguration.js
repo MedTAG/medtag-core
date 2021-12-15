@@ -152,7 +152,14 @@ function InfoAboutConfiguration() {
 
     return (
         <div className="App">
-
+            {Username !== Admin ?
+                <div><h1>FORBIDDEN</h1>
+                    <div>
+                        <a href="http://0.0.0.0:8000/index">
+                            Back
+                        </a>
+                    </div>
+                </div>:
 
             <div >
                 {/*<div style={{'float':'left','padding':'10px','padding-left':'250px'}}><button className='menuButton' onClick={(e)=>handleBar(e)}><FontAwesomeIcon icon={faBars} size='2x' /></button></div>*/}
@@ -265,7 +272,7 @@ function InfoAboutConfiguration() {
                     {Redir && <Redirect  to="/configure" />}
                     {UpdateConfiguration && <Redirect  to="/updateConfiguration" />}
                 </div></Container>
-            </div>
+            </div>}
 
             {ShowModalMissing === true  &&
 

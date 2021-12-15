@@ -81,7 +81,10 @@ def upload_files(files,user_to,overwrite):
     """This method handles the upload of csv files to copy th annotations from"""
 
     json_resp = {'message':'Ok'}
-
+    mode_rob = NameSpace.objects.get(ns_id='Robot')
+    mode_hum = NameSpace.objects.get(ns_id='Human')
+    print(user_to)
+    username_rob = User.objects.get(username='Robot_user', ns_id=mode_rob)
     try:
         with transaction.atomic():
             for i in range(len(files)):
@@ -101,42 +104,245 @@ def upload_files(files,user_to,overwrite):
 
                 for i, g in df.groupby(['id_report','language','annotation_mode']):
                     count_rows = g.shape[0]
+
+                    deleted_mentions = False
+
                     if df.annotation_mode.unique()[0] == 'Manual':
                         a = 'Human'
                     else:
                         a = 'Robot'
                     report_cur = Report.objects.get(id_report = str(g.id_report.unique()[0]), language = g.language.unique()[0] )
-                    anno_mode = NameSpace.objects.get(ns_id =a)
+                    mode = NameSpace.objects.get(ns_id =a)
+                    anno_mode = mode
+                    report = report_cur
                     g = g.reset_index()
                     action = ''
+
+                    user = User.objects.get(username=user_to, ns_id=mode)
+
+                    if set(cols) == set(labels):
+                        user_to_gt = GroundTruthLogFile.objects.filter(username=user, ns_id=mode,
+                                                                       id_report=report, language=report.language,
+                                                                       gt_type='labels')
+                        robot_gt = GroundTruthLogFile.objects.filter(username=username_rob, ns_id=mode_rob,
+                                                                     id_report=report, language=report.language,
+                                                                     gt_type='labels')
+                        ins_time = ''
+                        if robot_gt.exists():
+                            rob_first_gt = robot_gt.first()
+                            ins_time = rob_first_gt.insertion_time
+
+                        if overwrite == False:
+                            if mode.ns_id == 'Robot':
+                                if user_to_gt.exists():
+                                    user_to_gt_first = user_to_gt.first()
+                                    if user_to_gt_first.insertion_time == ins_time:
+                                        GroundTruthLogFile.objects.filter(username=user, ns_id=mode,
+                                                                          id_report=report,
+                                                                          language=report.language,
+                                                                          gt_type='labels').delete()
+                                        Associate.objects.filter(username=user, ns_id=mode, id_report=report,
+                                                                 language=report.language).delete()
+                        else:
+                            GroundTruthLogFile.objects.filter(username=user, ns_id=mode, id_report=report,
+                                                              language=report.language,
+                                                              gt_type='labels').delete()
+                            Associate.objects.filter(username=user, ns_id=mode, id_report=report,
+                                                     language=report.language).delete()
+
+
+                    elif set(cols) == set(mentions):
+                        user_to_gt = GroundTruthLogFile.objects.filter(username=user, ns_id=mode,
+                                                                       id_report=report, language=report.language,
+                                                                       gt_type='mentions')
+                        robot_gt = GroundTruthLogFile.objects.filter(username=username_rob, ns_id=mode_rob,
+                                                                     id_report=report, language=report.language,
+                                                                     gt_type='mentions')
+                        ins_time = ''
+                        if robot_gt.exists():
+                            rob_first_gt = robot_gt.first()
+                            ins_time = rob_first_gt.insertion_time
+
+                        if overwrite == False:
+                            if mode.ns_id == 'Robot':
+                                if user_to_gt.exists():
+                                    user_to_gt_first = user_to_gt.first()
+                                    if user_to_gt_first.insertion_time == ins_time:
+                                        GroundTruthLogFile.objects.filter(username=user, ns_id=mode,
+                                                                          id_report=report,
+                                                                          language=report.language,
+                                                                          gt_type='mentions').delete()
+                                        if Linked.objects.filter(username=user, ns_id=mode, id_report=report,
+                                                                 language=report.language).exists():
+                                            GroundTruthLogFile.objects.filter(username=user, ns_id=mode,
+                                                                              id_report=report,
+                                                                              language=report.language,
+                                                                              gt_type='concept-mention').delete()
+                                            GroundTruthLogFile.objects.filter(username=user, ns_id=mode,
+                                                                              id_report=report,
+                                                                              language=report.language,
+                                                                              gt_type='concepts').delete()
+                                        Annotate.objects.filter(username=user, ns_id=mode, id_report=report,
+                                                                 language=report.language).delete()
+                                        links = Linked.objects.filter(username=user, ns_id=mode, id_report=report,
+                                                           language=report.language)
+                                        for e in links:
+                                            concept = e.concept_url
+                                            Contains.objects.filter(username=user, ns_id=mode, id_report=report,
+                                                                 language=report.language, concept_url = concept).delete()
+                                        links.delete()
+                        else:
+                            GroundTruthLogFile.objects.filter(username=user, ns_id=mode,
+                                                              id_report=report,
+                                                              language=report.language,
+                                                              gt_type='mentions').delete()
+                            if Linked.objects.filter(username=user, ns_id=mode,id_report=report,language=report.language).exists():
+                                GroundTruthLogFile.objects.filter(username=user, ns_id=mode,
+                                                                  id_report=report,
+                                                                  language=report.language,
+                                                                  gt_type='concept-mention').delete()
+                                GroundTruthLogFile.objects.filter(username=user, ns_id=mode,
+                                                                  id_report=report,
+                                                                  language=report.language,
+                                                                  gt_type='concepts').delete()
+
+                            Annotate.objects.filter(username=user, ns_id=mode, id_report=report,
+                                                     language=report.language).delete()
+                            links = Linked.objects.filter(username=user, ns_id=mode, id_report=report,
+                                                           language=report.language)
+                            for e in links:
+                                concept = e.concept_url
+                                Contains.objects.filter(username=user, ns_id=mode, id_report=report,
+                                                        language=report.language, concept_url=concept).delete()
+                            links.delete()
+
+                    elif set(cols) == set(concepts):
+                        user_to_gt = GroundTruthLogFile.objects.filter(username=user, ns_id=mode,
+                                                                       id_report=report, language=report.language,
+                                                                       gt_type='concepts')
+                        robot_gt = GroundTruthLogFile.objects.filter(username=username_rob, ns_id=mode_rob,
+                                                                     id_report=report, language=report.language,
+                                                                     gt_type='concepts')
+                        ins_time = ''
+                        if robot_gt.exists():
+                            rob_first_gt = robot_gt.first()
+                            ins_time = rob_first_gt.insertion_time
+
+                        if overwrite == False:
+                            if mode.ns_id == 'Robot':
+                                if user_to_gt.exists():
+                                    user_to_gt_first = user_to_gt.first()
+                                    if user_to_gt_first.insertion_time == ins_time:
+                                        GroundTruthLogFile.objects.filter(username=user, ns_id=mode,
+                                                                          id_report=report,
+                                                                          language=report.language,
+                                                                          gt_type='concepts').delete()
+                                        Contains.objects.filter(username=user, ns_id=mode, id_report=report,
+                                                                 language=report.language).delete()
+                        else:
+                            GroundTruthLogFile.objects.filter(username=user, ns_id=mode, id_report=report,
+                                                              language=report.language,
+                                                              gt_type='concepts').delete()
+                            Contains.objects.filter(username=user, ns_id=mode, id_report=report,
+                                                     language=report.language).delete()
+
+                    elif set(cols) == set(linking):
+                        user_to_gt = GroundTruthLogFile.objects.filter(username=user, ns_id=mode,
+                                                                       id_report=report, language=report.language,
+                                                                       gt_type='concept-mention')
+                        robot_gt = GroundTruthLogFile.objects.filter(username=username_rob, ns_id=mode_rob,
+                                                                     id_report=report, language=report.language,
+                                                                     gt_type='concept-mention')
+                        ins_time = ''
+                        if robot_gt.exists():
+                            rob_first_gt = robot_gt.first()
+                            ins_time = rob_first_gt.insertion_time
+
+                        # annotations = Annotate.objects.filter(username=user, ns_id=mode,id_report=report,language=report.language)
+                        # if annotations.exists():
+                        #     annotations.delete()
+                        #     GroundTruthLogFile.objects.filter(username=user, ns_id=mode, id_report=report, gt_type='mentions',
+                        #                             language=report.language).delete()
+                        if overwrite == False:
+                            if mode.ns_id == 'Robot':
+                                if user_to_gt.exists():
+                                    user_to_gt_first = user_to_gt.first()
+                                    if user_to_gt_first.insertion_time == ins_time:
+                                        GroundTruthLogFile.objects.filter(username=user, ns_id=mode,
+                                                                          id_report=report,
+                                                                          language=report.language,
+                                                                          gt_type='concepts').delete()
+                                        GroundTruthLogFile.objects.filter(username=user, ns_id=mode,
+                                                                          id_report=report,
+                                                                          language=report.language,
+                                                                          gt_type='concept-mention').delete()
+                                        GroundTruthLogFile.objects.filter(username=user, ns_id=mode,
+                                                                          id_report=report,
+                                                                          language=report.language,
+                                                                          gt_type='mentions').delete()
+                                        links = Linked.objects.filter(username=user, ns_id=mode, id_report=report,
+                                                                       language=report.language)
+                                        for e in links:
+                                            concept = e.concept_url
+                                            area = e.name
+                                            Contains.objects.filter(username=user, ns_id=mode, id_report=report,
+                                                                    language=report.language,name = area,
+                                                                    concept_url=concept).delete()
+
+                                            # Annotate.objects.filter(username=user, ns_id=mode,start=e.start,stop = e.stop, id_report=report,language=report.language).delete()
+                                        links.delete()
+                                        Annotate.objects.filter(username=user, ns_id=mode, id_report=report,
+                                                                language=report.language).delete()
+
+                        else:
+                            GroundTruthLogFile.objects.filter(username=user, ns_id=mode,
+                                                              id_report=report,
+                                                              language=report.language,
+                                                              gt_type='concepts').delete()
+                            GroundTruthLogFile.objects.filter(username=user, ns_id=mode,
+                                                              id_report=report,
+                                                              language=report.language,
+                                                              gt_type='concept-mention').delete()
+                            GroundTruthLogFile.objects.filter(username=user, ns_id=mode,
+                                                              id_report=report,
+                                                              language=report.language,
+                                                              gt_type='mentions').delete()
+
+
+                            links = Linked.objects.filter(username=user, ns_id=mode, id_report=report,
+                                                           language=report.language)
+
+                            for ll in links:
+                                concept = ll.concept_url
+                                area = ll.name
+                                Contains.objects.filter(username=user, ns_id=mode, id_report=report,
+                                                        language=report.language, concept_url=concept,name = area).delete()
+
+                            Annotate.objects.filter(username=user, ns_id=mode, id_report=report,
+                                                    language=report.language).delete()
+                            links.delete()
+
+
+
                     for i in range(count_rows):
                         usecase = str(df.loc[i, 'usecase'])
-                        usecase_obj = UseCase.objects.get(name=usecase.lower())
+                        usecase_obj = UseCase.objects.get(name=usecase)
                         mode = str(g.loc[i, 'annotation_mode'])
                         id_report = str(g.loc[i, 'id_report'])
                         language = str(g.loc[i, 'language'])
                         institute = str(g.loc[i, 'institute'])
-                        user_from = str(g.loc[i, 'username'])
+                        # user_from = str(g.loc[i, 'username'])
                         if mode == 'Manual':
                             mode = 'Human'
                         elif mode == 'Automatic':
                             mode = 'Robot'
-                        username_from = User.objects.get(username=user_from, ns_id=mode)
 
+                        # username_from = User.objects.get(username=user_from, ns_id=mode)
                         mode = NameSpace.objects.get(ns_id = mode)
-                        user = User.objects.get(username=user_to, ns_id=mode)
-
                         report = Report.objects.get(id_report=id_report, language=language, institute=institute)
+
                         if set(cols) == set(labels):
                             label = AnnotationLabel.objects.get(label = str(g.loc[i, 'label']),name = usecase_obj)
-                            if overwrite == True and GroundTruthLogFile.objects.filter(username=user,
-                                                                                             ns_id=mode,
-                                                                                             id_report=report,
-                                                                                             language=report.language,
-                                                                                             gt_type='labels').exists():
-                                GroundTruthLogFile.objects.filter(username=user,ns_id=mode,id_report=report,language=report.language,
-                                                                  gt_type='labels').delete()
-                                Associate.objects.filter(username=user,ns_id=mode,id_report=report,language=report.language).delete()
 
                             if (overwrite == False and not GroundTruthLogFile.objects.filter(username=user,
                                                                                              ns_id=mode,
@@ -152,14 +358,7 @@ def upload_files(files,user_to,overwrite):
 
                             mention = Mention.objects.get(id_report = report, language = language, start = int(g.loc[i, 'start']),
                                                           stop = int(g.loc[i, 'stop']))
-                            if overwrite == True and GroundTruthLogFile.objects.filter(username=user,
-                                                                                             ns_id=mode,
-                                                                                             id_report=report,
-                                                                                             language=report.language,
-                                                                                             gt_type='mentions').exists():
-                                GroundTruthLogFile.objects.filter(username=user,ns_id=mode,id_report=report,language=report.language,
-                                                                  gt_type='mentions').delete()
-                                Annotate.objects.filter(username=user,ns_id=mode,id_report=report,language=report.language).delete()
+
                             if (overwrite == False and not GroundTruthLogFile.objects.filter(username=user,
                                                                                              ns_id=mode,
                                                                                              id_report=report,
@@ -173,14 +372,8 @@ def upload_files(files,user_to,overwrite):
 
                             concept = Concept.objects.get(concept_url = str(g.loc[i, 'concept_url']))
                             area = SemanticArea.objects.get(name=str(g.loc[i, 'area']))
-                            if overwrite == True and GroundTruthLogFile.objects.filter(username=user,
-                                                                                             ns_id=mode,
-                                                                                             id_report=report,
-                                                                                             language=report.language,
-                                                                                             gt_type='concepts').exists():
-                                GroundTruthLogFile.objects.filter(username=user,ns_id=mode,id_report=report,language=report.language,
-                                                                  gt_type='concepts').delete()
-                                Contains.objects.filter(username=user,ns_id=mode,id_report=report,language=report.language).delete()
+
+
                             if (overwrite == False and not GroundTruthLogFile.objects.filter(username=user,
                                                                                              ns_id=mode,
                                                                                              id_report=report,
@@ -195,39 +388,60 @@ def upload_files(files,user_to,overwrite):
                             area = SemanticArea.objects.get(name=str(g.loc[i, 'area']))
                             mention = Mention.objects.get(id_report=report, language=language,start=int(g.loc[i, 'start']),
                                                           stop=int(g.loc[i, 'stop']))
-                            from_arr = []
-                            to_arr = []
-                            for el in Annotate.objects.filter(id_report=report, language=report.language,
-                                                              username=username_from, ns_id=mode).values('start',
-                                                                                                         'stop'):
-                                from_arr.append(el['start'])
-                            for el in Annotate.objects.filter(id_report=report, language=report.language,
-                                                              username=user, ns_id=mode).values('start', 'stop'):
-                                to_arr.append(el['start'])
-                            if overwrite == True and set(to_arr) == set(from_arr) and GroundTruthLogFile.objects.filter(username=user,
-                                                                                             ns_id=mode,
-                                                                                             id_report=report,
-                                                                                             language=report.language,
-                                                                                             gt_type='concept-mention').exists():
-                                GroundTruthLogFile.objects.filter(username=user,ns_id=mode,id_report=report,language=report.language,
-                                                                  gt_type='concept-mention').delete()
-                                Linked.objects.filter(username=user,ns_id=mode,id_report=report,language=report.language).delete()
 
-                            if (overwrite == False and set(to_arr) == set(from_arr) and not GroundTruthLogFile.objects.filter(username=user,
+
+                            if (overwrite == False and not GroundTruthLogFile.objects.filter(username=user,
                                                                                              ns_id=mode,
                                                                                              id_report=report,
                                                                                              language=report.language,
                                                                                              gt_type='concept-mention').exists()) or overwrite == True:
-                                Linked.objects.create(username = user, ns_id = mode, id_report = report,concept_url = concept,name = area,
+
+                                if not deleted_mentions:
+                                    Annotate.objects.filter(username=user, ns_id=mode, id_report=report,language=report.language).delete()
+                                    deleted_mentions = True
+
+                                a = Annotate.objects.filter(username = user, ns_id = mode, id_report = report,
+                                                               language = report.language,start=mention,stop = mention.stop)
+                                c = Contains.objects.filter(username = user, ns_id = mode, id_report = report,concept_url = concept,name = area,
+                                                               language = report.language)
+                                l = Linked.objects.filter(username = user, ns_id = mode, id_report = report,concept_url = concept,name = area,
+                                                               language = report.language,start=mention,stop = mention.stop)
+                                if not a.exists():
+                                    Annotate.objects.create(username=user, ns_id=mode, id_report=report,
+                                                            language=report.language, start=mention, stop=mention.stop, insertion_time = Now())
+
+                                if not c.exists():
+                                    Contains.objects.create(username = user, ns_id = mode, id_report = report,concept_url = concept,name = area,
+                                                               language = report.language,insertion_time = Now())
+                                if not l.exists():
+                                    Linked.objects.create(username = user, ns_id = mode, id_report = report,concept_url = concept,name = area,
                                                                language = report.language,start=mention,stop = mention.stop,insertion_time = Now())
                                 action = 'concept-mention'
+
+
                     if action != '':
 
                         gt_json = serialize_gt(action, usecase, user_to, report_cur.id_report, report_cur.language,
                                                anno_mode)
-                        GroundTruthLogFile.objects.create(username=user, ns_id=anno_mode, gt_type=action,
-                                                          gt_json=gt_json, insertion_time=Now(),
-                                                          id_report=report_cur, language=language)
+                        GroundTruthLogFile.objects.create(username=user, ns_id=anno_mode, gt_type=action,gt_json=gt_json, insertion_time=Now(),id_report=report_cur, language=language)
+                        if action == 'concept-mention':
+                            gt_json = serialize_gt('mentions', usecase, user_to, report_cur.id_report, report_cur.language,
+                                                   anno_mode)
+                            GroundTruthLogFile.objects.create(username=user, ns_id=anno_mode, gt_type='mentions',
+                                                              gt_json=gt_json, insertion_time=Now(),
+                                                              id_report=report_cur, language=language)
+                            gt_json = serialize_gt('concepts', usecase, user_to, report_cur.id_report, report_cur.language,
+                                                   anno_mode)
+                            GroundTruthLogFile.objects.create(username=user, ns_id=anno_mode, gt_type='concepts',
+                                                              gt_json=gt_json, insertion_time=Now(),
+                                                              id_report=report_cur, language=language)
+                        if action == 'mentions':
+                            gt_json = serialize_gt('concepts', usecase, user_to, report_cur.id_report, report_cur.language,
+                                                   anno_mode)
+                            if Contains.objects.filter(id_report=report_cur, language=language,username=user, ns_id=anno_mode).count()>0 and Linked.objects.filter(id_report=report_cur, language=language,username=user, ns_id=anno_mode).count()>0:
+                                GroundTruthLogFile.objects.create(username=user, ns_id=anno_mode, gt_type='concepts',
+                                                                  gt_json=gt_json, insertion_time=Now(),
+                                                                  id_report=report_cur, language=language)
 
     except Exception as e:
         print(e)

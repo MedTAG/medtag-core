@@ -47,7 +47,8 @@ def new_credentials(request):
         usecase = request_body_json['usecase']
         request.session['usecase'] = usecase
         language = request_body_json['language']
-        request.session['language'] = language.lower()
+        # request.session['language'] = language.lower()
+        request.session['language'] = language
         institute = request_body_json['institute']
         request.session['institute'] = institute
         batch = request_body_json['batch']
@@ -1127,7 +1128,7 @@ def contains(request, action=None):
             else:
                 mode_1 = mode
             response_json = get_user_gt(user_get,mode_1,report1,language,'concepts')
-            print('concetti',response_json)
+            # print('concetti',response_json)
             return JsonResponse(response_json)
 
         elif request.method == 'POST' and action.lower() == 'insert':
@@ -1520,6 +1521,8 @@ def get_gt_list(request):
     use = request.GET.get('use',None)
     action = request.GET.get('action',None)
     token = request.GET.get('token',None)
+    reptype = request.GET.get('reptype',None)
+    languages = ['English','english']
     annotation_mode = request.GET.get('annotation_mode',None)
     if ins == '':
         ins = None
@@ -1527,6 +1530,8 @@ def get_gt_list(request):
         use = None
     if lang == '':
         lang = None
+    if reptype == '':
+        reptype = 'reports'
     if token == 'all':
         ns_robot = NameSpace.objects.get(ns_id='Robot')
         ns_human = NameSpace.objects.get(ns_id='Human')
@@ -1546,61 +1551,85 @@ def get_gt_list(request):
 
 
     else:
-
-        if ins is not None and use is not None and lang is not None:
-            with connection.cursor() as cursor:
+        with connection.cursor() as cursor:
+            if reptype == 'reports':
                 if annotation_mode == 'Human':
                     cursor.execute(
-                        "SELECT COUNT(*) FROM report AS r INNER JOIN ground_truth_log_file AS g ON g.id_report = r.id_report AND g.language = r.language WHERE r.institute = %s AND r.name = %s AND r.language = %s AND g.gt_type = %s AND g.ns_id = %s",
-                        [ins, use, lang,action,'Human'])
+                        "SELECT COUNT(*) FROM report AS r INNER JOIN ground_truth_log_file AS g ON g.id_report = r.id_report AND g.language = r.language WHERE r.institute = COALESCE(%s,r.institute) AND r.name = %s AND r.language = COALESCE(%s,r.language) AND g.gt_type = %s AND g.ns_id = %s and r.institute != %s",
+                        [ins, use, lang, action, 'Human','PUBMED'])
                     groundTruths = cursor.fetchone()[0]
                 elif annotation_mode == 'Robot':
                     cursor.execute(
-                        "SELECT COUNT(*) FROM report AS r INNER JOIN ground_truth_log_file AS g ON g.id_report = r.id_report AND g.language = r.language INNER JOIN ground_truth_log_file AS gg ON g.id_report = gg.id_report AND g.language = gg.language AND g.ns_id = gg.ns_id AND g.gt_type = gg.gt_type WHERE r.institute = %s AND r.name = %s AND r.language = %s AND g.gt_type = %s AND g.ns_id = %s AND g.username != %s AND gg.username = %s AND g.insertion_time != gg.insertion_time",
-                        [ins, use, lang,action,'Robot','Robot_user','Robot_user'])
+                        "SELECT COUNT(*) FROM report AS r INNER JOIN ground_truth_log_file AS g ON g.id_report = r.id_report AND g.language = r.language INNER JOIN ground_truth_log_file AS gg ON g.id_report = gg.id_report AND g.language = gg.language AND g.ns_id = gg.ns_id AND g.gt_type = gg.gt_type WHERE r.institute = COALESCE(%s,r.institute) AND r.name = %s AND r.language = COALESCE(%s,r.language) AND g.gt_type = %s AND g.ns_id = %s AND g.username != %s AND gg.username = %s AND g.insertion_time != gg.insertion_time AND r.institute != %s",
+                        [ins, use, lang, action, 'Robot', 'Robot_user', 'Robot_user','PUBMED'])
                     groundTruths = cursor.fetchone()[0]
-
-        elif ins is not None and use is not None and lang is None:
-            with connection.cursor() as cursor:
+            else:
                 if annotation_mode == 'Human':
                     cursor.execute(
-                        "SELECT COUNT(*) FROM report AS r INNER JOIN ground_truth_log_file AS g ON g.id_report = r.id_report AND g.language = r.language WHERE r.institute = %s AND r.name = %s AND g.gt_type = %s AND g.ns_id = %s",
-                        [ins, use,action,'Human'])
+                        "SELECT COUNT(*) FROM report AS r INNER JOIN ground_truth_log_file AS g ON g.id_report = r.id_report AND g.language = r.language WHERE  r.name = %s AND r.language in %s AND g.gt_type = %s AND g.ns_id = %s and r.institute = %s",
+                        [use, tuple(languages), action, 'Human','PUBMED'])
                     groundTruths = cursor.fetchone()[0]
-                if annotation_mode == 'Robot':
+                elif annotation_mode == 'Robot':
                     cursor.execute(
-                        "SELECT COUNT(*) FROM report AS r INNER JOIN ground_truth_log_file AS g ON g.id_report = r.id_report AND g.language = r.language INNER JOIN ground_truth_log_file AS gg ON g.id_report = gg.id_report AND g.language = gg.language AND g.ns_id = gg.ns_id AND g.gt_type = gg.gt_type WHERE r.institute = %s AND r.name = %s AND g.gt_type = %s AND g.ns_id = %s AND g.username != %s AND gg.username = %s AND g.insertion_time != gg.insertion_time",
-                        [ins, use,action,'Robot','Robot_user','Robot_user'])
+                        "SELECT COUNT(*) FROM report AS r INNER JOIN ground_truth_log_file AS g ON g.id_report = r.id_report AND g.language = r.language INNER JOIN ground_truth_log_file AS gg ON g.id_report = gg.id_report AND g.language = gg.language AND g.ns_id = gg.ns_id AND g.gt_type = gg.gt_type WHERE  r.name = %s AND r.language in %s AND g.gt_type = %s AND g.ns_id = %s AND g.username != %s AND gg.username = %s AND g.insertion_time != gg.insertion_time AND r.institute = %s",
+                        [use, tuple(languages), action, 'Robot', 'Robot_user', 'Robot_user','PUBMED'])
                     groundTruths = cursor.fetchone()[0]
 
 
-        elif ins is None and use is not None and lang is not None:
-            with connection.cursor() as cursor:
-                if annotation_mode == 'Human':
-                    cursor.execute(
-                        "SELECT COUNT(*) FROM report AS r INNER JOIN ground_truth_log_file AS g ON g.id_report = r.id_report AND r.language = g.language WHERE r.name = %s AND r.language = %s AND g.gt_type = %s AND g.ns_id = %s",
-                        [use, lang,action,'Human'])
-                    groundTruths = cursor.fetchone()[0]
-                if annotation_mode == 'Robot':
-                    cursor.execute(
-                        "SELECT COUNT(*) FROM report AS r INNER JOIN ground_truth_log_file AS g ON g.id_report = r.id_report AND g.language = r.language INNER JOIN ground_truth_log_file AS gg ON g.id_report = gg.id_report AND g.language = gg.language AND g.ns_id = gg.ns_id AND g.gt_type = gg.gt_type WHERE r.name = %s AND r.language = %s AND g.gt_type = %s AND g.ns_id = %s AND g.username != %s AND gg.username = %s AND g.insertion_time != gg.insertion_time",
-                        [use, lang,action,'Robot','Robot_user','Robot_user'])
-                    groundTruths = groundTruths + cursor.fetchone()[0]
-
-
-
-        elif ins is None and use is not None and lang is None:
-            with connection.cursor() as cursor:
-                if annotation_mode == 'Human':
-                    cursor.execute(
-                        "SELECT COUNT(*) FROM report AS r INNER JOIN ground_truth_log_file AS g ON g.id_report = r.id_report AND r.language = g.language WHERE r.name = %s AND g.gt_type = %s AND g.ns_id = %s",
-                        [use,action,'Human'])
-                    groundTruths = cursor.fetchone()[0]
-                if annotation_mode == 'Robot':
-                    cursor.execute(
-                        "SELECT COUNT(*) FROM report AS r INNER JOIN ground_truth_log_file AS g ON g.id_report = r.id_report AND g.language = r.language INNER JOIN ground_truth_log_file AS gg ON g.id_report = gg.id_report AND g.language = gg.language AND g.ns_id = gg.ns_id AND g.gt_type = gg.gt_type WHERE r.name = %s  AND g.gt_type = %s AND g.ns_id = %s AND g.username != %s AND gg.username = %s AND g.insertion_time != gg.insertion_time",
-                        [use, action,'Robot','Robot_user','Robot_user'])
-                    groundTruths = cursor.fetchone()[0]
+        # if ins is not None and use is not None and lang is not None:
+        #     with connection.cursor() as cursor:
+        #         if annotation_mode == 'Human':
+        #             cursor.execute(
+        #                 "SELECT COUNT(*) FROM report AS r INNER JOIN ground_truth_log_file AS g ON g.id_report = r.id_report AND g.language = r.language WHERE r.institute = %s AND r.name = %s AND r.language = %s AND g.gt_type = %s AND g.ns_id = %s",
+        #                 [ins, use, lang,action,'Human'])
+        #             groundTruths = cursor.fetchone()[0]
+        #         elif annotation_mode == 'Robot':
+        #             cursor.execute(
+        #                 "SELECT COUNT(*) FROM report AS r INNER JOIN ground_truth_log_file AS g ON g.id_report = r.id_report AND g.language = r.language INNER JOIN ground_truth_log_file AS gg ON g.id_report = gg.id_report AND g.language = gg.language AND g.ns_id = gg.ns_id AND g.gt_type = gg.gt_type WHERE r.institute = %s AND r.name = %s AND r.language = %s AND g.gt_type = %s AND g.ns_id = %s AND g.username != %s AND gg.username = %s AND g.insertion_time != gg.insertion_time",
+        #                 [ins, use, lang,action,'Robot','Robot_user','Robot_user'])
+        #             groundTruths = cursor.fetchone()[0]
+        #
+        # elif ins is not None and use is not None and lang is None:
+        #     with connection.cursor() as cursor:
+        #         if annotation_mode == 'Human':
+        #             cursor.execute(
+        #                 "SELECT COUNT(*) FROM report AS r INNER JOIN ground_truth_log_file AS g ON g.id_report = r.id_report AND g.language = r.language WHERE r.institute = %s AND r.name = %s AND g.gt_type = %s AND g.ns_id = %s",
+        #                 [ins, use,action,'Human'])
+        #             groundTruths = cursor.fetchone()[0]
+        #         if annotation_mode == 'Robot':
+        #             cursor.execute(
+        #                 "SELECT COUNT(*) FROM report AS r INNER JOIN ground_truth_log_file AS g ON g.id_report = r.id_report AND g.language = r.language INNER JOIN ground_truth_log_file AS gg ON g.id_report = gg.id_report AND g.language = gg.language AND g.ns_id = gg.ns_id AND g.gt_type = gg.gt_type WHERE r.institute = %s AND r.name = %s AND g.gt_type = %s AND g.ns_id = %s AND g.username != %s AND gg.username = %s AND g.insertion_time != gg.insertion_time",
+        #                 [ins, use,action,'Robot','Robot_user','Robot_user'])
+        #             groundTruths = cursor.fetchone()[0]
+        #
+        #
+        # elif ins is None and use is not None and lang is not None:
+        #     with connection.cursor() as cursor:
+        #         if annotation_mode == 'Human':
+        #             cursor.execute(
+        #                 "SELECT COUNT(*) FROM report AS r INNER JOIN ground_truth_log_file AS g ON g.id_report = r.id_report AND r.language = g.language WHERE r.name = %s AND r.language = %s AND g.gt_type = %s AND g.ns_id = %s",
+        #                 [use, lang,action,'Human'])
+        #             groundTruths = cursor.fetchone()[0]
+        #         if annotation_mode == 'Robot':
+        #             cursor.execute(
+        #                 "SELECT COUNT(*) FROM report AS r INNER JOIN ground_truth_log_file AS g ON g.id_report = r.id_report AND g.language = r.language INNER JOIN ground_truth_log_file AS gg ON g.id_report = gg.id_report AND g.language = gg.language AND g.ns_id = gg.ns_id AND g.gt_type = gg.gt_type WHERE r.name = %s AND r.language = %s AND g.gt_type = %s AND g.ns_id = %s AND g.username != %s AND gg.username = %s AND g.insertion_time != gg.insertion_time",
+        #                 [use, lang,action,'Robot','Robot_user','Robot_user'])
+        #             groundTruths = groundTruths + cursor.fetchone()[0]
+        #
+        #
+        #
+        # elif ins is None and use is not None and lang is None:
+        #     with connection.cursor() as cursor:
+        #         if annotation_mode == 'Human':
+        #             cursor.execute(
+        #                 "SELECT COUNT(*) FROM report AS r INNER JOIN ground_truth_log_file AS g ON g.id_report = r.id_report AND r.language = g.language WHERE r.name = %s AND g.gt_type = %s AND g.ns_id = %s",
+        #                 [use,action,'Human'])
+        #             groundTruths = cursor.fetchone()[0]
+        #         if annotation_mode == 'Robot':
+        #             cursor.execute(
+        #                 "SELECT COUNT(*) FROM report AS r INNER JOIN ground_truth_log_file AS g ON g.id_report = r.id_report AND g.language = r.language INNER JOIN ground_truth_log_file AS gg ON g.id_report = gg.id_report AND g.language = gg.language AND g.ns_id = gg.ns_id AND g.gt_type = gg.gt_type WHERE r.name = %s  AND g.gt_type = %s AND g.ns_id = %s AND g.username != %s AND gg.username = %s AND g.insertion_time != gg.insertion_time",
+        #                 [use, action,'Robot','Robot_user','Robot_user'])
+        #             groundTruths = cursor.fetchone()[0]
 
 
 
@@ -1789,7 +1818,7 @@ def download_ground_truths(request):
         lang = None
     else:
         lang = str(lang)
-    batch = request.GET.get('batch','') #modified 22/10
+    batch = request.GET.get('batch','') # added 22/10/2021
     if batch == '' or batch == 'all':
         batch = None
     else:
@@ -2123,7 +2152,7 @@ def get_fields(request):
     workpath = os.path.dirname(os.path.abspath(__file__))  # Returns the Path your .py file is in
     auto_request = request.GET.get('ns_id', None)
     report = request.GET.get('report', None)
-    print(request.session['report_type'])
+    # print(request.session['report_type'])
     if report is not None or all == 'all':
         if report is not None:
             if report.startswith('PUBMED_'):
@@ -2242,7 +2271,7 @@ def get_keys_and_uses_from_csv(request):
     uses = list(map(lambda x: x.lower(), uses))
     final_uses = list(map(lambda x: x.lower(), final_uses))
     json_resp['uses'] = list(uses)
-
+    # print(json_resp['uses'])
     return JsonResponse(json_resp)
 
 
@@ -2292,9 +2321,10 @@ def get_stats_array_per_usecase(request):
     mode = request.GET.get('mode',None)
     usern = request.GET.get('member',request.session['username'])
     username = User.objects.get(username=usern, ns_id=mode)
+    language = request.GET.get('language',request.session['language'])
     json_dict = {}
-    json_dict['medtag'] =  get_array_per_usecase(username,mode)
-    json_dict['pubmed'] =  get_array_per_usecase_PUBMED(username,mode)
+    json_dict['medtag'] =  get_array_per_usecase(username,mode,language)
+    json_dict['pubmed'] =  get_array_per_usecase_PUBMED(username,mode,language)
     # print(json_dict)
     return JsonResponse(json_dict)
 
@@ -2318,11 +2348,50 @@ def get_data(request):
         language = el.language
         ns_human = NameSpace.objects.get(ns_id='Human')
         ns_robot = NameSpace.objects.get(ns_id='Robot')
-        gt_human = GroundTruthLogFile.objects.filter(id_report = report, language = language, ns_id = ns_human).count()
+        user_robot = User.objects.get(username = 'Robot_user',ns_id = ns_robot)
+
+        gt_robot = 0
         cursor = connection.cursor()
-        cursor.execute("SELECT * FROM ground_truth_log_file AS g INNER JOIN ground_truth_log_file AS gg ON gg.id_report = g.id_report AND gg.language = g.language AND g.ns_id = gg.ns_id AND g.gt_type = gg.gt_type WHERE g.insertion_time != gg.insertion_time AND g.ns_id = %s AND g.username != %s AND gg.username = %s AND g.id_report = %s AND g.language = %s",['Robot','Robot_user','Robot_user',str(report.id_report),str(report.language)])
-        ans = cursor.fetchall()
-        gt_robot = len(ans)
+
+        gt_labels = 0
+        gt_mentions = 0
+        gt_concepts = 0
+        gt_linking = 0
+        gt_human = GroundTruthLogFile.objects.filter(id_report = report, language = language, ns_id = ns_human).count()
+
+        ins_time_gt_robot_mentions = GroundTruthLogFile.objects.filter(id_report = report, language = language, ns_id = ns_robot, username = user_robot, gt_type = 'mentions')
+        if ins_time_gt_robot_mentions.exists():
+            ins_time_mentions = ins_time_gt_robot_mentions.first().insertion_time
+            gt_mentions = GroundTruthLogFile.objects.filter(id_report=report, language=language, ns_id=ns_robot,
+                                                            gt_type='mentions').exclude(insertion_time=ins_time_mentions).count()
+        ins_time_gt_robot_labels = GroundTruthLogFile.objects.filter(id_report = report, language = language, ns_id = ns_robot, username = user_robot, gt_type = 'labels')
+        if ins_time_gt_robot_labels.exists():
+            ins_time_labels = ins_time_gt_robot_labels.first().insertion_time
+            gt_labels = GroundTruthLogFile.objects.filter(id_report=report, language=language, ns_id=ns_robot,
+                                                          gt_type='labels').exclude(insertion_time=ins_time_labels).count()
+        ins_time_gt_robot_concepts = GroundTruthLogFile.objects.filter(id_report = report, language = language, ns_id = ns_robot, username = user_robot, gt_type = 'concepts')
+        if ins_time_gt_robot_concepts.exists():
+            ins_time_gt_robot_concepts = ins_time_gt_robot_concepts.first()
+            ins_time_concepts = ins_time_gt_robot_concepts.insertion_time
+            gt_concepts = GroundTruthLogFile.objects.filter(id_report=report, language=language, ns_id=ns_robot,
+                                                            gt_type='concepts').exclude(insertion_time=ins_time_concepts).count()
+        ins_time_gt_robot_linking = GroundTruthLogFile.objects.filter(id_report = report, language = language, ns_id = ns_robot, username = user_robot, gt_type = 'concept-mention')
+        if ins_time_gt_robot_linking.exists():
+            ins_time_gt_robot_linking = ins_time_gt_robot_linking.first()
+            ins_time_linking = ins_time_gt_robot_linking.insertion_time
+            gt_linking = GroundTruthLogFile.objects.filter(id_report=report, language=language, ns_id=ns_robot, gt_type='concept-mention').exclude(insertion_time=ins_time_linking).count()
+        gt_robot = gt_linking + gt_mentions + gt_labels + gt_concepts
+
+
+
+        # cursor.execute("SELECT * FROM ground_truth_log_file AS g INNER JOIN ground_truth_log_file AS gg ON gg.id_report = g.id_report AND gg.language = g.language AND g.ns_id = gg.ns_id AND g.gt_type = gg.gt_type WHERE g.insertion_time != gg.insertion_time AND g.ns_id = %s AND g.username != %s AND gg.username = %s AND g.id_report = %s AND g.language = %s",['Robot','Robot_user','Robot_user',str(report.id_report),str(report.language)])
+        # cursor.execute("SELECT * FROM ground_truth_log_file AS g INNER JOIN ground_truth_log_file AS gg ON gg.id_report = g.id_report AND gg.language = g.language AND g.ns_id = gg.ns_id AND g.gt_type = gg.gt_type WHERE g.insertion_time != gg.insertion_time AND g.ns_id = %s AND g.username != %s AND gg.username = %s AND g.id_report = %s AND g.language = %s",['Robot','Robot_user','Robot_user',str(report.id_report),str(report.language)])
+        # cursor.execute("SELECT * FROM ground_truth_log_file AS g INNER JOIN ground_truth_log_file AS gg ON gg.id_report = g.id_report AND gg.language = g.language AND g.ns_id = gg.ns_id AND g.gt_type = gg.gt_type WHERE g.insertion_time != gg.insertion_time AND g.ns_id = %s AND g.username != %s AND gg.username = %s AND g.id_report = %s AND g.language = %s",['Robot','Robot_user','Robot_user',str(report.id_report),str(report.language)])
+        # cursor.execute("SELECT * FROM ground_truth_log_file AS g INNER JOIN ground_truth_log_file AS gg ON gg.id_report = g.id_report AND gg.language = g.language AND g.ns_id = gg.ns_id AND g.gt_type = gg.gt_type WHERE g.insertion_time != gg.insertion_time AND g.ns_id = %s AND g.username != %s AND gg.username = %s AND g.id_report = %s AND g.language = %s",['Robot','Robot_user','Robot_user',str(report.id_report),str(report.language)])
+        # ans = cursor.fetchall()
+        # gt_robot = len(ans)
+
+
         # print('robot',str(gt_robot))
         # print('human',str(gt_human))
         rep = report.report_json
@@ -2330,6 +2399,7 @@ def get_data(request):
         for key in rep.keys():
             nkey = key+ '_0'
             new_rep[nkey] = rep[key]
+
         total = gt_human + gt_robot
         # print('totale:',str(total))
         new_rep['usecase'] = report.name_id
@@ -2354,19 +2424,20 @@ def report_missing_auto(request):
 
     usecases = UseCase.objects.all()
     json_resp = {}
-
+    languages = ['english', 'English']
     for el in usecases:
         use = el.name
         batches = []
         batches.append('all')
         if use.lower() in ['colon','lung','uterine cervix']:
-            report = Report.objects.filter(name=el,language='english').exclude(institute = 'PUBMED')
+            report = Report.objects.filter(name=el,language__in=languages).exclude(institute = 'PUBMED')
             count_rep = report.count()
             for rp in report:
                 if rp.batch not in batches:
                     batches.append(rp.batch)
             # print(el)
             # print(count_rep)
+
             if count_rep > 0:
                 json_resp[use] = {}
                 for batch in batches:
@@ -2376,8 +2447,8 @@ def report_missing_auto(request):
                         json_resp[use][batch]['tot'] = count_rep
                         with connection.cursor() as cursor:
                             cursor.execute(
-                                "SELECT COUNT(*) FROM report AS r INNER JOIN ground_truth_log_file AS g ON g.id_report = r.id_report AND r.language = g.language WHERE r.name = %s AND g.username = %s AND gt_type=%s and institute != %s and r.language =%s;",
-                                [str(use),'Robot_user','labels','PUBMED','english']) # We could consider any of the gt_type
+                                "SELECT COUNT(*) FROM report AS r INNER JOIN ground_truth_log_file AS g ON g.id_report = r.id_report AND r.language = g.language WHERE r.name = %s AND g.username = %s AND gt_type=%s and institute != %s and r.language in %s;",
+                                [str(use),'Robot_user','labels','PUBMED',tuple(languages)]) # We could consider any of the gt_type
                             groundTruths = cursor.fetchone()[0]
                             if groundTruths is None:
                                 json_resp[use][batch]['annotated'] = 0
@@ -2388,8 +2459,8 @@ def report_missing_auto(request):
                         json_resp[use][batch]['tot'] = report_count
                         with connection.cursor() as cursor:
                             cursor.execute(
-                                "SELECT COUNT(*) FROM report AS r INNER JOIN ground_truth_log_file AS g ON g.id_report = r.id_report AND r.language = g.language WHERE r.name = %s AND g.username = %s AND gt_type=%s and institute != %s and batch = %s and r.language = %s;",
-                                [str(use), 'Robot_user', 'labels', 'PUBMED',batch,'english'])  # We could consider any of the gt_type
+                                "SELECT COUNT(*) FROM report AS r INNER JOIN ground_truth_log_file AS g ON g.id_report = r.id_report AND r.language = g.language WHERE r.name = %s AND g.username = %s AND gt_type=%s and institute != %s and batch = %s and r.language in %s;",
+                                [str(use), 'Robot_user', 'labels', 'PUBMED',batch, tuple(languages)])  # We could consider any of the gt_type
                             groundTruths = cursor.fetchone()[0]
                             if groundTruths is None:
                                 json_resp[use][batch]['annotated'] = 0
@@ -2411,13 +2482,14 @@ def pubmed_missing_auto(request):
     json_resp['annotated'] = 0
     json_resp['tot'] = 0
     json_resp['usecase'] = []
+    languages = ['English','english']
     for el in usecases:
         use = el.name
         json_resp[use] = {}
         batches = []
         batches.append('all')
         if use.lower() in ['colon','lung','uterine cervix']:
-            report = Report.objects.filter(name=el,language='english',institute = 'PUBMED')
+            report = Report.objects.filter(name=el,language__in=languages,institute = 'PUBMED')
             for el in report:
                 if el.batch not in batches:
                     batches.append(el.batch)
@@ -2428,8 +2500,8 @@ def pubmed_missing_auto(request):
                 json_resp['tot'] = json_resp['tot'] + count_rep
                 with connection.cursor() as cursor:
                     cursor.execute(
-                        "SELECT COUNT(*) FROM report AS r INNER JOIN ground_truth_log_file AS g ON g.id_report = r.id_report AND r.language = g.language WHERE r.name = %s AND g.username = %s AND gt_type=%s AND institute = %s and r.language = %s;",
-                        [str(use),'Robot_user','labels','PUBMED','english']) # We could consider any of the gt_type
+                        "SELECT COUNT(*) FROM report AS r INNER JOIN ground_truth_log_file AS g ON g.id_report = r.id_report AND r.language = g.language WHERE r.name = %s AND g.username = %s AND gt_type=%s AND institute = %s and r.language in %s;",
+                        [str(use),'Robot_user','labels','PUBMED',tuple(languages)]) # We could consider any of the gt_type
                     groundTruths = cursor.fetchone()[0]
 
                     json_resp['annotated'] = json_resp['annotated'] + groundTruths
@@ -2443,8 +2515,8 @@ def pubmed_missing_auto(request):
                         json_resp[use][batch]['tot'] = count_rep
                         with connection.cursor() as cursor:
                             cursor.execute(
-                                "SELECT COUNT(*) FROM report AS r INNER JOIN ground_truth_log_file AS g ON g.id_report = r.id_report AND r.language = g.language WHERE r.name = %s AND g.username = %s AND gt_type=%s AND institute = %s and r.language = %s;",
-                                [str(use),'Robot_user','labels','PUBMED','english']) # We could consider any of the gt_type
+                                "SELECT COUNT(*) FROM report AS r INNER JOIN ground_truth_log_file AS g ON g.id_report = r.id_report AND r.language = g.language WHERE r.name = %s AND g.username = %s AND gt_type=%s AND institute = %s and r.language in %s;",
+                                [str(use),'Robot_user','labels','PUBMED',tuple(languages)]) # We could consider any of the gt_type
                             groundTruths = cursor.fetchone()[0]
 
                             if groundTruths is None:
@@ -2452,13 +2524,13 @@ def pubmed_missing_auto(request):
                             else:
                                 json_resp[use][batch]['annotated'] = groundTruths
                     else:
-                        report = Report.objects.filter(name=use,language='english', institute='PUBMED',batch = batch)
+                        report = Report.objects.filter(name=use,language__in=languages, institute='PUBMED',batch = batch)
                         count_rep = report.count()
                         json_resp[use][batch]['tot'] = count_rep
                         with connection.cursor() as cursor:
                             cursor.execute(
-                                "SELECT COUNT(*) FROM report AS r INNER JOIN ground_truth_log_file AS g ON g.id_report = r.id_report AND r.language = g.language WHERE r.name = %s AND g.username = %s AND gt_type=%s AND institute = %s and batch = %s and r.language = %s;",
-                                [str(use), 'Robot_user', 'labels', 'PUBMED',batch,'english'])  # We could consider any of the gt_type
+                                "SELECT COUNT(*) FROM report AS r INNER JOIN ground_truth_log_file AS g ON g.id_report = r.id_report AND r.language = g.language WHERE r.name = %s AND g.username = %s AND gt_type=%s AND institute = %s and batch = %s and r.language in %s;",
+                                [str(use), 'Robot_user', 'labels', 'PUBMED',batch,tuple(languages)])  # We could consider any of the gt_type
                             groundTruths = cursor.fetchone()[0]
 
                             if groundTruths is None:
@@ -2588,7 +2660,7 @@ def annotation_all_stats(request):
 
     json_dict = get_annotations_count(id_report,language)
 
-    print('annotations',json_dict)
+    # print('annotations',json_dict)
     return JsonResponse(json_dict)
 
 
@@ -2660,7 +2732,7 @@ def get_insertion_time_record(request):
     action = request.GET.get('action',None)
     report1 = Report.objects.get(id_report = report, language = language)
     ns_id = NameSpace.objects.get(ns_id=ns_id_str)
-    print('get_insertion_time')
+    # print('get_insertion_time')
     user = User.objects.get(username=user_obj,ns_id=ns_id)
     gt_user = GroundTruthLogFile.objects.filter(id_report = report1, language = language, ns_id = ns_id,username=user,gt_type=action)
     if gt_user.exists():
@@ -2695,6 +2767,29 @@ def get_users_list(request):
             lista.append(name['username'])
     return JsonResponse(lista,safe=False)
 
+def get_annotators_users_list(request):
+    users = User.objects.all().values('username')
+    user_black_list = ['Robot_user']
+    language = request.session['language']
+    print(language)
+    usecase = request.session['usecase']
+    print(usecase)
+    institute = request.session['institute']
+    print(institute)
+    mode = request.session['mode']
+    print(mode)
+    mode_obj = NameSpace.objects.get(ns_id = mode)
+    lista = []
+    for name in users:
+        u = User.objects.filter(username = name['username'], ns_id = mode_obj)
+        if u.count() == 1 and name['username'] != 'Robot_user' and name['username'] != request.session['username']:
+            cursor = connection.cursor()
+            cursor.execute("SELECT * FROM ground_truth_log_file AS g INNER JOIN report AS r ON r.id_report = g.id_report and g.language = r.language WHERE r.institute = %s AND r.language = %s AND r.name = %s AND ns_id = %s AND username = %s",
+                           [str(institute),str(language),str(usecase),str(mode),str(name['username'])])
+            resp = cursor.fetchall()
+            if name['username'] not in user_black_list and name['username'] not in lista and len(resp) > 0:
+                lista.append(name['username'])
+    return JsonResponse(lista, safe=False)
 
 def get_user_ground_truth(request):
 
@@ -2721,7 +2816,8 @@ def check_auto_presence_for_configuration(request):
     language = request.GET.get('language',None)
     institute = request.GET.get('institute',None)
     batch = request.GET.get('batch',None)
-    print('BATCH',str(batch))
+    languages = ['English','english']
+    # print('BATCH',str(batch))
     use = UseCase.objects.get(name=usecase)
     json_resp = {}
     mode = NameSpace.objects.get(ns_id = 'Robot')
@@ -2729,7 +2825,7 @@ def check_auto_presence_for_configuration(request):
 
     if report_type == 'pubmed':
         cursor = connection.cursor()
-        cursor.execute("SELECT COUNT(*) FROM ground_truth_log_file AS g INNER JOIN report AS r ON r.id_report = g.id_report AND r.language = g.language WHERE g.ns_id = %s AND g.username = %s AND r.institute=%s AND r.language = %s AND r.name = %s AND r.batch = %s",['Robot','Robot_user','PUBMED','english',str(usecase),int(batch)])
+        cursor.execute("SELECT COUNT(*) FROM ground_truth_log_file AS g INNER JOIN report AS r ON r.id_report = g.id_report AND r.language = g.language WHERE g.ns_id = %s AND g.username = %s AND r.institute=%s AND r.language in %s AND r.name = %s AND r.batch = %s",['Robot','Robot_user','PUBMED',tuple(languages),str(usecase),int(batch)])
         reports = cursor.fetchone()[0]
         json_resp['count'] = reports
 
@@ -2750,16 +2846,16 @@ def get_batch_list(request):
 
     json_resp = {}
     usecase = request.GET.get('usecase')
-    print(usecase)
+    # print(usecase)
     use_obj = UseCase.objects.get(name=usecase)
     json_resp['batch_list'] = []
     batch = Report.objects.filter(name=use_obj).exclude(institute = 'PUBMED').values('batch')
     for el in batch:
         if el['batch'] not in json_resp['batch_list']:
             json_resp['batch_list'].append( el['batch'])
-    print(json_resp['batch_list'])
+    # print(json_resp['batch_list'])
     json_resp['batch_list'] = sorted(json_resp['batch_list'])
-    print(json_resp)
+    # print(json_resp)
     return JsonResponse(json_resp)
 
 
@@ -2769,16 +2865,17 @@ def get_auto_anno_batch_list(request):
 
     json_resp = {}
     usecase = request.GET.get('usecase')
-    print(usecase)
+    # print(usecase)
     use_obj = UseCase.objects.get(name=usecase)
     json_resp['batch_list'] = []
-    batch = Report.objects.filter(name=use_obj,language = 'english').exclude(institute = 'PUBMED').values('batch')
+    languages = ['English','english']
+    batch = Report.objects.filter(name=use_obj,language__in = languages).exclude(institute = 'PUBMED').values('batch')
     for el in batch:
         if el['batch'] not in json_resp['batch_list']:
             json_resp['batch_list'].append( el['batch'])
-    print(json_resp['batch_list'])
+    # print(json_resp['batch_list'])
     json_resp['batch_list'] = sorted(json_resp['batch_list'])
-    print(json_resp)
+    # print(json_resp)
     return JsonResponse(json_resp)
 
 
@@ -2788,16 +2885,16 @@ def get_PUBMED_batch_list(request):
 
     json_resp = {}
     usecase = request.GET.get('usecase')
-    print(usecase)
+    # print(usecase)
     use_obj = UseCase.objects.get(name=usecase)
     json_resp['batch_list'] = []
     batch = Report.objects.filter(name=use_obj,institute = 'PUBMED').values('batch')
     for el in batch:
         if el['batch'] not in json_resp['batch_list']:
             json_resp['batch_list'].append( el['batch'])
-    print(json_resp['batch_list'])
+    # print(json_resp['batch_list'])
     json_resp['batch_list'] = sorted(json_resp['batch_list'])
-    print(json_resp)
+    # print(json_resp)
     return JsonResponse(json_resp)
 
 
@@ -2807,16 +2904,17 @@ def get_auto_anno_PUBMED_batch_list(request):
 
     json_resp = {}
     usecase = request.GET.get('usecase')
-    print(usecase)
+    # print(usecase)
+    languages = ['English', 'english']
     use_obj = UseCase.objects.get(name=usecase)
     json_resp['batch_list'] = []
-    batch = Report.objects.filter(name=use_obj,language = 'english',institute = 'PUBMED').values('batch')
+    batch = Report.objects.filter(name=use_obj,language__in = languages,institute = 'PUBMED').values('batch')
     for el in batch:
         if el['batch'] not in json_resp['batch_list']:
             json_resp['batch_list'].append( el['batch'])
-    print(json_resp['batch_list'])
+    # print(json_resp['batch_list'])
     json_resp['batch_list'] = sorted(json_resp['batch_list'])
-    print(json_resp)
+    # print(json_resp)
     return JsonResponse(json_resp)
 
 
@@ -3204,9 +3302,10 @@ def get_report_translations(request):
                 languages.append(el.language)
 
         json_resp = {}
-        print(languages)
+        # print(languages)
         json_resp['languages'] = languages
         return JsonResponse(json_resp)
+
 
 
 def medtag_reports(request):

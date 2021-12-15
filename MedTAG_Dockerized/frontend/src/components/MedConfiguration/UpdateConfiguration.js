@@ -1128,7 +1128,14 @@ function UpdateConfiguration() {
 
     return (
         <div className="App">
-
+            {Username !== Admin ?
+                <div><h1>FORBIDDEN</h1>
+                    <div>
+                        <a href="http://0.0.0.0:8000/index">
+                            Back
+                        </a>
+                    </div>
+                </div>:<div>
             <Modal show={ShowIrreversibleModal} onHide={handleCloseIrrModal} backdrop="static" keyboard={false}>
                 <Modal.Header closeButton>
                     <Modal.Title>Pay attention!</Modal.Title>
@@ -1723,7 +1730,7 @@ function UpdateConfiguration() {
                 </Modal>}
             </div>}
             {BackClick === true && <Redirect to='./InfoAboutConfiguration'/>}
-
+                </div>}
         </div>
 
 

@@ -52,15 +52,16 @@ function MentionList(props){
     useEffect(()=>{
         // console.log('MENTISHOW',ShowInfoMentions)
         if(SelectedLang === Language && WordMention.length === 0) {
-            // console.log('count1', FinalCount)
-            // console.log('count1', Children.length)
-            // console.log('count1',Children)
+            console.log('entro')
+            console.log('count1', FinalCount)
+            console.log('count1', Children.length)
+            console.log('count1',mentions_to_show)
             if (ShowInfoMentions === false) {
                 if (Children.length === FinalCount) {
                     if (mentions_to_show.length === 0) {
                         console.log('EMPTY MENTIONS')
                         Children.map(child => {
-                            // console.log('TOKEN')
+                            console.log('TOKEN empty')
                             child.setAttribute('class', 'token') //Added!!
                             child.style.color = 'black'                        //Added!!
                         })
@@ -69,7 +70,7 @@ function MentionList(props){
                     var bottone_mention = (document.getElementsByClassName('butt_mention'))
                     if (mentions_to_show.length > 0) {
                         Children.map(child => {
-                            // console.log('TOKEN')
+                            console.log('TOKEN')
                             child.setAttribute('class', 'token') //Added!!
                             child.style.color = 'black'
                             //Added!!
@@ -94,7 +95,7 @@ function MentionList(props){
                                         words_array.push(child)
                                         // child.setAttribute('class', 'notSelected')
                                         child.setAttribute('class', 'notSelectedMention')
-
+                                        console.log('PASSO COLORO qua',child)
 
                                         child.style.color = Color[index_color]
 
@@ -125,7 +126,7 @@ function MentionList(props){
 
             SetLoadingMentionsColor(false)
         }
-    },[Action,mentions_to_show,Color,ShowInfoMentions,SelectedLang,Children]) //COLOR AGGIUNTO,children
+    },[Action,mentions_to_show,Color,ShowInfoMentions,SelectedLang,FinalCount,Children]) //COLOR AGGIUNTO,children
 
 
 

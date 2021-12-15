@@ -4,7 +4,7 @@ import WindowedSelect from "react-windowed-select";
 import Select from "react-select";
 import ListSelectedConcepts from "./ListSelectedConcepts";
 import {AppContext}  from "../../App";
-import {ConceptContext} from '../../BaseIndex'
+import {ConceptContext} from '../../Prova_BaseInfex'
 import {Modal} from "react-bootstrap";
 import Button from "react-bootstrap/Button";
 import axios from "axios";
@@ -147,6 +147,7 @@ export default function ConceptList(props) {
             }
         }
         else{
+            console.log('entro in semantic == all')
             var group = []
             var sem_area = SemanticArea
             SemanticArea.map(area=>{
@@ -163,7 +164,7 @@ export default function ConceptList(props) {
                 }
 
             })
-            // console.log('group',group)
+            console.log('group',group)
             // console.log('group',props.area)
             SetGrouped(group)
         }
@@ -288,52 +289,52 @@ export default function ConceptList(props) {
             <span style={groupBadgeStyles}>{grouped.options.length}</span>
         </div>
     );
-        return (
-            <div>
-                {currentSemanticArea === 'All' && <Row>
-                    <Col md={1}></Col><Col md={10}>
-                    {ShowAutoAnn !== true && ShowMemberGt !== true && <Select styles={styles}
-                            id='concept_list_id'
-                            maxMenuHeight="180px"
-                            options={grouped}
-                            value = {''}
-                            placeholder="Select or search for a concept"
-                            onChange={(option)=>handleChange_concept(option)}
-                            formatGroupLabel={formatGroupLabel}
-                    />}</Col><Col md={1}></Col>
-                </Row>}
-
-                {currentSemanticArea !== 'All' && <Row ><Col md={1}></Col><Col md={10}><WindowedSelect styles={styles}
-                maxMenuHeight="180px"
-                isSearchable={true}
-                options={options}
-                onChange={handleChange}
-                onClick={handleChange}
-                value={''}
-                placeholder="Select or search for a concept"
-                /></Col><Col md={1}></Col>
+    return (
+        <div>
+            {currentSemanticArea === 'All' && grouped !== [] && <Row>
+                <Col md={1}></Col><Col md={10}>
+                {ShowAutoAnn !== true && ShowMemberGt !== true && <Select styles={styles}
+                        id='concept_list_id'
+                        maxMenuHeight="180px"
+                        options={grouped}
+                        value = {''}
+                        placeholder="Select or search for a concept"
+                        onChange={(option)=>handleChange_concept(option)}
+                        formatGroupLabel={formatGroupLabel}
+                />}</Col><Col md={1}></Col>
             </Row>}
-                {area !== 'All' ? <p className="numberOfConceptsIdentifiedParagraph">Number of concepts identified: <b>{selectedConcepts[area].length}</b></p>
-                : <p className="numberOfConceptsIdentifiedParagraph">Number of concepts identified: <b>{Count}</b></p>}
-                <div ref={list_conc} className="concept-list" id ="concept-list">
 
-                    <ListSelectedConcepts area={area}/>
-                    <Modal show={show} onHide={handleClose}>
-                        <Modal.Header closeButton>
-                            <Modal.Title>Concept <em>{selectedOption === undefined ? " " : selectedOption["label"]}</em> already present!</Modal.Title>
-                        </Modal.Header>
-                        <Modal.Body>
-                            <p><b>{selectedOption === undefined ? " " : selectedOption["label"]}</b> is already present in the list</p>
-                        </Modal.Body>
-                        <Modal.Footer>
-                            <Button variant="secondary" onClick={handleClose}>
-                                Close
-                            </Button>
-                        </Modal.Footer>
-                    </Modal>
-                </div>
+            {currentSemanticArea !== 'All' && options !== [] && <Row ><Col md={1}></Col><Col md={10}><WindowedSelect styles={styles}
+            maxMenuHeight="180px"
+            isSearchable={true}
+            options={options}
+            onChange={handleChange}
+            onClick={handleChange}
+            value={''}
+            placeholder="Select or search for a concept"
+            /></Col><Col md={1}></Col>
+        </Row>}
+            {area !== 'All' ? <p className="numberOfConceptsIdentifiedParagraph">Number of concepts identified: <b>{selectedConcepts[area].length}</b></p>
+            : <p className="numberOfConceptsIdentifiedParagraph">Number of concepts identified: <b>{Count}</b></p>}
+            <div ref={list_conc} className="concept-list" id ="concept-list">
+
+                <ListSelectedConcepts area={area}/>
+                <Modal show={show} onHide={handleClose}>
+                    <Modal.Header closeButton>
+                        <Modal.Title>Concept <em>{selectedOption === undefined ? " " : selectedOption["label"]}</em> already present!</Modal.Title>
+                    </Modal.Header>
+                    <Modal.Body>
+                        <p><b>{selectedOption === undefined ? " " : selectedOption["label"]}</b> is already present in the list</p>
+                    </Modal.Body>
+                    <Modal.Footer>
+                        <Button variant="secondary" onClick={handleClose}>
+                            Close
+                        </Button>
+                    </Modal.Footer>
+                </Modal>
             </div>
-        );
+        </div>
+    );
 
 }
 

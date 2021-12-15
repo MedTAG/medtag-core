@@ -69,7 +69,7 @@ function SelectMenu(props){
             SetBatch(BatchNumber)
         }
 
-    },[])
+    },[Language,UseCase,Institute,BatchNumber])
 
 
 
@@ -101,7 +101,8 @@ function SelectMenu(props){
         SetShowBar(prevState => !prevState)
     }
     function handleChangeLanguage(e){
-        SetLanguage(e.target.value)
+        SetLang(e.target.value)
+        // SetLanguage(e.target.value)
         axios.post("http://127.0.0.1:8000/new_credentials", {
             usecase: UseCase, language: e.target.value, institute: Institute, annotation: Annotation,report_type: ReportType,batch:BatchNumber
         })
@@ -121,7 +122,8 @@ function SelectMenu(props){
     }
 
     function handleChangeInstitute(e){
-        SetInstitute(e.target.value)
+        SetInst(e.target.value)
+        // SetInstitute(e.target.value)
 
         var i = ''
         var batch = ''
@@ -133,21 +135,25 @@ function SelectMenu(props){
             i = 'reports'
         }
 
-        SetUse(e.target.value)
+        // SetUse(e.target.value)
         var opt_batches = []
         if(i === 'pubmed'){
-            axios.get('http://127.0.0.1:8000/get_PUBMED_batch_list', {params: {usecase: e.target.value}}).then(response => {
+            axios.get('http://127.0.0.1:8000/get_PUBMED_batch_list', {params: {usecase: UseCase}}).then(response => {
                 SetBatchList(response.data['batch_list']);
                 opt_batches = response.data['batch_list']
+                var b = 1
+                if (opt_batches.length > 0){
+                    b = opt_batches[0]
+                }
                 axios.post("http://127.0.0.1:8000/new_credentials", {
-                    usecase: UseCase, language: Language, institute: e.target.value, annotation: Annotation,report_type: i,batch:opt_batches[0]
+                    usecase: UseCase, language: Language, institute: e.target.value, annotation: Annotation,report_type: i,batch:b
                 })
                     .then(function (response) {
                         SetInstitute(e.target.value)
                         SetUpdateMenu(true)
                         SetReportType(i)
-                        SetBatch(opt_batches[0])
-                        SetBatchNumber(opt_batches[0])
+                        SetBatch(b)
+                        SetBatchNumber(b)
 
 
 
@@ -159,24 +165,25 @@ function SelectMenu(props){
             })
         }
         else{
-            axios.get('http://127.0.0.1:8000/get_batch_list', {params: {usecase: e.target.value}}).then(response => {
+            axios.get('http://127.0.0.1:8000/get_batch_list', {params: {usecase: UseCase}}).then(response => {
                 SetBatchList(response.data['batch_list']);
                 opt_batches = response.data['batch_list']
+                var b = 1
+                if (opt_batches.length > 0){
+                    b = opt_batches[0]
+                }
                 axios.post("http://127.0.0.1:8000/new_credentials", {
-                    usecase: UseCase, language: Language, institute: e.target.value, annotation: Annotation,report_type: i,batch:opt_batches[0]
+                    usecase: UseCase, language: Language, institute: e.target.value, annotation: Annotation,report_type: i,batch:b
                 })
                     .then(function (response) {
                         SetInstitute(e.target.value)
                         SetUpdateMenu(true)
                         SetReportType(i)
-                        SetBatch(opt_batches[0])
-                        SetBatchNumber(opt_batches[0])
-
-
+                        SetBatch(b)
+                        SetBatchNumber(b)
 
                     })
                     .catch(function (error) {
-
                         console.log('ERROR', error);
                     });
             })
@@ -185,6 +192,8 @@ function SelectMenu(props){
 
 
     }
+
+
 
     function handleChangeUseCase(e){
         SetUse(e.target.value)
@@ -193,15 +202,19 @@ function SelectMenu(props){
             axios.get('http://127.0.0.1:8000/get_PUBMED_batch_list', {params: {usecase: e.target.value}}).then(response => {
                 SetBatchList(response.data['batch_list']);
                 opt_batches = response.data['batch_list']
+                var b = 1
+                if (opt_batches.length > 0){
+                    b = opt_batches[0]
+                }
                 axios.post("http://127.0.0.1:8000/new_credentials", {
-                    usecase: e.target.value, language: Language, institute: Institute, annotation: Annotation,report_type: ReportType,batch:opt_batches[0]
+                    usecase: e.target.value, language: Language, institute: Institute, annotation: Annotation,report_type: ReportType,batch:b
                 })
                     .then(function (response) {
                         console.log('usecase cambio',e.target.value)
                         SetUseCase(e.target.value)
                         SetUpdateMenu(true)
-                        SetBatch(opt_batches[0])
-                        SetBatchNumber(opt_batches[0])
+                        SetBatch(b)
+                        SetBatchNumber(b)
 
                     })
                     .catch(function (error) {
@@ -213,8 +226,12 @@ function SelectMenu(props){
             axios.get('http://127.0.0.1:8000/get_batch_list', {params: {usecase: e.target.value}}).then(response => {
                 SetBatchList(response.data['batch_list']);
                 opt_batches = response.data['batch_list']
+                var b = 1
+                if (opt_batches.length > 0){
+                    b = opt_batches[0]
+                }
                 axios.post("http://127.0.0.1:8000/new_credentials", {
-                    usecase: e.target.value, language: Language, institute: Institute, annotation: Annotation,report_type: ReportType,batch:opt_batches[0]
+                    usecase: e.target.value, language: Language, institute: Institute, annotation: Annotation,report_type: ReportType,batch:b
                 })
                     .then(function (response) {
                         console.log('usecase cambio',e.target.value)
@@ -230,11 +247,8 @@ function SelectMenu(props){
             })
         }
 
-
-
-
-
     }
+
     function handleChangeBatch(e){
         SetBatch(e.target.value)
         axios.post("http://127.0.0.1:8000/new_credentials", {
@@ -291,17 +305,17 @@ function SelectMenu(props){
                         {/*<span className='configuration'><FontAwesomeIcon icon={faHospital} /> <span>{Institute}</span></span>*/}
 
                         <span className='configuration'><FontAwesomeIcon icon={faLanguage} />&nbsp;
-                            {LanguageList.length > 0 && Language !== '' && <select style={{'vertical-align':'bottom','font-size':'0.8rem'}} className='select_class'
-                                                                                   value = {Language}
+                            {LanguageList.length > 0 && Language !== '' && Lang !== '' && <select style={{'vertical-align':'bottom','font-size':'0.8rem'}} className='select_class'
+                                                                                   value = {Lang}
                                                                                    onChange={(e)=>handleChangeLanguage(e)}>
                                 {LanguageList.map(lang=>
                                     <option value = {lang}>{lang}</option>
                                 )}
                             </select>}</span>
                         <span className='configuration'><FontAwesomeIcon icon={faHospital} />&nbsp;
-                            {InstituteList.length > 0 && Institute !== '' &&
+                            {InstituteList.length > 0 && Institute !== '' && Inst !== '' &&
                             <select style={{'vertical-align':'bottom','font-size':'0.8rem'}} className='select_class'
-                                    value = {Institute}
+                                    value = {Inst}
                                     onChange={(e)=>handleChangeInstitute(e)}>
                                 {InstituteList.map(inst=>
                                     <option value = {inst}>{inst}</option>
