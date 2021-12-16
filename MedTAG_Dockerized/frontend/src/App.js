@@ -228,47 +228,7 @@ function App() {
                         <Switch>
 
 
-                            {/*<Route path="/exatag/index">*/}
-                            {/*    {(LoadingMenu) ? <div className='spinnerDiv'><Spinner animation="border" role="status"/></div> : <Prova_BaseInfex />}*/}
-                            {/*</Route>*/}
 
-
-                            {/*<Route path="/exatag/credits">*/}
-                            {/*    <Credits />*/}
-                            {/*</Route>*/}
-                            {/*<Route path="/exatag/tutorial">*/}
-
-                            {/*    <Tutorial />*/}
-                            {/*</Route>*/}
-                            {/*<Route path="/exatag/my_stats">*/}
-
-                            {/*    <MyStats />*/}
-                            {/*</Route>*/}
-                            {/*<Route path="/exatag/infoAboutConfiguration">*/}
-
-                            {/*    <InfoAboutConfiguration />*/}
-                            {/*</Route>*/}
-                            {/*<Route path="/exatag/configure">*/}
-
-                            {/*    <Configure />*/}
-                            {/*</Route>*/}
-                            {/*<Route path="/exatag/updateConfiguration">*/}
-
-                            {/*    <UpdateConfiguration />*/}
-                            {/*</Route>*/}
-
-                            {/*<Route path="/exatag/team_members_stats">*/}
-
-                            {/*    <MembersStats />*/}
-                            {/*</Route>*/}
-                            {/*<Route path="/exatag/reports_stats">*/}
-
-                            {/*<ReportsStats />*/}
-                            {/*</Route>*/}
-                            {/*<Route path="/exatag/uploadFile">*/}
-
-                            {/*    <UploadFile />*/}
-                            {/*</Route>*/}
 
                             <Route path="/index">
                                 {(LoadingMenu) ? <div className='spinnerDiv'><Spinner animation="border" role="status"/></div> : <Prova_BaseInfex />}

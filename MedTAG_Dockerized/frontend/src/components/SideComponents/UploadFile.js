@@ -50,6 +50,7 @@ function UploadFile() {
     const [Reports,SetReports] = reports;
     const [Checked, SetChecked] = useState(0)
     const [UsersList,SetUsersList] = usersList
+    const [UsersListAnno,SetUsersListAnno] = useState([])
     const [ShowDeleteFiles,SetShowDeleteFiles] = useState(false)
     const [ShowModal,SetShowModal] = useState(false)
     const [LoadingTransfer,SetLoadingTransfer] = useState(false)
@@ -61,6 +62,11 @@ function UploadFile() {
 
     useEffect(()=>{
         window.scroll(0,0)
+        axios.post('http://127.0.0.1:8000/get_at_least_one_anno')
+            .then(response => {
+                SetUsersListAnno(response.data['users'])
+            })
+            .catch(error=>{console.log(error)})
     },[])
 
     function handleStartCopy(){
@@ -212,7 +218,7 @@ function UploadFile() {
                                             {LoadingTransfer === false ? <div>{UsersList.length > 0 && <div style={{display:'inline-block','padding-left':'1%','padding-right':'1%','margin-top':'2%','width':'80%'}}>
                                                 <div className="input-group"><Form.Control as="select" style={{margin:'0 1% 2% 0'}} onChange={(option)=>{SetCompleteTransfer(0);ref_user.current = option.target.value}} defaultValue="Choose a team member..." >
                                                 <option value = ''>Select a team member...</option>
-                                                {UsersList.map(val=>
+                                                {UsersListAnno.map(val=>
                                                     <option value ={val}>{val}</option>
                                                 )}
                                             </Form.Control>
