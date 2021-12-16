@@ -3328,3 +3328,20 @@ def pubmed_reports(request):
             json_resp['usecase'].append(str(r.name_id))
     return JsonResponse(json_resp)
 
+def get_at_least_one_anno(request):
+    users_list = []
+    cursor = connection.cursor()
+    cursor.execute("SELECT DISTINCT(username) FROM ground_truth_log_file WHERE ns_id = %s and username != %s",['Human',request.session['username']])
+    ans = cursor.fetchall()
+    for el in ans:
+        if el[0] not in users_list:
+            users_list.append(el[0])
+
+    cursor.execute("SELECT DISTINCT(g.username) FROM ground_truth_log_file AS g INNER JOIN ground_truth_log_file AS gg ON g.id_report = gg.id_report AND g.language = gg.language AND g.gt_type = gg.gt_type AND g.ns_id = gg.ns_id WHERE G.ns_id = %s AND gg.username = %s AND g.insertion_time != gg.insertion_time AND g.username != %s AND g.username != %s", ['Robot','Robot_user','Robot_user',request.session['username']])
+    ans = cursor.fetchall()
+    for el in ans:
+        if el[0] not in users_list:
+            users_list.append(el[0])
+    json_resp = {}
+    json_resp['users'] = users_list
+    return JsonResponse(json_resp)

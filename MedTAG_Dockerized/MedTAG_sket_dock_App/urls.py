@@ -53,7 +53,7 @@ urlpatterns = [
     path('get_keys', views.get_keys, name='get_keys'),
     path('get_batch_list', views.get_batch_list, name='get_batch_list'),
     path('get_auto_anno_batch_list', views.get_auto_anno_batch_list, name='get_auto_anno_batch_list'),
-    # path('signals_malfunctions', views.signals_malfunctions, name='signals_malfunctions'),
+    path('get_at_least_one_anno', views.get_at_least_one_anno, name='get_at_least_one_anno'),
 
     path('get_keys_and_uses_from_csv', views.get_keys_and_uses_from_csv, name='get_keys_and_uses_from_csv'),
     path('get_keys_from_csv_update', views.get_keys_from_csv_update, name='get_keys_from_csv_update'),
