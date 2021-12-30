@@ -52,8 +52,11 @@ def create_majority_vote_gt(action,users,mode,report):
 
             labels = AnnotationLabel.objects.filter(name=report.name,annotation_mode__in=auto_modes)
 
+            # cursor.execute(
+            #     "SELECT a.username FROM ground_truth_log_file AS a INNER JOIN ground_truth_log_file AS aa ON a.id_report = aa.id_report and a.gt_type = aa.gt_type and a.language = aa.language  WHERE aa.username=%s AND a.gt_type = %s AND a.ns_id = %s AND a.id_report = %s AND a.language = %s AND a.username IN %s AND a.insertion_time != aa.insertion_time",
+            #     ['Robot_user', 'labels', 'Robot', str(report.id_report), str(report.language),tuple(users)])
             cursor.execute(
-                "SELECT a.username FROM ground_truth_log_file AS a INNER JOIN ground_truth_log_file AS aa ON a.id_report = aa.id_report and a.gt_type = aa.gt_type and a.language = aa.language  WHERE aa.username=%s AND a.gt_type = %s AND a.ns_id = %s AND a.id_report = %s AND a.language = %s AND a.username IN %s AND a.insertion_time != aa.insertion_time",
+                "SELECT a.username FROM ground_truth_log_file AS a WHERE a.username != %s AND a.gt_type = %s AND a.ns_id = %s AND a.id_report = %s AND a.language = %s AND a.username IN %s",
                 ['Robot_user', 'labels', 'Robot', str(report.id_report), str(report.language),tuple(users)])
             ans = cursor.fetchall()
             total_gt = len(ans)
@@ -90,15 +93,15 @@ def create_majority_vote_gt(action,users,mode,report):
             annotations = AnnotationLabel.objects.filter(name = report.name,annotation_mode = 'Manual and Automatic')
             human_gt = GroundTruthLogFile.objects.filter(gt_type='labels', ns_id=ns_human, id_report=report,
                                                          language=report.language, username__in=users1)
-            rob_gt = GroundTruthLogFile.objects.filter(gt_type='labels', id_report=report, language=report.language,
-                                                    username=agent, ns_id=ns_robot)
-            robot_gt_count = 0
-            if rob_gt.count() > 0:
-                rob_gt = GroundTruthLogFile.objects.get(gt_type='labels', id_report=report, language=report.language,
-                                                           username=agent, ns_id=ns_robot)
-                robot_gt = GroundTruthLogFile.objects.filter(gt_type='labels', ns_id=ns_robot, id_report=report,
-                                                         language=report.language, username__in=users1).exclude(insertion_time=rob_gt.insertion_time)
-                robot_gt_count = robot_gt.count()
+            # rob_gt = GroundTruthLogFile.objects.filter(gt_type='labels', id_report=report, language=report.language,
+            #                                         username=agent, ns_id=ns_robot)
+            # robot_gt_count = 0
+            # if rob_gt.count() > 0:
+            #     rob_gt = GroundTruthLogFile.objects.get(gt_type='labels', id_report=report, language=report.language,
+            #                                                username=agent, ns_id=ns_robot)
+            robot_gt = GroundTruthLogFile.objects.filter(gt_type='labels', ns_id=ns_robot, id_report=report,
+                                                     language=report.language, username__in=users1)
+            robot_gt_count = robot_gt.count()
 
             for label in annotations:
                 json_val = {}
@@ -168,8 +171,7 @@ def create_majority_vote_gt(action,users,mode,report):
 
             cursor.execute(
                 "SELECT a.username FROM ground_truth_log_file AS a INNER JOIN ground_truth_log_file AS aa ON a.id_report = aa.id_report and a.gt_type = aa.gt_type and a.language = aa.language  WHERE aa.username=%s AND a.gt_type = %s AND a.ns_id = %s AND a.id_report = %s AND a.language = %s AND a.username IN %s AND a.insertion_time != aa.insertion_time",
-                ['Robot_user', 'mentions', 'Robot', str(report.id_report), str(report.language),
-                 tuple(users)])
+                ['Robot_user', 'mentions', 'Robot', str(report.id_report), str(report.language),tuple(users)])
             ans = cursor.fetchall()
             total_gt = len(ans)
 
@@ -180,8 +182,8 @@ def create_majority_vote_gt(action,users,mode,report):
                 ment = Mention.objects.get(id_report = report,language = report.language, start = mention.start_id,stop = mention.stop)
                 robot_anno = Annotate.objects.filter(username=agent, ns_id=ns_robot, id_report=report,start = ment,stop = ment.stop,
                                         language=report.language)
-                robot_anno_gt = GroundTruthLogFile.objects.filter(username=agent, ns_id=ns_robot, id_report=report,gt_type='mentions',
-                                        language=report.language)
+                # robot_anno_gt = GroundTruthLogFile.objects.filter(username=agent, ns_id=ns_robot, id_report=report,gt_type='mentions',
+                #                         language=report.language)
 
                 if robot_anno.exists() and robot_anno.count() == 1:
                     robot_anno = robot_anno.first()
@@ -189,9 +191,9 @@ def create_majority_vote_gt(action,users,mode,report):
                     if 'Robot_user' not in json_val['users_list']:
                         json_val['users_list'].append('Robot_user')
 
-                if robot_anno_gt.exists() and robot_anno_gt.count() == 1:
-                    if 'Robot_user' not in json_val['users_list']:
-                        json_val['users_list'].append('Robot_user')
+                # if robot_anno_gt.exists() and robot_anno_gt.count() == 1:
+                #     if 'Robot_user' not in json_val['users_list']:
+                #         json_val['users_list'].append('Robot_user')
 
                 # total_gt = GroundTruthLogFile.objects.filter(username__in=users1,ns_id=ns_robot,id_report = report,language = report.language,gt_type='mentions').exclude(insertion_time = ins_time_gt)
                 user_anno = Annotate.objects.filter(username__in=users1, ns_id=ns_robot, id_report=report, start=ment,
@@ -211,16 +213,15 @@ def create_majority_vote_gt(action,users,mode,report):
             annotations = Annotate.objects.filter(username__in=users1,id_report = report,language = report.language).distinct('start')
             human_gt = GroundTruthLogFile.objects.filter(gt_type='mentions', ns_id=ns_human, id_report=report,
                                                          language=report.language, username__in=users1)
-            rob_gt = GroundTruthLogFile.objects.filter(gt_type='mentions', id_report=report, language=report.language,
-                                                       username=agent, ns_id=ns_robot)
-            robot_gt_count = 0
-            if rob_gt.count() > 0:
-                rob_gt = GroundTruthLogFile.objects.get(gt_type='mentions', id_report=report, language=report.language,
-                                                        username=agent, ns_id=ns_robot)
-                robot_gt = GroundTruthLogFile.objects.filter(gt_type='mentions', ns_id=ns_robot, id_report=report,
-                                                             language=report.language, username__in=users1).exclude(
-                    insertion_time=rob_gt.insertion_time)
-                robot_gt_count = robot_gt.count()
+            # rob_gt = GroundTruthLogFile.objects.filter(gt_type='mentions', id_report=report, language=report.language,
+            #                                            username=agent, ns_id=ns_robot)
+            # robot_gt_count = 0
+            # if rob_gt.count() > 0:
+            #     rob_gt = GroundTruthLogFile.objects.get(gt_type='mentions', id_report=report, language=report.language,
+            #                                             username=agent, ns_id=ns_robot)
+            robot_gt = GroundTruthLogFile.objects.filter(gt_type='mentions', ns_id=ns_robot, id_report=report,
+                                                         language=report.language, username__in=users1)
+            robot_gt_count = robot_gt.count()
 
             for mention in annotations:
                 json_val = {}
@@ -311,10 +312,10 @@ def create_majority_vote_gt(action,users,mode,report):
 
                 robot_anno = Contains.objects.filter(username=agent, ns_id=ns_robot, id_report=report,concept_url=concept,
                                         name=area,language=report.language)
-                robot_anno_gt = GroundTruthLogFile.objects.filter(username=agent,ns_id=ns_robot,id_report = report,language=report.language,gt_type='concepts')
-                if robot_anno_gt.exists() and robot_anno_gt.count() == 1:
-                    if 'Robot_user' not in json_val['users_list']:
-                        json_val['users_list'].append('Robot_user')
+                # robot_anno_gt = GroundTruthLogFile.objects.filter(username=agent,ns_id=ns_robot,id_report = report,language=report.language,gt_type='concepts')
+                # if robot_anno_gt.exists() and robot_anno_gt.count() == 1:
+                #     if 'Robot_user' not in json_val['users_list']:
+                #         json_val['users_list'].append('Robot_user')
 
                 if robot_anno.exists() and robot_anno.count() == 1:
                     robot_anno = robot_anno.first()
@@ -341,19 +342,14 @@ def create_majority_vote_gt(action,users,mode,report):
             annotations = Contains.objects.filter(username__in=users1,id_report = report,language = report.language).distinct('concept_url', 'name')
             human_gt = GroundTruthLogFile.objects.filter(gt_type='concepts', ns_id=ns_human, id_report=report,
                                                          language=report.language, username__in=users1)
-            rob_gt = GroundTruthLogFile.objects.filter(gt_type = 'concepts',id_report = report,language = report.language,username=agent,ns_id=ns_robot)
-            robot_gt_count = 0
-            if rob_gt.count() > 0:
-                rob_gt = GroundTruthLogFile.objects.get(gt_type='concepts', id_report=report, language=report.language,
-                                                        username=agent, ns_id=ns_robot)
-                robot_gt = GroundTruthLogFile.objects.filter(gt_type='concepts', ns_id=ns_robot, id_report=report,
-                                                             language=report.language, username__in=users1).exclude(
-                    insertion_time=rob_gt.insertion_time)
-                robot_gt_count = robot_gt.count()
-            # json_val = {}
-            # json_val['total_human_gt'] = majority_gt['Human'][0]['total_gt']
-            # json_val['total_robot_gt'] = majority_gt['Robot'][0]['total_gt']
-            # majority_gt['both'].append(json_val)
+            # rob_gt = GroundTruthLogFile.objects.filter(gt_type = 'concepts',id_report = report,language = report.language,username=agent,ns_id=ns_robot)
+            # robot_gt_count = 0
+            # if rob_gt.count() > 0:
+            #     rob_gt = GroundTruthLogFile.objects.get(gt_type='concepts', id_report=report, language=report.language,
+            #                                             username=agent, ns_id=ns_robot)
+            robot_gt = GroundTruthLogFile.objects.filter(gt_type='concepts', ns_id=ns_robot, id_report=report,
+                                                         language=report.language, username__in=users1)
+            robot_gt_count = robot_gt.count()
 
             for el in annotations:
                 json_val = {}
@@ -454,10 +450,10 @@ def create_majority_vote_gt(action,users,mode,report):
                 robot_anno = Linked.objects.filter(username=agent, ns_id=ns_robot, id_report=report,
                                                      concept_url=concept,start = mention, stop = mention.stop,
                                                      name=area, language=report.language)
-                robot_anno_gt = GroundTruthLogFile.objects.filter(username=agent,ns_id=ns_robot,id_report = report,language = report.language,gt_type='concept-mention')
-                if robot_anno_gt.exists() and robot_anno_gt.count() == 1:
-                    if 'Robot_user' not in json_val['users_list']:
-                        json_val['users_list'].append('Robot_user')
+                # robot_anno_gt = GroundTruthLogFile.objects.filter(username=agent,ns_id=ns_robot,id_report = report,language = report.language,gt_type='concept-mention')
+                # if robot_anno_gt.exists() and robot_anno_gt.count() == 1:
+                #     if 'Robot_user' not in json_val['users_list']:
+                #         json_val['users_list'].append('Robot_user')
                 if robot_anno.exists() and robot_anno.count() == 1:
                     robot_anno = robot_anno.first()
                     ins_time = robot_anno.insertion_time
@@ -486,16 +482,15 @@ def create_majority_vote_gt(action,users,mode,report):
             annotations = Linked.objects.filter(username__in=users1, id_report=report,language=report.language).distinct('concept_url', 'name','start')
             human_gt = GroundTruthLogFile.objects.filter(gt_type='concept-mention', ns_id=ns_human, id_report=report,
                                                          language=report.language, username__in=users1)
-            rob_gt = GroundTruthLogFile.objects.filter(gt_type='concept-mention', id_report=report, language=report.language,
-                                                       username=agent, ns_id=ns_robot)
-            robot_gt_count = 0
-            if rob_gt.count() > 0:
-                rob_gt = GroundTruthLogFile.objects.get(gt_type='concept-mention', id_report=report, language=report.language,
-                                                        username=agent, ns_id=ns_robot)
-                robot_gt = GroundTruthLogFile.objects.filter(gt_type='concept-mention', ns_id=ns_robot, id_report=report,
-                                                             language=report.language, username__in=users1).exclude(
-                    insertion_time=rob_gt.insertion_time)
-                robot_gt_count = robot_gt.count()
+            # rob_gt = GroundTruthLogFile.objects.filter(gt_type='concept-mention', id_report=report, language=report.language,
+            #                                            username=agent, ns_id=ns_robot)
+            # robot_gt_count = 0
+            # if rob_gt.count() > 0:
+            #     rob_gt = GroundTruthLogFile.objects.get(gt_type='concept-mention', id_report=report, language=report.language,
+            #                                             username=agent, ns_id=ns_robot)
+            robot_gt = GroundTruthLogFile.objects.filter(gt_type='concept-mention', ns_id=ns_robot, id_report=report,
+                                                         language=report.language, username__in=users1)
+            robot_gt_count = robot_gt.count()
             for el in annotations:
                 json_val = {}
                 json_val['users_list'] = []

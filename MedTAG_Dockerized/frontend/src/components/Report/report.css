@@ -176,3 +176,9 @@ hr{
 .badge{
     font-size: 85% !important;
 }
+
+.button_translation{
+    border:none;
+    background-color:white;
+
+}

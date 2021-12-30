@@ -56,7 +56,15 @@
 @media (max-width: 800px ) {
     .sidenav {
         min-width: 130px;
+        font-size: 0.8rem;
 
     }
 }
 
+@media (max-width: 700px ) {
+    .sidenav {
+        min-width: 100px;
+        font-size: 0.6rem;
+
+    }
+}

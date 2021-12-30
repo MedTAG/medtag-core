@@ -54,6 +54,9 @@ function App() {
     const [SnackMessageMention, SetSnackMessageMention] = useState('This action removes also the concepts you linked to this mention. If you want to keep these concepts go to Concepts and' +
         ' add them manually.')
     const [LabToInsert,SetLabToInsert] = useState([])
+    const [SelectedLanguage,SetSelectedLanguage] = useState('')
+    const [SelectedInstitute,SetSelectedInstitute] = useState('')
+    const [SelectedUse,SetSelectedUse] = useState('')
     const [LinkingConcepts,SetLinkingConcepts] = useState([])
     const [change, setChange] = useState(false)
     const [useCase,SetUseCase] = useState('')
@@ -171,15 +174,7 @@ function App() {
                 console.log(error)
             })
 
-        axios.get("http://0.0.0.0:8000/get_annotators_users_list")
-            .then(response => {
-                if(response.data.length>0){
-                    // console.log(response.data)
-                    SetUsersListAnnotations(response.data)
-                }})
-            .catch(error=>{
-                console.log(error)
-            })
+
 
 
 
@@ -219,16 +214,13 @@ function App() {
                 conceptOption:[selectedOption, setSelectedOption],removedConcept:[RemovedConcept,SetRemovedConcept],indexList:[AnnotatedIndexList,SetAnnotatedIndexList],reportArray:[SelectOptions,SetSelectOptions],orderVar:[OrderVar,SetOrderVar],fields:[Fields,SetFields],fieldsToAnn:[FieldsToAnn,SetFieldsToAnn],
                 admin:[Admin, SetAdmin],showSnackMessage:[SnackMessage,SetSnackMessage],showSnack:[ShowSnack, SetShowSnack], labelsToInsert:[LabToInsert,SetLabToInsert],start:[Start,SetStart],changeConceots:[change,setChange],username:[Username,SetUsername],showOptions:[ShowModal,SetShowModal],language:[Language,SetLanguage],institute:[Institute, SetInstitute], usecase:[useCase,SetUseCase],outcomes:[Outcomes,SetOutcomes],semanticArea:[SemanticArea,SetSemanticArea],concepts:[Concepts,SetConcepts],reportString:[reportsString,setReportsString],radio:[RadioChecked, SetRadioChecked],finalcount:[FinalCount,SetFinalCount],reached:[FinalCountReached,SetFinalCountReached],
                 index:[index,setIndex],showbar:[ShowBar,SetShowBar], tokens:[Children,SetChildren],report:[report,setReport],reports:[reports, setReports],insertionTimes:[ArrayInsertionTimes,SetArrayInsertionTimes],userLabels:[labels_to_show, setLabels_to_show],labelsList:[labels,setLabels],checks:[checks,setChecks],highlightMention:[HighlightMention, SetHighlightMention],updateMenu:[UpdateMenu,SetUpdateMenu],usecaseList: [UseCaseList,SetUseCaseList],languageList:[LanguageList,SetLanguageList],
-                instituteList: [InstituteList,SetInstituteList],save:[SavedGT,SetSavedGT],disButton:[Disabled_Buttons,SetDisable_Buttons],selectedconcepts:[selectedConcepts, setSelectedConcepts],conceptModal:[ShowConceptModal, SetShowConceptModal],linkingConcepts:[LinkingConcepts,SetLinkingConcepts],errorSnack:[ShowErrorSnack, SetShowErrorSnack],
+                instituteList: [InstituteList,SetInstituteList],save:[SavedGT,SetSavedGT],disButton:[Disabled_Buttons,SetDisable_Buttons],selectedconcepts:[selectedConcepts, setSelectedConcepts],conceptModal:[ShowConceptModal, SetShowConceptModal],linkingConcepts:[LinkingConcepts,SetLinkingConcepts],errorSnack:[ShowErrorSnack, SetShowErrorSnack],selectedLanguage:[SelectedLanguage,SetSelectedLanguage],selectedInstitute:[SelectedInstitute,SetSelectedInstitute],selectedUse:[SelectedUse,SetSelectedUse],
                 mentionToAdd:[Mention,SetMention],showDownload:[ShowModalDownload,SetShowModalDownload],showSnackMessageMention:[SnackMessageMention, SetSnackMessageMention],showSnackMention:[ShowSnackMention,SetShowSnackMention],associations:[associations_to_show,SetAssociations_to_show], mentionsList:[mentions_to_show,SetMentions_to_show], allMentions:[AllMentions, SetAllMentions],action:[Action,SetAction], mentionSingleWord:[WordMention, SetWordMention],color:[Color,SetColor]}}
             >
                 <Router>
                     <div>
 
                         <Switch>
-
-
-
 
                             <Route path="/index">
                                 {(LoadingMenu) ? <div className='spinnerDiv'><Spinner animation="border" role="status"/></div> : <Prova_BaseInfex />}

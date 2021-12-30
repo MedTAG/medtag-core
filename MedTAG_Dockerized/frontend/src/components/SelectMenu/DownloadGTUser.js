@@ -596,9 +596,9 @@ function DownloadGTUser(props){
 
             <Modal.Footer>
 
-                <Button onClick={(e)=>onSave(e,'all')} variant="warning" >
-                    Download All (JSON)
-                </Button>
+                {/*<Button onClick={(e)=>onSave(e,'all')} variant="warning" >*/}
+                {/*    Download All (JSON)*/}
+                {/*</Button>*/}
 
                 <Button  onClick={(e)=>onSave(e,'conf')} variant="primary" >
                     Download

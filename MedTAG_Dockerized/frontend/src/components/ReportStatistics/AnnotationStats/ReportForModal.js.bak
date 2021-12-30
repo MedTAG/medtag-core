@@ -20,12 +20,14 @@ import {Divider} from "@material-ui/core";
 // axios.defaults.xsrfHeaderName = "X-CSRFTOKEN";
 function ReportForModal(props) {
 
-    const { index,institute,loadingMentions,color,tokens,fields,loadingReport,loadingColors,showannotations,finalcount,fieldsToAnn,reached,orderVar, errorSnack,reports, reportString, insertionTimes } = useContext(AppContext);
+    const { index,institute,loadingMentions,selectedUse,selectedInstitute,selectedLanguage,color,tokens,fields,loadingReport,loadingColors,showannotations,finalcount,fieldsToAnn,reached,orderVar, errorSnack,reports, reportString, insertionTimes } = useContext(AppContext);
     const [Reports,SetReports] = useState([])
     const [ReportString, setReportsString] = reportString;
     //Report sections
     const [LoadingReport, SetLoadingReport] = loadingReport;
-
+    const [SelectedLang,SetSelectedLang] = selectedLanguage
+    const [SelectedInstitute,SetSelectedInstitute] =selectedInstitute
+    const [SelectedUse,SetSelectedUse] = selectedUse
     const [Children,SetChildren] = tokens;
     const [selectedStats,SetSelectedStata] = useState('none')
     const [ShowLabelsStats,SetShowLabelsStats] = useState(false)
@@ -64,10 +66,19 @@ function ReportForModal(props) {
     },[props.stats])
 
     useEffect(()=>{
+        if(SelectedUse !== '' && SelectedInstitute !== '' && SelectedLang !== ''){
+            setReportsString('')
+            axios.get("http://127.0.0.1:8000/get_reports", {params: {all: 'all',usec:SelectedUse,lang:SelectedLang,institute:SelectedInstitute}}).then(response => {
+                SetReports(response.data['report']);})
+        }
+
+
+    },[SelectedUse,SelectedInstitute,SelectedLang])
+
+    useEffect(()=>{
         setReportsString('')
         SetMentions_to_show([])
-        axios.get("http://127.0.0.1:8000/get_reports", {params: {all: 'all'}}).then(response => {
-            SetReports(response.data['report']);})
+
 
         axios.get("http://127.0.0.1:8000/check_presence_exa_conc_lab", {params: {id_report:props.id_report,language:props.language}})
             .then(response => {
@@ -98,8 +109,7 @@ function ReportForModal(props) {
     useEffect(()=>{
         if(Reports.length > 0){
             SetLoadingReport(true)
-            console.log(Reports[newInd].id_report)
-            console.log(newInd)
+
             if(newInd >= 0){
                 axios.get("http://127.0.0.1:8000/report_start_end", {params: {report_id: Reports[newInd].id_report.toString()}}).then(response => {SetFinalCount(response.data['final_count']);
                     setReportsString(response.data['rep_string']); SetFinalCountReached(false);
@@ -135,14 +145,7 @@ function ReportForModal(props) {
 
 
 
-    useEffect(()=>{
-        if(Reports.length>0){
-            if(newInd===0){
-                console.log('zero',Reports[newInd].id_report)
-            }
 
-        }
-    },[newInd])
 
 
     function showAnnotators(e,id){
@@ -526,19 +529,21 @@ function ReportForModal(props) {
                             {props.stats['Robot']['linking']['count'] > 0 &&
                             <div><hr/>
                                 <h6 style={{textDecoration:'underline'}}>Associations from automatic annotation</h6>
-                                <i style={{fontSize:'0.8rem'}}>The associations found by the algorithm are highlighted in  <span style={{color:'royalblue'}}>blue</span></i><br/>
+                                <i style={{fontSize:'0.8rem'}}>The associations found by the algorithm are highlighted in <span style={{color:'royalblue'}}>blue</span> (the mention)
+                                and in <span style={{color:'red'}}>red</span> (the association)</i><br/>
                                 <div>Users who corrected the automatically linked concepts for this report: <b>{props.stats['Robot']['linking']['count']-1} {props.stats['Robot']['linking']['count']-1>0 && <i>({props.stats['Robot']['linking']['users_list'].filter(name=>name!== 'Robot_user').join(', ')})</i>}</b></div>
                                 <ul>{props.stats['Robot']['linking']['linking_list'].map((valore,i)=><>
                                 <div style={{color: valore.isRobot === true ? 'royalblue':'black'}}>
                                     <div>
                                         <Mention id = {index} index = {index} text={valore['mention']} start={valore['start']} stop={valore['stop']} mention_obj = {valore}/>
                                     </div>
-                                    </div><br/>
+                                    </div>
+                                <br/>
                                     <ul>
                                     {valore['concepts'].map((val,ind)=>
                                         <li className='annotations_li'>
                                             <div>
-                                                <Badge pill variant="dark" >
+                                                <Badge pill variant={val.isRobot ? "danger" :"dark"} >
                                                     {val.concept_name}
                                                 </Badge> - <span style={{color:'black',fontSize:'0.9rem'}}><i><b>URL</b> {val.concept_url}</i></span>
                                             </div>
@@ -565,7 +570,7 @@ function ReportForModal(props) {
                         </div> :
                                 <div>
                                     <i>Below you can find the list of associations mention-concept found for this report. Below each association you can see how many users chose that in <b>manual</b> and <b>automatic</b> annotation respectively.</i>
-                                    <br/><i style={{fontSize:'0.8rem'}}>The concepts annotated by the algorithm are highlighted in  <span style={{color:'royalblue'}}>blue</span></i><br/>
+                                    <br/><i style={{fontSize:'0.8rem'}}>The concepts annotated by the algorithm are highlighted in  <span style={{color:'royalblue'}}>blue</span> (the mention) and the concept in <span style={{color:'red'}}>red</span> </i><br/>
                                     <br/>
                                     {props.stats['Human_Robot']['linking']['count'] > 0 &&
                                     <div>
@@ -582,7 +587,7 @@ function ReportForModal(props) {
                                             {valore['concepts'].map((val,ind)=>
                                                 <li className='annotations_li'>
                                                         <div>
-                                                        <Badge pill variant="dark" >
+                                                        <Badge pill variant={val.isRobot ? "danger":"dark"} >
                                                             {val.concept_name}
                                                         </Badge> - <span style={{color:'black',fontSize:'0.9rem'}}><i><b>URL</b> {val.concept_url}</i></span>
                                                         </div>

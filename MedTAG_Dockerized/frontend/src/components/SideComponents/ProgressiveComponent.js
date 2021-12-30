@@ -8,9 +8,7 @@ function ProgressiveComponent(props){
     const [Colors,SetColors] = useState(['#039be5','#00c853','#f57f17','#d84315'])
     const [Actions,SetActions] = useState(['Labels','Mentions','Concepts','Linking'])
 
-    useEffect(()=>{
-        console.log('STATS_ARR: ',props.stats_array)
-    },[props.stats_array])
+
 
 
     return (

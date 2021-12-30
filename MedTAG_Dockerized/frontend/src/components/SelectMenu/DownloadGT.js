@@ -354,27 +354,27 @@ function DownloadGT(props){
                         <Form.Control className='selection' size="sm" as="select" onChange={(option)=>handleChangeFormat(option)}>
                             <option value="">Choose a file format...</option>
                             {(Act === 'labels' || Act === 'concepts') && Act !== 'none' && <>
-                            {Options_format_red.map((option)=>
-                                <option value={option.value}>{option.label}</option>)}
+                                {Options_format_red.map((option)=>
+                                    <option value={option.value}>{option.label}</option>)}
                             </>}
                             {(Act === 'mentions' || Act === 'concept-mention') && Act !== 'none' && <>
                                 {Options_format.map((option)=>
                                     <option value={option.value}>{option.label}</option>)}
                             </>}
 
-                        )}
+                            )}
                         </Form.Control>
 
 
                         <hr/>
 
-                            <div><FontAwesomeIcon icon={faProjectDiagram} /> Annotation types <i>(Mandatory)</i></div>
-                            <Form.Control className='selection' size="sm" as="select" onChange={(option)=>handleChangeAction(option)} placeholder="Select an action...">
-                                <option value="">Choose an action...</option>
-                                {Options_actions.map((option)=>
-                                    <option value={option.value}>{option.label}</option>
-                                )}
-                            </Form.Control>
+                        <div><FontAwesomeIcon icon={faProjectDiagram} /> Annotation types <i>(Mandatory)</i></div>
+                        <Form.Control className='selection' size="sm" as="select" onChange={(option)=>handleChangeAction(option)} placeholder="Select an action...">
+                            <option value="">Choose an action...</option>
+                            {Options_actions.map((option)=>
+                                <option value={option.value}>{option.label}</option>
+                            )}
+                        </Form.Control>
 
                         {(Format === 'biocxml' || Format === 'biocjson') && Act === 'mentions' && <div className='selection'><a className='bioc_down' onClick={(e)=>onSaveKeyFiles(e,'mentions')}>Download BioC key file for mentions</a></div>}
                         {(Format === 'biocxml' || Format === 'biocjson') && Act === 'concept-mention' && <div className='selection'><a  className='bioc_down' onClick={(e)=>onSaveKeyFiles(e,'concept-mention')}>Download BioC key file for linking</a></div>}
@@ -409,12 +409,12 @@ function DownloadGT(props){
 
                         <hr/>
                         {Use !== '' && Options_annotation.length>0 &&<div><div><FontAwesomeIcon icon={faRobot} /> Mode <i>(Optional)</i></div>
-                        <Form.Control className='selection' size="sm" as="select" onChange={(option)=>handleChangeMode(option)} placeholder="Select an institute...">
-                            <option value="">Choose an annotation mode...</option>
-                            {Options_annotation.map((option)=>
-                                <option value={option.value}>{option.label}</option>
-                            )}
-                        </Form.Control></div>}
+                            <Form.Control className='selection' size="sm" as="select" onChange={(option)=>handleChangeMode(option)} placeholder="Select an institute...">
+                                <option value="">Choose an annotation mode...</option>
+                                {Options_annotation.map((option)=>
+                                    <option value={option.value}>{option.label}</option>
+                                )}
+                            </Form.Control></div>}
 
                     </div>
                 </div>

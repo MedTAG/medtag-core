@@ -139,7 +139,7 @@ function ReportSelection(props){
                 {
 
                     var str = (ind+1).toString() +' - '+ Reports[ind].id_report.toString()
-                    console.log('str',str)
+                    // console.log('str',str)
                     if(ArrayInsertionTimes[ind] !== 0){
                         arr_to_opt.push({id:ind, label: str})
                         already_ann_opt.push({id:ind, label: str})
@@ -176,7 +176,8 @@ function ReportSelection(props){
                 {
 
                     var str = (ind+1).toString() +' - '+ Reports[ind].id_report.toString()
-                    console.log('str',str)
+
+
                     if(ArrayInsertionTimes[ind] !== 0){
                         arr_to_opt.push({id:ind, label: str})
                         already_ann_opt.push({id:ind, label: str})

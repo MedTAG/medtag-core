@@ -334,9 +334,11 @@ def update_mentions(mentions,report1,language,user,usecase,mode):
                 area = SemanticArea.objects.get(name = elem.name_id)
                 conc_obj = Contains.objects.filter(username = user,ns_id=mode, language = language, id_report=report1,concept_url = conc,
                                                    name = area)
+                link_t_d = Linked.objects.filter(username = user,ns_id=mode, language = language, id_report=report1,concept_url = conc,
+                                                   name = area)
 
 
-                if conc_obj.exists():
+                if conc_obj.exists() and link_t_d.count() == 1:
                     conc_obj.delete()
                     var_conc = True
 
@@ -431,12 +433,17 @@ def delete_all_associations(user, report1,language,type,usecase,mode):
     for association in ass:
         concept = Concept.objects.get(concept_url = association.concept_url_id)
         semarea = SemanticArea.objects.get(name=association.name_id)
+        print(association.username_id)
         concepts_user = Contains.objects.filter(username = user,ns_id=mode, id_report = report1,language = language, concept_url = concept,
                                                 name=semarea)
-        for con in concepts_user:
-            if con.concept_url == association.concept_url and con.name == association.name:
-                con.delete()
-                modifyconc = True
+        if concepts_user.exists() and concepts_user.count() == 1:
+            concepts_user.delete()
+            modifyconc = True
+        # print(concepts_user.count())
+        # for con in concepts_user:
+        #     if con.concept_url == association.concept_url and con.name == association.name:
+        #         con.delete()
+        #         modifyconc = True
 
     if modifyconc:
         if GroundTruthLogFile.objects.filter(username=user,ns_id=mode, id_report=report1, language=language,
@@ -472,6 +479,7 @@ def update_associations(concepts,user,report1,language,usecase,mode):
         sem_area = SemanticArea.objects.get(name=single_link.name_id)
         con = Concept.objects.get(concept_url=single_link.concept_url_id)
         concetto = Contains.objects.filter(username=user,ns_id=mode, language=language, id_report=report1,name = sem_area,concept_url=con)
+        link = Contains.objects.filter(username=user,ns_id=mode, language=language, id_report=report1,name = sem_area,concept_url=con)
         # La mention c'era nella lista precedente ma non nella nuova, è stata rimossa la singola mention
         ass_deleted = True
         a = Linked.objects.filter(concept_url = con,name=sem_area,start = mention_cur,username=user,ns_id = mode,id_report = report1,language = report1.language)
@@ -487,7 +495,7 @@ def update_associations(concepts,user,report1,language,usecase,mode):
                 ass_deleted = False
 
         if ass_deleted:
-            if concetto.exists():
+            if concetto.exists() and link.count() == 1:
                 concetto.delete()
                 modify_con = True
 
@@ -796,7 +804,7 @@ def get_distinct():
     return jsonDict
 
 
-def get_array_per_usecase(user,mode1,language):
+def get_array_per_usecase(user,mode1,language,institute,batch):
 
     """This method returns the stats for each use case related to a specific user"""
 
@@ -816,22 +824,27 @@ def get_array_per_usecase(user,mode1,language):
             array_stats = {}
             array_stats_percent = {}
             use_obj = UseCase.objects.get(name=usecase)
-            count_per_usecase = Report.objects.filter(name=use_obj,language = language).exclude(institute = 'PUBMED')
-            array_stats['all_reports'] = count_per_usecase.count()
+            c = 0
+            if institute != 'PUBMED':
+                count_per_usecase = Report.objects.filter(name=use_obj,language = language,institute = institute,batch = batch).exclude(institute = 'PUBMED')
+                c = count_per_usecase.count()
+
+            array_stats['all_reports'] = c
+
             array_stats_percent['all_reports'] = 100
 
             count_tot = 0
-            if count_per_usecase.count() > 0:
+            if c > 0:
                 with connection.cursor() as cursor:
                     for type in types:
                         cursor.execute(
-                            "SELECT COUNT(*) FROM report AS r INNER JOIN ground_truth_log_file AS g ON r.id_report = g.id_report AND r.language = g.language WHERE r.name = %s AND username = %s AND gt_type = %s AND ns_id = %s AND institute != %s AND r.language = %s;",
-                            [str(usecase), str(user.username), type, mode1,'PUBMED', str(language)])
+                            "SELECT COUNT(*) FROM report AS r INNER JOIN ground_truth_log_file AS g ON r.id_report = g.id_report AND r.language = g.language WHERE r.name = %s AND username = %s AND gt_type = %s AND ns_id = %s AND institute != %s AND r.language = %s AND r.institute = %s AND r.batch = %s;",
+                            [str(usecase), str(user.username), type, mode1,'PUBMED', str(language),str(institute),int(batch)])
                         count = cursor.fetchone()
                         count_gt = count[0]
                         count_tot += count_gt
                         array_stats[type] = count_gt
-                        array_stats_percent[type] = int((count_gt * 100) / count_per_usecase.count())
+                        array_stats_percent[type] = int((count_gt * 100) / c)
 
             array_tot[usecase] = array_stats
             array_tot_percent[usecase] = array_stats_percent
@@ -850,18 +863,26 @@ def get_array_per_usecase(user,mode1,language):
                 array_stats_percent = {}
 
                 count_tot = 0
-                cursor.execute(
-                    "SELECT COUNT(DISTINCT(r.id_report,r.language)) FROM report AS r INNER JOIN ground_truth_log_file AS g ON r.id_report = g.id_report AND r.language = g.language WHERE r.name = %s AND username = %s AND ns_id = %s AND institute != %s AND r.language = %s;",
-                    [str(usecase), 'Robot_user', mode1,'PUBMED',str(language)])
-                count = cursor.fetchone()
-                count_rep = count[0]
+                count_rep = 0
+                if institute != 'PUBMED':
+                    cursor.execute(
+                        "SELECT COUNT(DISTINCT(r.id_report,r.language)) FROM report AS r INNER JOIN ground_truth_log_file AS g ON r.id_report = g.id_report AND r.language = g.language WHERE r.name = %s AND username = %s AND ns_id = %s AND institute != %s AND r.language = %s and r.institute = %s AND r.batch = %s;",
+                        [str(usecase), 'Robot_user', mode1,'PUBMED',str(language),str(institute),int(batch)])
+                    count = cursor.fetchone()
+                    count_rep = count[0]
                 array_stats['all_reports'] = count_rep  # all reports auto annotated for a usecase
                 array_stats_percent['all_reports'] = 100  # all reports auto annotated for a usecase
                 if count_rep > 0:
                     for type in types:
+
+                        #CAMBIO
+                        # cursor.execute(
+                        #     "SELECT COUNT(*) FROM report AS r INNER JOIN ground_truth_log_file AS gt ON r.id_report = gt.id_report AND r.language = gt.language INNER JOIN ground_truth_log_file AS gtt ON gtt.id_report = gt.id_report AND gtt.language = gt.language AND gtt.gt_type = gt.gt_type WHERE gtt.username=%s AND gt.username=%s AND r.name = %s AND gt.ns_id=%s AND gt.gt_type = %s AND gtt.insertion_time != gt.insertion_time AND institute != %s AND r.language = %s;",
+                        #     ['Robot_user', str(user.username), usecase, mode1, type,'PUBMED',str(language)])
+
                         cursor.execute(
-                            "SELECT COUNT(*) FROM report AS r INNER JOIN ground_truth_log_file AS gt ON r.id_report = gt.id_report AND r.language = gt.language INNER JOIN ground_truth_log_file AS gtt ON gtt.id_report = gt.id_report AND gtt.language = gt.language AND gtt.gt_type = gt.gt_type WHERE gtt.username=%s AND gt.username=%s AND r.name = %s AND gt.ns_id=%s AND gt.gt_type = %s AND gtt.insertion_time != gt.insertion_time AND institute != %s AND r.language = %s;",
-                            ['Robot_user', str(user.username), usecase, mode1, type,'PUBMED',str(language)])
+                            "SELECT COUNT(*) FROM report AS r INNER JOIN ground_truth_log_file AS gt ON r.id_report = gt.id_report AND r.language = gt.language WHERE gt.username=%s AND r.name = %s AND gt.ns_id=%s AND gt.gt_type = %s AND institute != %s AND r.language = %s and r.institute = %s AND r.batch = %s;",
+                            [str(user.username), usecase, mode1, type,'PUBMED',str(language),str(institute),int(batch)])
                         gt_count = cursor.fetchone()[0]
                         count_tot += gt_count
                         array_stats[type] = gt_count
@@ -876,88 +897,8 @@ def get_array_per_usecase(user,mode1,language):
     to_ret['percent'] = array_tot_percent
     return to_ret
 
-# def get_array_per_usecase(user,mode1):
-#
-#     """This method returns the stats for each use case related to a specific user"""
-#
-#     array_tot = {}
-#     array_tot_percent = {}
-#
-#     types = ['labels','mentions','concepts','concept-mention']
-#     usecase = Report.objects.all().distinct('name')
-#
-#     if mode1 == 'Human':
-#         usecases = []
-#         for uc in usecase:
-#             usecases.append(uc.name_id)
-#
-#         # Subdivided for each usecase
-#         for usecase in usecases:
-#             array_stats = {}
-#             array_stats_percent = {}
-#             use_obj = UseCase.objects.get(name=usecase)
-#             count_per_usecase = Report.objects.filter(name=use_obj).exclude(institute = 'PUBMED')
-#             array_stats['all_reports'] = count_per_usecase.count()
-#             array_stats_percent['all_reports'] = 100
-#
-#             count_tot = 0
-#             if count_per_usecase.count() > 0:
-#                 with connection.cursor() as cursor:
-#                     for type in types:
-#                         cursor.execute(
-#                             "SELECT COUNT(*) FROM report AS r INNER JOIN ground_truth_log_file AS g ON r.id_report = g.id_report AND r.language = g.language WHERE r.name = %s AND username = %s AND gt_type = %s AND ns_id = %s AND institute != %s;",
-#                             [str(usecase), str(user.username), type, mode1,'PUBMED'])
-#                         count = cursor.fetchone()
-#                         count_gt = count[0]
-#                         count_tot += count_gt
-#                         array_stats[type] = count_gt
-#                         array_stats_percent[type] = int((count_gt * 100) / count_per_usecase.count())
-#
-#             array_tot[usecase] = array_stats
-#             array_tot_percent[usecase] = array_stats_percent
-#
-#     elif mode1 == 'Robot':
-#         with connection.cursor() as cursor:
-#             """all_rep are all the reports such that have an automatic gt created."""
-#
-#             usecases = []
-#             for uc in usecase:
-#                 usecases.append(uc.name_id)
-#
-#             for usecase in usecases:
-#                 # print(usecase)
-#                 array_stats = {}
-#                 array_stats_percent = {}
-#
-#                 count_tot = 0
-#                 cursor.execute(
-#                     "SELECT COUNT(DISTINCT(r.id_report,r.language)) FROM report AS r INNER JOIN ground_truth_log_file AS g ON r.id_report = g.id_report AND r.language = g.language WHERE r.name = %s AND username = %s AND ns_id = %s AND institute != %s;",
-#                     [str(usecase), 'Robot_user', mode1,'PUBMED'])
-#                 count = cursor.fetchone()
-#                 count_rep = count[0]
-#                 array_stats['all_reports'] = count_rep  # all reports auto annotated for a usecase
-#                 array_stats_percent['all_reports'] = 100  # all reports auto annotated for a usecase
-#                 if count_rep > 0:
-#                     for type in types:
-#                         cursor.execute(
-#                             "SELECT COUNT(*) FROM report AS r INNER JOIN ground_truth_log_file AS gt ON r.id_report = gt.id_report AND r.language = gt.language INNER JOIN ground_truth_log_file AS gtt ON gtt.id_report = gt.id_report AND gtt.language = gt.language AND gtt.gt_type = gt.gt_type WHERE gtt.username=%s AND gt.username=%s AND r.name = %s AND gt.ns_id=%s AND gt.gt_type = %s AND gtt.insertion_time != gt.insertion_time AND institute != %s;",
-#                             ['Robot_user', str(user.username), usecase, mode1, type,'PUBMED'])
-#                         gt_count = cursor.fetchone()[0]
-#                         count_tot += gt_count
-#                         array_stats[type] = gt_count
-#                         array_stats_percent[type] = int((gt_count * 100) / count_rep)
-#
-#                 array_tot[usecase] = array_stats
-#                 array_tot_percent[usecase] = array_stats_percent
-#
-#
-#     to_ret = {}
-#     to_ret['original'] = array_tot
-#     to_ret['percent'] = array_tot_percent
-#     return to_ret
 
-
-def get_array_per_usecase_PUBMED(user,mode1,language):
+def get_array_per_usecase_PUBMED(user,mode1,language,institute,batch):
 
     """This method returns the stats for each use case related to a specific user"""
 
@@ -975,21 +916,24 @@ def get_array_per_usecase_PUBMED(user,mode1,language):
             array_stats = {}
             array_stats_percent = {}
             us = UseCase.objects.get(name=usecase)
-            all_rep = Report.objects.filter(name=us,institute = 'PUBMED',language = language)
-            array_stats['all_reports'] = all_rep.count()
+            c = 0
+            if institute == 'PUBMED':
+                all_rep = Report.objects.filter(name=us,institute = 'PUBMED',language = language,batch = batch)
+                c = all_rep.count()
+            array_stats['all_reports'] = c
             array_stats_percent['all_reports'] = 100
-            if all_rep.count() > 0:
+            if c > 0:
                 count_tot = 0
                 with connection.cursor() as cursor:
                     for type in types:
                         cursor.execute(
-                            "SELECT COUNT(*) FROM report AS r INNER JOIN ground_truth_log_file AS g ON r.id_report = g.id_report AND r.language = g.language WHERE r.name = %s AND username = %s AND gt_type = %s AND ns_id = %s AND institute = %s AND r.language = %s;",
-                            [str(usecase), str(user.username), type, mode1,'PUBMED',str(language)])
+                            "SELECT COUNT(*) FROM report AS r INNER JOIN ground_truth_log_file AS g ON r.id_report = g.id_report AND r.language = g.language WHERE r.name = %s AND username = %s AND gt_type = %s AND ns_id = %s AND institute = %s AND r.language = %s AND r.batch = %s;",
+                            [str(usecase), str(user.username), type, mode1,'PUBMED',str(language),int(batch)])
                         count = cursor.fetchone()
                         count_gt = count[0]
                         count_tot += count_gt
                         array_stats[type] = count_gt
-                        array_stats_percent[type] = int((count_gt * 100) / all_rep.count())
+                        array_stats_percent[type] = int((count_gt * 100) / c)
 
 
             array_tot[usecase] = array_stats
@@ -1004,18 +948,25 @@ def get_array_per_usecase_PUBMED(user,mode1,language):
                 array_stats = {}
                 array_stats_percent = {}
                 count_tot = 0
-                cursor.execute(
-                    "SELECT COUNT(DISTINCT(r.id_report,r.language)) FROM report AS r INNER JOIN ground_truth_log_file AS g ON r.id_report = g.id_report AND r.language = g.language WHERE r.name = %s AND username = %s AND ns_id = %s AND institute = %s AND r.language = %s;",
-                    [str(usecase), 'Robot_user', mode1,'PUBMED',str(language)])
-                count = cursor.fetchone()
-                count_rep = count[0]
+                count_rep = 0
+                if institute == 'PUBMED':
+                    cursor.execute(
+                        "SELECT COUNT(DISTINCT(r.id_report,r.language)) FROM report AS r INNER JOIN ground_truth_log_file AS g ON r.id_report = g.id_report AND r.language = g.language WHERE r.name = %s AND username = %s AND ns_id = %s AND institute = %s AND r.language = %s AND r.batch = %s;",
+                        [str(usecase), 'Robot_user', mode1,'PUBMED',str(language),int(batch)])
+                    count = cursor.fetchone()
+                    count_rep = count[0]
                 array_stats['all_reports'] = count_rep  # all reports auto annotated for a usecase
                 array_stats_percent['all_reports'] = 100  # all reports auto annotated for a usecase
                 if count_rep > 0 :
                     for type in types:
                         cursor.execute(
-                            "SELECT COUNT(*) FROM report AS r INNER JOIN ground_truth_log_file AS gt ON r.id_report = gt.id_report AND r.language = gt.language INNER JOIN ground_truth_log_file AS gtt ON gtt.id_report = gt.id_report AND gtt.language = gt.language AND gtt.gt_type = gt.gt_type WHERE gtt.username=%s AND gt.username=%s AND r.name = %s AND gt.ns_id=%s AND gt.gt_type = %s AND gtt.insertion_time < gt.insertion_time AND institute = %s AND r.language = %s;",
-                            ['Robot_user', str(user.username), usecase, mode1, type,'PUBMED',str(language)])
+                            "SELECT COUNT(*) FROM report AS r INNER JOIN ground_truth_log_file AS gt ON r.id_report = gt.id_report AND r.language = gt.language WHERE  gt.username=%s AND r.name = %s AND gt.ns_id=%s AND gt.gt_type = %s  AND institute = %s AND r.language = %s AND r.batch = %s;",
+                            [ str(user.username), usecase, mode1, type, 'PUBMED', str(language),int(batch)])
+
+                        #CAMBIO
+                        # cursor.execute(
+                        #     "SELECT COUNT(*) FROM report AS r INNER JOIN ground_truth_log_file AS gt ON r.id_report = gt.id_report AND r.language = gt.language INNER JOIN ground_truth_log_file AS gtt ON gtt.id_report = gt.id_report AND gtt.language = gt.language AND gtt.gt_type = gt.gt_type WHERE gtt.username=%s AND gt.username=%s AND r.name = %s AND gt.ns_id=%s AND gt.gt_type = %s AND gtt.insertion_time < gt.insertion_time AND institute = %s AND r.language = %s;",
+                        #     ['Robot_user', str(user.username), usecase, mode1, type,'PUBMED',str(language)])
                         gt_count = cursor.fetchone()[0]
                         count_tot += gt_count
                         array_stats[type] = gt_count
@@ -1263,7 +1214,6 @@ def get_fields_from_json():
     json_resp['fields'] = data['fields']
     json_resp['fields_to_ann'] = data['fields_to_ann']
     json_resp['all_fields'] = data['all_fields']
-
     # ADDED 06092021
     # json_resp['fields'].extend(['volume','authors','journal','year'])
     # json_resp['fields_to_ann'].extend(['abstract','title'])
@@ -1459,38 +1409,28 @@ def copy_rows(use_case,user_from,user_to,overwrite = None):
     try:
         with transaction.atomic():
 
-            mode_rob = NameSpace.objects.get(ns_id='Robot')
-            username_rob = User.objects.get(username='Robot_user', ns_id=mode_rob)
-
             with connection.cursor() as cursor:
                 cursor.execute(
                     "SELECT g.username,g.id_report,g.language,g.label,g.seq_number,g.insertion_time,g.ns_id FROM report AS r INNER JOIN associate AS g ON r.id_report = g.id_report AND r.language = g.language WHERE r.name = %s AND g.username = %s;",
                     [str(use_case), str(user_from)])
                 rows_asso = cursor.fetchall()
 
-                for row in rows_asso:
-                    mode = NameSpace.objects.get(ns_id = row[6])
+                cursor.execute(
+                    "SELECT DISTINCT r.id_report,r.language,ns_id FROM ground_truth_log_file AS g INNER JOIN report AS r ON r.id_report = g.id_report AND r.language = g.language WHERE username = %s AND gt_type = %s AND r.name = %s;",
+                    [str(user_from),'labels',str(use_case)])
+                dist_ids = cursor.fetchall()
 
-                    report = Report.objects.get(id_report=row[1], language=row[2])
+                for row in dist_ids:
+                    mode = NameSpace.objects.get(ns_id = row[2])
+
+                    report = Report.objects.get(id_report=row[0], language=row[1])
                     username = User.objects.get(username=user_to, ns_id=mode)
                     user_to_gt = GroundTruthLogFile.objects.filter(username=username,ns_id=mode,id_report=report,language=report.language,gt_type='labels')
 
-                    # label = AnnotationLabel.objects.get(seq_number=row[4], label=row[3])
-                    robot_gt = GroundTruthLogFile.objects.filter(username=username_rob,ns_id=mode_rob,id_report=report,language=report.language,gt_type='labels')
-                    ins_time = ''
-                    if robot_gt.exists():
-                        rob_first_gt = robot_gt.first()
-                        ins_time = rob_first_gt.insertion_time
-
                     if overwrite == False:
                         if mode.ns_id == 'Robot':
-                            if user_to_gt.exists():
-                                user_to_gt_first = user_to_gt.first()
-                                if user_to_gt_first.insertion_time == ins_time:
-                                    GroundTruthLogFile.objects.filter(username=username, ns_id=mode, id_report=report,
-                                                                      language=report.language,
-                                                                      gt_type='labels').delete()
-                                    Associate.objects.filter(username=username, ns_id=mode, id_report=report,
+                            if not user_to_gt.exists():
+                                Associate.objects.filter(username=username, ns_id=mode, id_report=report,
                                                              language=report.language).delete()
 
 
@@ -1501,13 +1441,6 @@ def copy_rows(use_case,user_from,user_to,overwrite = None):
                         Associate.objects.filter(username=username, ns_id=mode, id_report=report,
                                                  language=report.language).delete()
 
-                    # if overwrite == True and GroundTruthLogFile.objects.filter(username=username,ns_id=mode,id_report=report,language=report.language,gt_type='labels').exists():
-                    #     GroundTruthLogFile.objects.filter(username=username, ns_id=mode, id_report=report,
-                    #                                       language=report.language,
-                    #                                       gt_type='labels').delete()
-                    #     Associate.objects.filter(username=username, ns_id=mode, id_report=report,
-                    #                              language=report.language).delete()
-
                 for row in rows_asso:
                     mode = NameSpace.objects.get(ns_id=row[6])
                     username = User.objects.get(username=user_to, ns_id=mode)
@@ -1515,75 +1448,68 @@ def copy_rows(use_case,user_from,user_to,overwrite = None):
                     label = AnnotationLabel.objects.get(seq_number=row[4], label=row[3])
                     if (overwrite == False and not GroundTruthLogFile.objects.filter(username=username, ns_id=mode,
                                                      id_report=report, language=row[2],gt_type='labels').exists()) or overwrite == True or user_from == 'Robot_user':
-
-                        Associate.objects.create(username=username, ns_id=mode, insertion_time=row[5], label=label,
-                                                 seq_number=row[4],id_report=report, language=row[2])
-
-                cursor.execute(
-                    "SELECT g.insertion_time,g.gt_json,g.id_report,g.language,g.ns_id FROM report AS r INNER JOIN ground_truth_log_file AS g ON r.id_report = g.id_report AND r.language = g.language WHERE  r.name = %s AND g.username = %s AND gt_type = %s;",
-                    [str(use_case), str(user_from), 'labels'])
-                rows_gt_lab = cursor.fetchall()
-                for row in rows_gt_lab:
-                    mode = NameSpace.objects.get(ns_id=row[4])
-                    username = User.objects.get(username=user_to, ns_id=mode)
-                    report_gt = Report.objects.get(id_report = row[2], language = row[3])
-
-                    if (overwrite == False and not GroundTruthLogFile.objects.filter(username=username, ns_id=mode,
-                                                     id_report=report_gt, language=report_gt.language,gt_type = 'labels').exists()) or overwrite == True or user_from == 'Robot_user':
-                        gt = json.loads(row[1])
-                        gt['username'] = user_to
-                        GroundTruthLogFile.objects.create(username=username, ns_id=mode, insertion_time=row[0],
-                                                          id_report=report_gt, language=report_gt.language,
-                                                          gt_json=gt, gt_type='labels')
+                        if not Associate.objects.filter(username=username, ns_id=mode, label=label,
+                                                 seq_number=row[4],id_report=report, language=row[2]).exists():
+                            Associate.objects.create(username=username, ns_id=mode, insertion_time=row[5], label=label,
+                                                     seq_number=row[4],id_report=report, language=row[2])
 
 
                 cursor.execute(
                     "SELECT g.username,g.id_report,g.language,g.start,g.stop,g.insertion_time,g.ns_id FROM report AS r INNER JOIN annotate AS g ON r.id_report = g.id_report AND r.language = g.language WHERE  r.name = %s AND g.username = %s;",
                     [str(use_case), str(user_from)])
                 rows = cursor.fetchall()
-
-                for row in rows:
-                    mode = NameSpace.objects.get(ns_id=row[6])
+                cursor.execute(
+                    "SELECT DISTINCT r.id_report,r.language,ns_id FROM ground_truth_log_file AS g INNER JOIN report AS r ON r.id_report = g.id_report AND r.language = g.language WHERE username = %s AND gt_type = %s AND r.name = %s;",
+                    [str(user_from),'mentions',str(use_case)])
+                dist_ids = cursor.fetchall()
+                for row in dist_ids:
+                    mode = NameSpace.objects.get(ns_id=row[2])
                     username = User.objects.get(username=user_to, ns_id=mode)
-                    report = Report.objects.get(id_report=row[1], language=row[2])
+                    report = Report.objects.get(id_report=row[0], language=row[1])
                     user_to_gt = GroundTruthLogFile.objects.filter(username=username,ns_id=mode,id_report=report,language=report.language,gt_type='mentions')
-                    robot_gt = GroundTruthLogFile.objects.filter(username=username_rob, ns_id=mode_rob,
-                                                                 id_report=report, language=report.language,
-                                                                 gt_type='mentions')
-                    ins_time = ''
-                    if robot_gt.exists():
-                        rob_first_gt = robot_gt.first()
-                        ins_time = rob_first_gt.insertion_time
 
                     if overwrite == False:
                         if mode.ns_id == 'Robot':
-                            if user_to_gt.exists():
-                                user_to_gt_first = user_to_gt.first()
-                                if user_to_gt_first.insertion_time == ins_time:
-                                    GroundTruthLogFile.objects.filter(username=username, ns_id=mode, id_report=report,
+                            if not user_to_gt.exists():
+                                if Linked.objects.filter(username=username, ns_id=mode, id_report=report,
+                                                         language=report.language).exists():
+                                    GroundTruthLogFile.objects.filter(username=username, ns_id=mode,
+                                                                      id_report=report,
                                                                       language=report.language,
-                                                                      gt_type='mentions').delete()
-                                    Annotate.objects.filter(username=username, ns_id=mode, id_report=report,
-                                                             language=report.language).delete()
+                                                                      gt_type='concept-mention').delete()
+                                    GroundTruthLogFile.objects.filter(username=username, ns_id=mode,
+                                                                      id_report=report,
+                                                                      language=report.language,
+                                                                      gt_type='concepts').delete()
+                                Annotate.objects.filter(username=username, ns_id=mode, id_report=report,
+                                                        language=report.language).delete()
+                                links = Linked.objects.filter(username=username, ns_id=mode, id_report=report,
+                                                              language=report.language)
+                                for e in links:
+                                    concept = e.concept_url
+                                    Contains.objects.filter(username=username, ns_id=mode, id_report=report,
+                                                            language=report.language, concept_url=concept).delete()
+                                links.delete()
+
 
                     else:
-                        GroundTruthLogFile.objects.filter(username=username, ns_id=mode, id_report=report,
-                                                          language=report.language,
-                                                          gt_type='mentions').delete()
 
-                        Annotate.objects.filter(username=username, ns_id=mode, id_report=report,
-                                                 language=report.language).delete()
+                        GroundTruthLogFile.objects.filter(username=username, ns_id=mode,id_report=report,
+                                                          language=report.language,gt_type='mentions').delete()
 
-                    # if overwrite == True and GroundTruthLogFile.objects.filter(username=username,
-                    #                                                            ns_id=mode,
-                    #                                                            id_report=report,
-                    #                                                            language=report.language,
-                    #                                                            gt_type='mentions').exists():
-                    #     GroundTruthLogFile.objects.filter(username=username, ns_id=mode, id_report=report,
-                    #                                       language=report.language,
-                    #                                       gt_type='mentions').delete()
-                    #     Annotate.objects.filter(username=username, ns_id=mode, id_report=report,
-                    #                              language=report.language).delete()
+                        if Linked.objects.filter(username=username, ns_id=mode, id_report=report,language=report.language).exists():
+                            GroundTruthLogFile.objects.filter(username=username, ns_id=mode,id_report=report,language=report.language,gt_type='concept-mention').delete()
+                            GroundTruthLogFile.objects.filter(username=username, ns_id=mode,id_report=report,language=report.language,gt_type='concepts').delete()
+
+                        Annotate.objects.filter(username=username, ns_id=mode, id_report=report,language=report.language).delete()
+                        links = Linked.objects.filter(username=username, ns_id=mode, id_report=report,language=report.language)
+
+                        for e in links:
+                            concept = e.concept_url
+                            Contains.objects.filter(username=username, ns_id=mode, id_report=report,language=report.language, concept_url=concept).delete()
+
+                        links.delete()
+
                 for row in rows:
                     mode = NameSpace.objects.get(ns_id=row[6])
                     username = User.objects.get(username=user_to, ns_id=mode)
@@ -1591,61 +1517,31 @@ def copy_rows(use_case,user_from,user_to,overwrite = None):
                     mention = Mention.objects.get(start=row[3], stop=row[4], id_report=report,
                                                   language=report.language)
 
-                    if (overwrite == False  and not GroundTruthLogFile.objects.filter(username=username,gt_type='mentions', ns_id=mode,
-                                                                                       id_report=report, language=row[
-                            2]).exists()) or overwrite == True or user_from == 'Robot_user':
-
-                        Annotate.objects.create(username=username, ns_id=mode, insertion_time=row[5], start=mention, stop=mention.stop,id_report=report,language=row[2])
-                cursor.execute(
-                    "SELECT g.insertion_time,g.gt_json,g.id_report,g.language,g.ns_id FROM report AS r INNER JOIN ground_truth_log_file AS g ON r.id_report = g.id_report AND r.language = g.language WHERE  r.name = %s AND g.username = %s AND gt_type = %s;",
-                    [str(use_case), str(user_from), 'mentions'])
-                rows_gt_lab = cursor.fetchall()
-                for row in rows_gt_lab:
-                    mode = NameSpace.objects.get(ns_id=row[4])
-                    username = User.objects.get(username=user_to, ns_id=mode)
-                    report_gt = Report.objects.get(id_report=row[2],language = row[3])
-                    if (overwrite == False and not GroundTruthLogFile.objects.filter(username=username,
-                                                                                       gt_type='mentions', ns_id=mode,
-                                                                                       id_report=report_gt, language=row[
-                            3]).exists()) or overwrite == True or user_from == 'Robot_user':
-                        gt = json.loads(row[1])
-                        gt['username'] = user_to
-                        GroundTruthLogFile.objects.create(username=username, ns_id=mode, insertion_time=row[0],
-                                                          id_report=report_gt, language=report_gt.language, gt_json=gt,
-                                                          gt_type='mentions')
-
+                    if (overwrite == False and not GroundTruthLogFile.objects.filter(username=username,gt_type='mentions', ns_id=mode,
+                                                                                       id_report=report, language=row[2]).exists()) or overwrite == True or user_from == 'Robot_user':
+                        if not Annotate.objects.filter(username=username, ns_id=mode, start=mention, stop=mention.stop,id_report=report,language=row[2]).exists():
+                            Annotate.objects.create(username=username, ns_id=mode, insertion_time=row[5], start=mention, stop=mention.stop,id_report=report,language=row[2])
 
                 cursor.execute(
                     "SELECT g.username,g.id_report,g.language,g.concept_url,g.name,g.insertion_time,g.ns_id FROM report AS r INNER JOIN contains AS g ON r.id_report = g.id_report AND r.language = g.language WHERE  r.name = %s AND g.username = %s;",
                     [str(use_case), str(user_from)])
                 rows = cursor.fetchall()
-
-                for row in rows:
-                    mode = NameSpace.objects.get(ns_id=row[6])
+                cursor.execute(
+                    "SELECT DISTINCT r.id_report,r.language,ns_id FROM ground_truth_log_file AS g INNER JOIN report AS r ON r.id_report = g.id_report AND r.language = g.language WHERE username = %s AND gt_type = %s AND r.name = %s;",
+                    [str(user_from), 'concepts', str(use_case)])
+                dist_ids = cursor.fetchall()
+                for row in dist_ids:
+                    mode = NameSpace.objects.get(ns_id=row[2])
                     username = User.objects.get(username=user_to, ns_id=mode)
-                    report = Report.objects.get(id_report=row[1], language=row[2])
-                    concept = Concept.objects.get(concept_url=row[3])
-                    sem = SemanticArea.objects.get(name=row[4])
-
+                    report = Report.objects.get(id_report=row[0], language=row[1])
                     user_to_gt = GroundTruthLogFile.objects.filter(username=username, ns_id=mode, id_report=report,
                                                                    language=report.language, gt_type='concepts')
-                    robot_gt = GroundTruthLogFile.objects.filter(username=username_rob, ns_id=mode_rob,
-                                                                 id_report=report, language=report.language,
-                                                                 gt_type='concepts')
-                    ins_time = ''
-                    if robot_gt.exists():
-                        rob_first_gt = robot_gt.first()
-                        ins_time = rob_first_gt.insertion_time
+
 
                     if overwrite == False:
                         if mode.ns_id == 'Robot':
-                            if user_to_gt.exists():
-                                user_to_gt_first = user_to_gt.first()
-                                if user_to_gt_first.insertion_time == ins_time:
-                                    GroundTruthLogFile.objects.filter(username=username, ns_id=mode, id_report=report,
-                                                                      language=report.language,
-                                                                      gt_type='concepts').delete()
-                                    Contains.objects.filter(username=username, ns_id=mode, id_report=report,
+                            if not user_to_gt.exists():
+                                Contains.objects.filter(username=username, ns_id=mode, id_report=report,
                                                             language=report.language).delete()
 
                     else:
@@ -1655,18 +1551,7 @@ def copy_rows(use_case,user_from,user_to,overwrite = None):
 
                         Contains.objects.filter(username=username, ns_id=mode, id_report=report,
                                                 language=report.language).delete()
-                    # if overwrite == True and GroundTruthLogFile.objects.filter(username=username,
-                    #                                                            ns_id=mode,
-                    #                                                            id_report=report,
-                    #                                                            language=report.language,
-                    #                                                            gt_type='concepts').exists():
-                    #     gt = json.loads(row[1])
-                    #     gt['username'] = user_to
-                    #     GroundTruthLogFile.objects.filter(username=username, ns_id=mode, id_report=report,
-                    #                                       language=report.language,
-                    #                                       gt_type='concepts').delete()
-                    #     Contains.objects.filter(username=username, ns_id=mode, id_report=report,
-                    #                              language=report.language).delete()
+
                 for row in rows:
                     mode = NameSpace.objects.get(ns_id=row[6])
                     username = User.objects.get(username=user_to, ns_id=mode)
@@ -1676,67 +1561,30 @@ def copy_rows(use_case,user_from,user_to,overwrite = None):
                     if (overwrite == False and not GroundTruthLogFile.objects.filter(username=username,gt_type='concepts', ns_id=mode,
                                                                                        id_report=report, language=row[
                             2]).exists()) or overwrite == True or user_from == 'Robot_user':
-
-                        Contains.objects.create(username=username, ns_id=mode, insertion_time=row[5], concept_url=concept,
+                        if not Contains.objects.filter(username=username, ns_id=mode,concept_url=concept,name=sem,id_report=report,language=row[2]).exists():
+                            Contains.objects.create(username=username, ns_id=mode, insertion_time=row[5], concept_url=concept,
                                             name=sem,id_report=report,language=row[2])
-                cursor.execute(
-                    "SELECT g.insertion_time,g.gt_json,g.id_report,g.language,g.ns_id FROM report AS r INNER JOIN ground_truth_log_file AS g ON r.id_report = g.id_report AND r.language = g.language WHERE  r.name = %s AND g.username = %s AND gt_type = %s;",
-                    [str(use_case), str(user_from), 'concepts'])
-                rows_gt_lab = cursor.fetchall()
-                for row in rows_gt_lab:
-                    mode = NameSpace.objects.get(ns_id=row[4])
-                    username = User.objects.get(username=user_to, ns_id=mode)
-                    report = Report.objects.get(id_report=row[2],language = row[3])
-                    if (overwrite == False and not GroundTruthLogFile.objects.filter(username=username,
-                                                                                       gt_type='concepts', ns_id=mode,
-                                                                                       id_report=report, language=row[
-                            3]).exists()) or overwrite == True or user_from == 'Robot_user':
-                        gt = json.loads(row[1])
-                        gt['username'] = user_to
-                        GroundTruthLogFile.objects.create(username=username, ns_id=mode, insertion_time=row[0],
-                                                          id_report=report, language=report.language,
-                                                          gt_json=gt,
-                                                          gt_type='concepts')
+
                 cursor.execute(
                     "SELECT g.username,g.id_report,g.language,g.concept_url,g.name,g.start,g.stop,g.insertion_time,g.ns_id FROM report AS r INNER JOIN linked AS g ON r.id_report = g.id_report AND r.language = g.language WHERE  r.name = %s AND username = %s;",
                     [str(use_case), str(user_from)])
                 rows = cursor.fetchall()
 
-                for row in rows:
-                    mode = NameSpace.objects.get(ns_id=row[8])
-                    username = User.objects.get(username=user_to, ns_id=mode)
-                    username_from = User.objects.get(username=user_from, ns_id=mode)
-                    report = Report.objects.get(id_report=row[1], language=row[2])
-                    concept = Concept.objects.get(concept_url=row[3])
-                    sem = SemanticArea.objects.get(name=row[4])
-                    from_arr = []
-                    to_arr = []
-                    for el in Annotate.objects.filter(id_report = report,language = report.language, username = username_from,ns_id = mode).values('start','stop'):
-                        from_arr.append(el['start'])
-                    for el in Annotate.objects.filter(id_report=report, language=report.language,
-                                                          username=username, ns_id=mode).values('start', 'stop'):
-                        to_arr.append(el['start'])
-                    mention = Mention.objects.get(start=row[5], stop=row[6], id_report=report, language=report.language)
+                cursor.execute(
+                    "SELECT DISTINCT r.id_report,r.language,ns_id FROM ground_truth_log_file AS g INNER JOIN report AS r ON r.id_report = g.id_report AND r.language = g.language WHERE username = %s AND gt_type = %s AND r.name = %s;",
+                    [str(user_from),'concept-mention',str(use_case)])
+                dist_ids = cursor.fetchall()
 
+                for row in dist_ids:
+                    mode = NameSpace.objects.get(ns_id=row[2])
+                    username = User.objects.get(username=user_to, ns_id=mode)
+                    report = Report.objects.get(id_report=row[0], language=row[1])
                     user_to_gt = GroundTruthLogFile.objects.filter(username=username, ns_id=mode, id_report=report,
                                                                    language=report.language, gt_type='concept-mention')
-                    robot_gt = GroundTruthLogFile.objects.filter(username=username_rob, ns_id=mode_rob,
-                                                                 id_report=report, language=report.language,
-                                                                 gt_type='concept-mention')
-                    ins_time = ''
-                    if robot_gt.exists():
-                        rob_first_gt = robot_gt.first()
-                        ins_time = rob_first_gt.insertion_time
-
                     if overwrite == False:
                         if mode.ns_id == 'Robot':
-                            if user_to_gt.exists():
-                                user_to_gt_first = user_to_gt.first()
-                                if user_to_gt_first.insertion_time == ins_time:
-                                    GroundTruthLogFile.objects.filter(username=username, ns_id=mode, id_report=report,
-                                                                      language=report.language,
-                                                                      gt_type='concept-mention').delete()
-                                    Linked.objects.filter(username=username, ns_id=mode, id_report=report,
+                            if not user_to_gt.exists():
+                                Linked.objects.filter(username=username, ns_id=mode, id_report=report,
                                                             language=report.language).delete()
 
                     else:
@@ -1746,68 +1594,27 @@ def copy_rows(use_case,user_from,user_to,overwrite = None):
 
                         Linked.objects.filter(username=username, ns_id=mode, id_report=report,
                                                 language=report.language).delete()
-                    # if overwrite == True and GroundTruthLogFile.objects.filter(username=username,
-                    #                                                            ns_id=mode,
-                    #                                                            id_report=report,
-                    #                                                            language=report.language,
-                    #                                                            gt_type='concept-mention').exists():
-                    #     GroundTruthLogFile.objects.filter(username=username, ns_id=mode, id_report=report,
-                    #                                       language=report.language,
-                    #                                       gt_type='concept-mention').delete()
-                    #     Linked.objects.filter(username=username, ns_id=mode, id_report=report,
-                    #                              language=report.language).delete()
+
                 for row in rows:
                     mode = NameSpace.objects.get(ns_id=row[8])
                     username = User.objects.get(username=user_to, ns_id=mode)
-                    username_from = User.objects.get(username=user_from, ns_id=mode)
                     report = Report.objects.get(id_report=row[1], language=row[2])
                     concept = Concept.objects.get(concept_url=row[3])
                     sem = SemanticArea.objects.get(name=row[4])
-                    from_arr = []
-                    to_arr = []
-                    for el in Annotate.objects.filter(id_report=report, language=report.language,
-                                                      username=username_from, ns_id=mode).values('start', 'stop'):
-                        from_arr.append(el['start'])
-                    for el in Annotate.objects.filter(id_report=report, language=report.language,
-                                                      username=username, ns_id=mode).values('start', 'stop'):
-                        to_arr.append(el['start'])
+
                     mention = Mention.objects.get(start=row[5], stop=row[6], id_report=report,
                                                   language=report.language)
-                    if (overwrite == False and set(to_arr) == set(from_arr) and not GroundTruthLogFile.objects.filter(username=username,
+                    if (overwrite == False and not GroundTruthLogFile.objects.filter(username=username,
                                                                                        gt_type='concept-mention', ns_id=mode,
                                                                                        id_report=report, language=row[
                             2]).exists()) or overwrite == True or user_from == 'Robot_user':
-
-                        Linked.objects.create(username=username, ns_id=mode, insertion_time=row[7], name=sem,
+                        if not Linked.objects.filter(username=username, ns_id=mode, name=sem,start=mention, stop=mention.stop, concept_url=concept, id_report=report,
+                                          language=row[2]).exists():
+                            Linked.objects.create(username=username, ns_id=mode, insertion_time=row[7], name=sem,
                                           start=mention, stop=mention.stop, concept_url=concept, id_report=report,
                                           language=row[2])
 
 
-                cursor.execute(
-                    "SELECT g.insertion_time,g.gt_json,g.id_report,g.language,g.ns_id FROM report AS r INNER JOIN ground_truth_log_file AS g ON r.id_report = g.id_report AND r.language = g.language WHERE  r.name = %s AND g.username = %s AND gt_type = %s;",
-                    [str(use_case), str(user_from), 'concept-mention'])
-                rows_gt_lab = cursor.fetchall()
-                for row in rows_gt_lab:
-                    mode = NameSpace.objects.get(ns_id=row[4])
-                    username = User.objects.get(username=user_to, ns_id=mode)
-                    report = Report.objects.get(id_report=row[2],language = row[3])
-                    from_arr = []
-                    to_arr = []
-                    for el in Annotate.objects.filter(id_report=report, language=report.language,
-                                                      username=username_from, ns_id=mode).values('start', 'stop'):
-                        from_arr.append(el['start'])
-                    for el in Annotate.objects.filter(id_report=report, language=report.language,
-                                                      username=username, ns_id=mode).values('start', 'stop'):
-                        to_arr.append(el['start'])
-                    if (overwrite == False and set(to_arr) == set(from_arr) and not GroundTruthLogFile.objects.filter(username=username,
-                                                                                     gt_type='concept-mention', ns_id=mode,
-                                                                                     id_report=report, language=row[
-                                3]).exists()) or overwrite == True or user_from == 'Robot_user':
-                        gt = json.loads(row[1])
-                        gt['username'] = user_to
-                        GroundTruthLogFile.objects.create(username=username, ns_id=mode, insertion_time=row[0],
-                                                      id_report=report, language=report.language, gt_json=gt,
-                                                      gt_type='concept-mention')
             return True
     except Exception as e:
         print(e)
@@ -1953,28 +1760,6 @@ def get_annotations_count(id_report,language):
                 json_val['concepts'].append(json_val_c)
                 json_dict['Human']['linking']['linking_list'].append(json_val)
 
-    # rep_links = Linked.objects.filter(id_report=report, language=language, ns_id=mode_human).distinct('start','stop','concept_url','name')
-    # for c in rep_links:
-    #     json_val = {}
-    #     mention = Mention.objects.get(start = c.start_id,stop = c.stop,id_report = report,language = language)
-    #     concept = Concept.objects.get(concept_url=c.concept_url_id)
-    #     area = SemanticArea.objects.get(name=c.name_id)
-    #     annotations = Linked.objects.filter(id_report=report, language=language, ns_id=mode_human,
-    #                                           concept_url=concept, name=area,start = mention,stop = mention.stop)
-    #     if annotations.exists() and annotations.count() > 0:
-    #         json_val['mention'] = mention.mention_text
-    #         json_val['start'] = mention.start
-    #         json_val['stop'] = mention.stop
-    #         json_val['concept_url'] = concept.concept_url
-    #         json_val['concept_name'] = concept.name
-    #         json_val['area'] = area.name
-    #         json_val['count'] = annotations.count()
-    #         json_val['users_list'] = []
-    #         users = annotations.values('username')
-    #         for us in users:
-    #             if us['username'] not in users_black_list and us['username'] not in json_val['users_list']:
-    #                 json_val['users_list'].append(us['username'])
-    #         json_dict['Human']['linking']['linking_list'].append(json_val)
 
     # ROBOT
     json_dict['Robot'] = {}
@@ -1989,32 +1774,46 @@ def get_annotations_count(id_report,language):
 
     json_dict['Robot']['labels']['users_list'] = []
     cursor = connection.cursor()
-    cursor.execute("select distinct(g.username) from ground_truth_log_file as g inner join ground_truth_log_file as gg on g.id_report = gg.id_report and g.language = gg.language and g.gt_type = gg.gt_type AND g.ns_id = gg.ns_id where gg.username = %s and gg.ns_id = %s and g.username != %s and g.gt_type = %s and gg.insertion_time != g.insertion_time AND g.id_report = %s AND g.language = %s",['Robot_user','Robot','Robot_user','labels',str(id_report),str(language)])
+    #CAMBIO
+    # cursor.execute("select distinct(g.username) from ground_truth_log_file as g inner join ground_truth_log_file as gg on g.id_report = gg.id_report and g.language = gg.language and g.gt_type = gg.gt_type AND g.ns_id = gg.ns_id where gg.username = %s and gg.ns_id = %s and g.username != %s and g.gt_type = %s and gg.insertion_time != g.insertion_time AND g.id_report = %s AND g.language = %s",['Robot_user','Robot','Robot_user','labels',str(id_report),str(language)])
+    cursor.execute("select distinct(username) from ground_truth_log_file  where  username != %s and ns_id = %s and gt_type = %s and id_report = %s AND language = %s",['Robot_user','Robot','labels',str(id_report),str(language)])
     ans = cursor.fetchall()
     for el in ans:
         json_dict['Robot']['labels']['users_list'].append(el[0])
 
     json_dict['Robot']['mentions']['users_list'] = []
     cursor.execute(
-        "select distinct(g.username) from ground_truth_log_file as g inner join ground_truth_log_file as gg on g.id_report = gg.id_report and g.language = gg.language and g.gt_type = gg.gt_type AND g.ns_id = gg.ns_id where gg.username = %s and gg.ns_id = %s and g.username != %s and g.gt_type = %s and gg.insertion_time != g.insertion_time AND g.id_report = %s AND g.language = %s",
-        ['Robot_user', 'Robot', 'Robot_user', 'mentions',str(id_report),str(language)])
+        "select distinct(username) from ground_truth_log_file where  ns_id = %s and username != %s and gt_type = %s AND id_report = %s AND language = %s",
+        ['Robot', 'Robot_user', 'mentions',str(id_report),str(language)])
+    # cambio
+    # cursor.execute(
+    #     "select distinct(g.username) from ground_truth_log_file as g inner join ground_truth_log_file as gg on g.id_report = gg.id_report and g.language = gg.language and g.gt_type = gg.gt_type AND g.ns_id = gg.ns_id where gg.username = %s and gg.ns_id = %s and g.username != %s and g.gt_type = %s and gg.insertion_time != g.insertion_time AND g.id_report = %s AND g.language = %s",
+    #     ['Robot_user', 'Robot', 'Robot_user', 'mentions',str(id_report),str(language)])
     ans = cursor.fetchall()
     for el in ans:
         json_dict['Robot']['mentions']['users_list'].append(el[0])
 
 
     json_dict['Robot']['concepts']['users_list'] = []
+    #CAMBIO
+    # cursor.execute(
+    #     "select distinct(g.username) from ground_truth_log_file as g inner join ground_truth_log_file as gg on g.id_report = gg.id_report and g.language = gg.language and g.gt_type = gg.gt_type AND g.ns_id = gg.ns_id where gg.username = %s and gg.ns_id = %s and g.username != %s and g.gt_type = %s and gg.insertion_time != g.insertion_time AND g.id_report = %s AND g.language = %s",
+    #     ['Robot_user', 'Robot', 'Robot_user', 'concepts',str(id_report),str(language)])
     cursor.execute(
-        "select distinct(g.username) from ground_truth_log_file as g inner join ground_truth_log_file as gg on g.id_report = gg.id_report and g.language = gg.language and g.gt_type = gg.gt_type AND g.ns_id = gg.ns_id where gg.username = %s and gg.ns_id = %s and g.username != %s and g.gt_type = %s and gg.insertion_time != g.insertion_time AND g.id_report = %s AND g.language = %s",
-        ['Robot_user', 'Robot', 'Robot_user', 'concepts',str(id_report),str(language)])
+        "select distinct(username) from ground_truth_log_file where ns_id = %s and username != %s and gt_type = %s and id_report = %s AND language = %s",
+        ['Robot', 'Robot_user', 'concepts',str(id_report),str(language)])
     ans = cursor.fetchall()
     for el in ans:
         json_dict['Robot']['concepts']['users_list'].append(el[0])
 
     json_dict['Robot']['linking']['users_list'] = []
     cursor.execute(
-        "select distinct(g.username) from ground_truth_log_file as g inner join ground_truth_log_file as gg on g.id_report = gg.id_report and g.language = gg.language and g.gt_type = gg.gt_type AND g.ns_id = gg.ns_id where gg.username = %s and gg.ns_id = %s and g.username != %s and g.gt_type = %s and gg.insertion_time != g.insertion_time AND g.id_report = %s AND g.language = %s",
-        ['Robot_user', 'Robot', 'Robot_user', 'concept-mention',str(id_report),str(language)])
+        "select distinct(username) from ground_truth_log_file where ns_id = %s and username != %s and gt_type = %s and id_report = %s AND language = %s",
+        ['Robot', 'Robot_user', 'concept-mention', str(id_report), str(language)])
+    #CAMBIO
+    # cursor.execute(
+    #     "select distinct(g.username) from ground_truth_log_file as g inner join ground_truth_log_file as gg on g.id_report = gg.id_report and g.language = gg.language and g.gt_type = gg.gt_type AND g.ns_id = gg.ns_id where gg.username = %s and gg.ns_id = %s and g.username != %s and g.gt_type = %s and gg.insertion_time != g.insertion_time AND g.id_report = %s AND g.language = %s",
+    #     ['Robot_user', 'Robot', 'Robot_user', 'concept-mention',str(id_report),str(language)])
     ans = cursor.fetchall()
     for el in ans:
         json_dict['Robot']['linking']['users_list'].append(el[0])
@@ -2023,25 +1822,44 @@ def get_annotations_count(id_report,language):
     json_dict['Robot']['mentions']['users_list'].append('Robot_user')
     json_dict['Robot']['concepts']['users_list'].append('Robot_user')
     json_dict['Robot']['linking']['users_list'].append('Robot_user')
+    #CAMBIO
+    # cursor = connection.cursor()
+    # cursor.execute("SELECT COUNT(*) FROM ground_truth_log_file AS g INNER JOIN ground_truth_log_file AS gg ON g.id_report = gg.id_report AND g.language = gg.language AND g.gt_type = gg.gt_type AND g.ns_id = gg.ns_id  WHERE gg.username = %s AND g.gt_type = %s AND  g.insertion_time != gg.insertion_time AND g.ns_id=%s AND g.id_report = %s and g.language = %s",['Robot_user','labels','Robot',str(id_report),str(language)])
+    # gt_labels = cursor.fetchone()[0]
+    #
+    # cursor.execute("SELECT COUNT(*) FROM ground_truth_log_file AS g INNER JOIN ground_truth_log_file AS gg ON g.id_report = gg.id_report AND g.language = gg.language AND g.gt_type = gg.gt_type AND g.ns_id = gg.ns_id  WHERE gg.username = %s AND g.gt_type = %s AND  g.insertion_time != gg.insertion_time AND g.ns_id=%s AND g.id_report = %s and g.language = %s",['Robot_user','mentions','Robot',str(id_report),str(language)])
+    # gt_mentions = cursor.fetchone()[0]
+    #
+    # cursor.execute("SELECT COUNT(*) FROM ground_truth_log_file AS g INNER JOIN ground_truth_log_file AS gg ON g.id_report = gg.id_report AND g.language = gg.language AND g.gt_type = gg.gt_type AND g.ns_id = gg.ns_id  WHERE gg.username = %s AND g.gt_type = %s AND g.insertion_time != gg.insertion_time AND g.ns_id=%s AND g.id_report = %s and g.language = %s",['Robot_user','concepts','Robot',str(id_report),str(language)])
+    # gt_concepts = cursor.fetchone()[0]
+    #
+    # cursor.execute("SELECT COUNT(*) FROM ground_truth_log_file AS g INNER JOIN ground_truth_log_file AS gg ON g.id_report = gg.id_report AND g.language = gg.language AND g.gt_type = gg.gt_type AND g.ns_id = gg.ns_id WHERE gg.username = %s AND g.gt_type = %s AND g.insertion_time != gg.insertion_time AND g.ns_id=%s AND g.id_report = %s and g.language = %s",['Robot_user','concept-mention','Robot',str(id_report),str(language)])
+    # gt_linking = cursor.fetchone()[0]
+
     cursor = connection.cursor()
-    cursor.execute("SELECT COUNT(*) FROM ground_truth_log_file AS g INNER JOIN ground_truth_log_file AS gg ON g.id_report = gg.id_report AND g.language = gg.language AND g.gt_type = gg.gt_type AND g.ns_id = gg.ns_id  WHERE gg.username = %s AND g.gt_type = %s AND  g.insertion_time != gg.insertion_time AND g.ns_id=%s AND g.id_report = %s and g.language = %s",['Robot_user','labels','Robot',str(id_report),str(language)])
+    cursor.execute("SELECT COUNT(*) FROM ground_truth_log_file WHERE gt_type = %s  AND ns_id=%s AND id_report = %s and language = %s",['labels','Robot',str(id_report),str(language)])
     gt_labels = cursor.fetchone()[0]
 
-    cursor.execute("SELECT COUNT(*) FROM ground_truth_log_file AS g INNER JOIN ground_truth_log_file AS gg ON g.id_report = gg.id_report AND g.language = gg.language AND g.gt_type = gg.gt_type AND g.ns_id = gg.ns_id  WHERE gg.username = %s AND g.gt_type = %s AND  g.insertion_time != gg.insertion_time AND g.ns_id=%s AND g.id_report = %s and g.language = %s",['Robot_user','mentions','Robot',str(id_report),str(language)])
+    cursor.execute(
+        "SELECT COUNT(*) FROM ground_truth_log_file WHERE gt_type = %s  AND ns_id=%s AND id_report = %s and language = %s",
+        ['mentions', 'Robot', str(id_report), str(language)])
     gt_mentions = cursor.fetchone()[0]
 
-    cursor.execute("SELECT COUNT(*) FROM ground_truth_log_file AS g INNER JOIN ground_truth_log_file AS gg ON g.id_report = gg.id_report AND g.language = gg.language AND g.gt_type = gg.gt_type AND g.ns_id = gg.ns_id  WHERE gg.username = %s AND g.gt_type = %s AND g.insertion_time != gg.insertion_time AND g.ns_id=%s AND g.id_report = %s and g.language = %s",['Robot_user','concepts','Robot',str(id_report),str(language)])
+    cursor.execute(
+        "SELECT COUNT(*) FROM ground_truth_log_file WHERE gt_type = %s  AND ns_id=%s AND id_report = %s and language = %s",
+        ['concepts', 'Robot', str(id_report), str(language)])
     gt_concepts = cursor.fetchone()[0]
-
-    cursor.execute("SELECT COUNT(*) FROM ground_truth_log_file AS g INNER JOIN ground_truth_log_file AS gg ON g.id_report = gg.id_report AND g.language = gg.language AND g.gt_type = gg.gt_type AND g.ns_id = gg.ns_id WHERE gg.username = %s AND g.gt_type = %s AND g.insertion_time != gg.insertion_time AND g.ns_id=%s AND g.id_report = %s and g.language = %s",['Robot_user','concept-mention','Robot',str(id_report),str(language)])
+    cursor.execute(
+        "SELECT COUNT(*) FROM ground_truth_log_file WHERE gt_type = %s  AND ns_id=%s AND id_report = %s and language = %s",
+        ['concept-mention', 'Robot', str(id_report), str(language)])
     gt_linking = cursor.fetchone()[0]
 
 
     # +1 for robot anno
-    json_dict['Robot']['mentions']['count'] = gt_mentions +1
-    json_dict['Robot']['concepts']['count'] = gt_concepts+1
-    json_dict['Robot']['linking']['count'] = gt_linking+1
-    json_dict['Robot']['labels']['count'] = gt_labels+1
+    json_dict['Robot']['mentions']['count'] = gt_mentions
+    json_dict['Robot']['concepts']['count'] = gt_concepts
+    json_dict['Robot']['linking']['count'] = gt_linking
+    json_dict['Robot']['labels']['count'] = gt_labels
 
     users_black_list = []
     # LABELS ROBOT
@@ -2162,6 +1980,8 @@ def get_annotations_count(id_report,language):
         for c in rep_links:
             json_val_c = {}
             json_val_c['users_list'] = []
+            json_val['isRobot'] = False
+            json_val_c['isRobot'] = False
             ins_time = '0001-01-01 00:00:00.000000+00'
             json_val['users_list'] = []
             concept = c.concept_url
@@ -2174,6 +1994,8 @@ def get_annotations_count(id_report,language):
                 robot_ann = robot_anno.first()
                 ins_time = robot_ann.insertion_time
                 json_val_c['users_list'].append('Robot_user')
+                json_val_c['isRobot'] = True
+                json_val['isRobot'] = True
 
             annotations = Linked.objects.filter(id_report=report, language=language, ns_id=mode_robot,
                                                 concept_url=concept, name=area, start=m, stop=m.stop).exclude(insertion_time=ins_time)
@@ -2183,7 +2005,7 @@ def get_annotations_count(id_report,language):
                 json_val_c['concept_name'] = concept.name
                 json_val_c['area'] = area.name
                 json_val_c['count'] = annotations.count()
-                json_val_c['isRobot'] = True
+
 
                 users = annotations.values('username')
                 for us in users:
@@ -2197,55 +2019,12 @@ def get_annotations_count(id_report,language):
                 json_val_c['area'] = area.name
                 json_val_c['count'] = 0
                 json_val_c['isRobot'] = True
+                json_val['isRobot'] = True
                 json_val['concepts'].append(json_val_c)
-        json_dict['Robot']['linking']['linking_list'].append(json_val)
+        if json_val['concepts'] != []:
+            json_dict['Robot']['linking']['linking_list'].append(json_val)
 
 
-
-
-    # rep_links = Linked.objects.filter(id_report=report, language=language, ns_id=mode_robot).distinct('concept_url','start','stop','name')
-    # for c in rep_links:
-    #     json_val = {}
-    #     ins_time = '0001-01-01 00:00:00.000000+00'
-    #     json_val['users_list'] = []
-    #     concept = c.concept_url
-    #     mention = Mention.objects.get(start = c.start_id,stop=c.stop,id_report = report,language = language)
-    #     area = c.name
-    #     robot_anno = Linked.objects.filter(id_report=report, language=language, ns_id=mode_robot, concept_url=concept,
-    #                                          name=area,start = mention,stop = mention.stop,
-    #                                          username=user_robot)
-    #     if robot_anno.exists() and robot_anno.count() == 1:
-    #         robot_ann = robot_anno.first()
-    #         ins_time = robot_ann.insertion_time
-    #         json_val['users_list'].append('Robot_user')
-    #
-    #     annotations = Linked.objects.filter(id_report=report, language=language, ns_id=mode_robot,
-    #                                         concept_url=concept, name=area, start=mention, stop=mention.stop).exclude(insertion_time=ins_time)
-    #
-    #     if annotations.exists() and annotations.count() > 0:
-    #         json_val['mention'] = mention.mention_text
-    #         json_val['start'] = mention.start
-    #         json_val['stop'] = mention.stop
-    #         json_val['concept_url'] = concept.concept_url
-    #         json_val['concept_name'] = concept.name
-    #         json_val['area'] = area.name
-    #         json_val['count'] = annotations.count()
-    #         users = annotations.values('username')
-    #         for us in users:
-    #             if us['username'] not in users_black_list:
-    #                 json_val['users_list'].append(us['username'])
-    #         json_dict['Robot']['linking']['linking_list'].append(json_val)
-    #
-    #     elif 'Robot_user' in json_val['users_list']:
-    #         json_val['mention'] = mention.mention_text
-    #         json_val['start'] = mention.start
-    #         json_val['stop'] = mention.stop
-    #         json_val['concept_url'] = concept.concept_url
-    #         json_val['concept_name'] = concept.name
-    #         json_val['area'] = area.name
-    #
-    #         json_val['count'] = 0
-    #         json_dict['Robot']['linking']['linking_list'].append(json_val)
 
     usecase = report.name_id
     json_dict['Human_Robot'] = {}
@@ -2266,13 +2045,14 @@ def get_annotations_count(id_report,language):
         json_dict['Human_Robot']['concepts']['count'] = len(json_dict['Human_Robot']['concepts']['users_list'])
         json_dict['Human_Robot']['linking']['users_list'] = list(set(json_dict['Human']['linking']['users_list'] + json_dict['Robot']['linking']['users_list']))
         json_dict['Human_Robot']['linking']['count'] = len(json_dict['Human_Robot']['linking']['users_list'])
-        workpath = os.path.dirname(
-            os.path.abspath(__file__))
-        with open(os.path.join(workpath, 'automatic_annotation/db_examode_data/examode_db_population.json'),
-                  'r') as outfile:
-            data = json.load(outfile)
-            labels = data['labels'][usecase]
+        # workpath = os.path.dirname(
+        #     os.path.abspath(__file__))
+        # with open(os.path.join(workpath, 'automatic_annotation/db_examode_data/examode_db_population.json'),
+        #           'r') as outfile:
+        #     data = json.load(outfile)
+        labels = AnnotationLabel.objects.filter(name = UseCase.objects.get(name = usecase)).values('label')
         for label in labels:
+            label = label['label']
             json_val = {}
             users_list = []
             json_val['robot_users'] = []
@@ -2441,6 +2221,7 @@ def get_annotations_count(id_report,language):
                 if el['mention'] == mention.mention_text:
                     if el['isRobot']:
                         json_val['isRobot'] = True
+                        j_c['isRobot'] = True
 
                     j_c['concept_url'] = el['concept_url']
                     j_c['concept_name'] = el['concept_name']
@@ -2455,59 +2236,6 @@ def get_annotations_count(id_report,language):
                 json_dict['Human_Robot']['linking']['linking_list'].append(json_val)
 
 
-
-
-
-        # associations_list = []
-        # for lab_entry in json_dict['Robot']['linking']['linking_list']:
-        #     cur_entry = {'concept_url': lab_entry['concept_url'], 'concept_name': lab_entry['concept_name'],
-        #                  'area': lab_entry['area'],'mention':lab_entry['mention'],'start':lab_entry['start'],'stop':lab_entry['stop']}
-        #     if cur_entry not in associations_list:
-        #         associations_list.append(cur_entry)
-        #
-        # for lab_entry in json_dict['Human']['linking']['linking_list']:
-        #     cur_entry = {'concept_url': lab_entry['concept_url'], 'concept_name': lab_entry['concept_name'],
-        #                  'area': lab_entry['area'], 'mention': lab_entry['mention'], 'start': lab_entry['start'],
-        #                  'stop': lab_entry['stop']}
-        #     if cur_entry not in associations_list:
-        #         associations_list.append(cur_entry)
-        #
-        # users_list = []
-        # for entry in associations_list:
-        #     json_val = {}
-        #     users_list = []
-        #     json_val['robot_users'] = []
-        #     json_val['human_users'] = []
-        #     json_val['users_list'] = []
-        #     for lab_entry in json_dict['Human']['linking']['linking_list']:
-        #         if entry['concept_url'] == lab_entry['concept_url'] and entry['concept_name'] == lab_entry[
-        #             'concept_name'] and entry[
-        #             'area'] == lab_entry['area'] and entry['mention'] == lab_entry['mention'] and entry['start'] == lab_entry['start'] and lab_entry['stop'] == entry['stop']:
-        #             json_val['human_users'] = lab_entry['users_list']
-        #             for user in lab_entry['users_list']:
-        #                 if user not in users_list:
-        #                     users_list.append(user)
-        #     for lab_entry in json_dict['Robot']['linking']['linking_list']:
-        #         if entry['concept_url'] == lab_entry['concept_url'] and entry['concept_name'] == lab_entry[
-        #             'concept_name'] and entry[
-        #             'area'] == lab_entry['area'] and entry['mention'] == lab_entry['mention'] and entry['start'] == \
-        #                 lab_entry['start'] and lab_entry['stop'] == entry['stop']:
-        #             json_val['robot_users'] = lab_entry['users_list']
-        #             for user in lab_entry['users_list']:
-        #                 if user not in users_list:
-        #                     users_list.append(user)
-        #     json_val['count'] = len(users_list)
-        #     if len(users_list) > 0:
-        #         json_val['concept_url'] = entry['concept_url']
-        #         json_val['concept_name'] = entry['concept_name']
-        #         json_val['area'] = entry['area']
-        #         json_val['start'] = entry['start']
-        #         json_val['stop'] = entry['stop']
-        #         json_val['mention'] = entry['mention']
-        #         json_val['users_list'] = (users_list)
-        #         json_dict['Human_Robot']['linking']['linking_list'].append(json_val)
-
-    # print('DICT ',json_dict)
     return json_dict
 
 
@@ -2516,14 +2244,15 @@ def check_exa_lab_conc_only(usecase):
     """This method returns whether the concepts and the labels for a use case are only those of examode"""
 
     cursor = connection.cursor()
-    bool = [True,True]
+    bool = [True, True]
     # cursor.execute("SELECT annotation_mode FROM concept AS c INNER JOIN concept_has_uc AS ch ON c.concept_url = ch.concept_url WHERE ch.name=%s",[str(usecase)])
-    cursor.execute("SELECT * FROM concept AS c INNER JOIN concept_has_uc AS ch ON c.concept_url = ch.concept_url WHERE ch.name=%s and annotation_mode in %s",[str(usecase),('Manual','Automatic')])
+    cursor.execute(
+        "SELECT * FROM concept AS c INNER JOIN concept_has_uc AS ch ON c.concept_url = ch.concept_url WHERE ch.name=%s and annotation_mode in %s",[str(usecase), ('Manual', 'Automatic')])
     ans = cursor.fetchall()
     if len(ans) > 0:
         bool[1] = False
     # cursor.execute("SELECT label FROM annotation_label WHERE annotation_mode !=  %s and name=%s",['Automatic',str(usecase)])
-    cursor.execute("SELECT label FROM annotation_label WHERE annotation_mode in  %s and name=%s",[('Manual','Automatic'),str(usecase)])
+    cursor.execute("SELECT label FROM annotation_label WHERE annotation_mode in  %s and name=%s",[('Manual', 'Automatic'), str(usecase)])
     ans = cursor.fetchall()
     if len(ans) > 0:
         bool[0] = False
@@ -2541,10 +2270,10 @@ def restore_robot_annotation(report,action,user):
             mode = NameSpace.objects.get(ns_id = 'Robot')
             robot = User.objects.get(ns_id=mode, username='Robot_user')
             gt_to_del = GroundTruthLogFile.objects.filter(gt_type = action,username=user,ns_id=mode,id_report = report,language = report.language)
-            gt_robot = GroundTruthLogFile.objects.get(gt_type = action,ns_id=mode,username=robot,id_report = report,language = report.language)
+            # gt_robot = GroundTruthLogFile.objects.get(gt_type = action,ns_id=mode,username=robot,id_report = report,language = report.language)
 
             gt_to_del.delete()
-            GroundTruthLogFile.objects.create(ns_id=mode,username=user,gt_type = action,gt_json = gt_robot.gt_json,insertion_time = gt_robot.insertion_time,id_report = report,language = report.language)
+            # GroundTruthLogFile.objects.create(ns_id=mode,username=user,gt_type = action,gt_json = gt_robot.gt_json,insertion_time = gt_robot.insertion_time,id_report = report,language = report.language)
 
             if action == 'labels':
                 to_del_user = Associate.objects.filter(username=user,ns_id = mode,id_report = report,language = report.language)
@@ -2557,9 +2286,13 @@ def restore_robot_annotation(report,action,user):
             if action == 'mentions':
                 to_del_user = Annotate.objects.filter(username=user, ns_id=mode, id_report=report,
                                                        language=report.language)
+                to_del_user_link = Linked.objects.filter(username=user, ns_id=mode, id_report=report,
+                                                       language=report.language)
                 robot_annos = Annotate.objects.filter(username=robot, ns_id=mode, id_report=report,
                                                        language=report.language)
                 to_del_user.delete()
+                to_del_user_link.delete()
+
                 for el in robot_annos:
                     mention = Mention.objects.get(id_report = report,language = report.language, start = el.start_id, stop = el.stop)
                     Annotate.objects.create(
@@ -2573,38 +2306,27 @@ def restore_robot_annotation(report,action,user):
                         if not Contains.objects.filter(id_report = report,language = report.language,username=user,ns_id=mode,name=link.name,concept_url = link.concept_url).exists():
                             Contains.objects.create(id_report = report,language = report.language,username=user,ns_id=mode,insertion_time=link.insertion_time,name=link.name,concept_url = link.concept_url)
 
-                gt_link_robot = GroundTruthLogFile.objects.get(gt_type='concept-mention',id_report = report,language = report.language,username=robot,ns_id=mode)
-                gt_conc_robot = GroundTruthLogFile.objects.get(gt_type='concepts',id_report = report,language = report.language,username=robot,ns_id=mode)
                 GroundTruthLogFile.objects.filter(gt_type='concept-mention', id_report=report, language=report.language,
                                                username=user, ns_id=mode).delete()
-                gt_prv = GroundTruthLogFile.objects.get(gt_type='concepts', id_report=report,
-                                                           language=report.language,
-                                                           username=user, ns_id=mode)
-                GroundTruthLogFile.objects.filter(gt_type='concepts', id_report=report, language=report.language,
-                                               username=user, ns_id=mode).delete()
-                json_serial1 = serialize_gt('concepts',report.name_id,user.username,report.id_report,report.language,mode)
-                json_serial2 = serialize_gt('concept-mention',report.name_id,user.username,report.id_report,report.language,mode)
-                GroundTruthLogFile.objects.create(gt_type='concept-mention', id_report=report, language=report.language,
-                                               username=user, ns_id=mode,insertion_time = gt_link_robot.insertion_time,gt_json=json_serial2)
+                GroundTruthLogFile.objects.filter(gt_type='concepts', id_report=report,language=report.language,username=user, ns_id=mode).delete()
+
                 c_robot = Contains.objects.filter(id_report=report, username=robot, language=report.language).values('concept_url', 'name')
                 cr = []
                 for el in c_robot:
-                    cr.append((el['concept_url'], el['name']))
-
+                    cr.append(el['concept_url'])
                 c_1 = Contains.objects.filter(id_report=report, username=user, language=report.language).values('concept_url', 'name')
                 c1 = []
                 for el in c_1:
-                    c1.append((el['concept_url'], el['name']))
-                if set(cr) == set(c1):
-                    GroundTruthLogFile.objects.create(gt_type='concepts', id_report=report, language=report.language,
-                                                      username=user, ns_id=mode,
-                                                      insertion_time=gt_conc_robot.insertion_time,
-                                                      gt_json=json_serial1)
-                else:
-                    GroundTruthLogFile.objects.create(gt_type='concepts', id_report=report, language=report.language,
-                                                      username=user, ns_id=mode,
-                                                      insertion_time=gt_prv.insertion_time,
-                                                      gt_json=json_serial1)
+                    c1.append(el['concept_url'])
+
+
+                if len(cr) != len(c1):
+                    json_serial1 = serialize_gt('concepts', report.name_id, user.username, report.id_report,
+                                                    report.language, mode)
+                    GroundTruthLogFile.objects.create(gt_type='concepts', id_report=report,
+                                                          language=report.language,
+                                                          username=user, ns_id=mode, insertion_time=Now(),
+                                                          gt_json=json_serial1)
 
 
             if action == 'concepts':
@@ -2640,11 +2362,7 @@ def restore_robot_annotation(report,action,user):
                                                     id_report=report, insertion_time=robot_concept_anno.insertion_time,
                                                     language=report.language)
 
-                    gt_conc_robot = GroundTruthLogFile.objects.get(gt_type='concepts', id_report=report,
-                                                                   language=report.language, username=robot, ns_id=mode)
 
-                    gt_prv = GroundTruthLogFile.objects.get(gt_type='concepts', id_report=report, language=report.language,
-                                                      username=user, ns_id=mode)
                     GroundTruthLogFile.objects.filter(gt_type='concepts', id_report=report, language=report.language,
                                                       username=user, ns_id=mode).delete()
 
@@ -2659,17 +2377,13 @@ def restore_robot_annotation(report,action,user):
                     c1 = []
                     for el in c_1:
                         c1.append((el['concept_url'],el['name']))
-                    if set(cr) == set(c1):
+                    if len(cr) != len(c1):
 
                         GroundTruthLogFile.objects.create(gt_type='concepts', id_report=report, language=report.language,
                                                       username=user, ns_id=mode,
-                                                      insertion_time=gt_conc_robot.insertion_time,
+                                                      insertion_time=Now(),
                                                       gt_json=json_serial1)
-                    else:
-                        GroundTruthLogFile.objects.create(gt_type='concepts', id_report=report, language=report.language,
-                                                      username=user, ns_id=mode,
-                                                      insertion_time=gt_prv.insertion_time,
-                                                      gt_json=json_serial1)
+
     except Exception as e:
         print(e)
         json_response = {'error': 'an error occurred'}

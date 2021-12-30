@@ -355,7 +355,7 @@ import {AppContext} from "../../App";
 // export default Token;
 
 function Token(props){
-    const { tokens,mentionSingleWord,index,language,selectedLang,reportString,mentionToAdd,allMentions,action,mentionsList,color,report,finalcount,reached } = useContext(AppContext);
+    const { tokens,mentionSingleWord,index,language,selectedLang,fields,fieldsToAnn,reportString,mentionToAdd,allMentions,action,mentionsList,color,report,finalcount,reached } = useContext(AppContext);
     const [Color,SetColor] = color
     const [ReportString, SetReportString] = reportString;
     const [Action,SetAction] = action
@@ -375,11 +375,15 @@ function Token(props){
     const [SelectedLang,SetSelectedLang] = selectedLang
     const [Language,SetLanguage] = language
     const [Index,SetIndex] = index
+    const [Fields,SetFields] = fields;
+    const [FieldsToAnn,SetFieldsToAnn] = fieldsToAnn;
 
     useEffect(()=>{ //Cambio azione e inizializzo tutto
         if((props.action === 'mentions' || props.action === 'concept-mention') && SelectedLang === Language){
-            // console.log('PASSO DI QUA, TOKENS')
+            // console.log('count_t',FinalCount)
             var array = Array.from(document.getElementsByName('butt'))
+            // console.log('count_t',array)
+
             //console.log('ARRARRA',array)
             var child = document.getElementById(props.start_token.toString())
             // console.log('child',child.id)
@@ -395,7 +399,7 @@ function Token(props){
 
             //console.log('ARR',array)
             if(FinalCount === array.length){
-                // console.log('AGG')
+                // console.log('count_tt')
                 SetReportWords(array)
             }
 
@@ -406,7 +410,7 @@ function Token(props){
             // SetAllMentions([])
         }
 
-    },[Action,Index,SelectedLang])
+    },[Action,Index,SelectedLang,FinalCount,Fields,FieldsToAnn])
 
 
     const handleVisible1 = () => {

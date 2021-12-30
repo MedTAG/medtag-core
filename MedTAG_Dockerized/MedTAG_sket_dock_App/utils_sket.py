@@ -481,15 +481,15 @@ def create_auto_gt_1(usecase,fields,report_key,batch):
                         ser_gt = serialize_gt('labels', usecase, 'Robot_user', rep[0], rep[1], mode)
                         GroundTruthLogFile.objects.create(username=ag, gt_type='labels', gt_json=ser_gt, id_report=report,
                                                           language=rep[1], insertion_time=Now(),ns_id=mode)
-                        for user in new_users:
-                            if user != 'Robot_user':
-                                user = User.objects.get(username=user,ns_id=mode)
-                                ser_us_gt = serialize_gt('labels', usecase, user.username, rep[0], rep[1], mode)
-                                last_gt = GroundTruthLogFile.objects.get(username=ag, gt_type='labels', gt_json=ser_gt, id_report=report,
-                                                          language=rep[1],ns_id=mode)
-                                GroundTruthLogFile.objects.create(username=user, gt_type='labels', gt_json=ser_us_gt,
-                                                                  id_report=report,ns_id=mode,
-                                                                  language=rep[1], insertion_time=last_gt.insertion_time)
+                        # for user in new_users:
+                        #     if user != 'Robot_user':
+                        #         user = User.objects.get(username=user,ns_id=mode)
+                        #         ser_us_gt = serialize_gt('labels', usecase, user.username, rep[0], rep[1], mode)
+                        #         last_gt = GroundTruthLogFile.objects.get(username=ag, gt_type='labels', gt_json=ser_gt, id_report=report,
+                        #                                   language=rep[1],ns_id=mode)
+                        #         GroundTruthLogFile.objects.create(username=user, gt_type='labels', gt_json=ser_us_gt,
+                        #                                           id_report=report,ns_id=mode,
+                        #                                           language=rep[1], insertion_time=last_gt.insertion_time)
 
                     if mentions_created:
                         if GroundTruthLogFile.objects.filter(gt_type = 'mentions',username=ag,ns_id=mode,id_report = report,language=rep[1]).exists():
@@ -498,16 +498,16 @@ def create_auto_gt_1(usecase,fields,report_key,batch):
                         ser_gt = serialize_gt('mentions', usecase, 'Robot_user', rep[0], rep[1], mode)
                         GroundTruthLogFile.objects.create(username=ag, gt_type='mentions', gt_json=ser_gt, id_report=report,
                                                           ns_id=mode,language=rep[1], insertion_time=Now())
-                        for user in new_users:
-                            if user != 'Robot_user':
-                                user = User.objects.get(username=user,ns_id=mode)
-                                ser_us_gt = serialize_gt('mentions', usecase, user.username, rep[0], rep[1], mode)
-                                last_gt = GroundTruthLogFile.objects.get(username=ag, gt_type='mentions',
-                                                                            gt_json=ser_gt, id_report=report,
-                                                                            language=rep[1], ns_id=mode)
-                                GroundTruthLogFile.objects.create(username=user, gt_type='mentions', gt_json=ser_us_gt,
-                                                                  id_report=report,ns_id=mode,
-                                                                  language=rep[1], insertion_time=last_gt.insertion_time)
+                        # for user in new_users:
+                        #     if user != 'Robot_user':
+                        #         user = User.objects.get(username=user,ns_id=mode)
+                        #         ser_us_gt = serialize_gt('mentions', usecase, user.username, rep[0], rep[1], mode)
+                        #         last_gt = GroundTruthLogFile.objects.get(username=ag, gt_type='mentions',
+                        #                                                     gt_json=ser_gt, id_report=report,
+                        #                                                     language=rep[1], ns_id=mode)
+                        #         GroundTruthLogFile.objects.create(username=user, gt_type='mentions', gt_json=ser_us_gt,
+                        #                                           id_report=report,ns_id=mode,
+                        #                                           language=rep[1], insertion_time=last_gt.insertion_time)
 
                     if concepts_created:
                         if GroundTruthLogFile.objects.filter(gt_type = 'concepts',username=ag,ns_id=mode,id_report = report,language=rep[1]).exists():
@@ -516,16 +516,16 @@ def create_auto_gt_1(usecase,fields,report_key,batch):
                         ser_gt = serialize_gt('concepts', usecase, 'Robot_user', rep[0], rep[1], mode)
                         GroundTruthLogFile.objects.create(username=ag, gt_type='concepts', gt_json=ser_gt,ns_id=mode, id_report=report,
                                                           language=rep[1], insertion_time=Now())
-                        for user in new_users:
-                            if user != 'Robot_user':
-                                user = User.objects.get(username=user,ns_id=mode)
-                                ser_us_gt = serialize_gt('concepts', usecase, user.username, rep[0], rep[1], mode)
-                                last_gt = GroundTruthLogFile.objects.get(username=ag, gt_type='concepts',
-                                                                            gt_json=ser_gt, id_report=report,
-                                                                            language=rep[1], ns_id=mode)
-                                GroundTruthLogFile.objects.create(username=user, gt_type='concepts', gt_json=ser_us_gt,
-                                                                  id_report=report,ns_id=mode,
-                                                                  language=rep[1], insertion_time=last_gt.insertion_time)
+                        # for user in new_users:
+                        #     if user != 'Robot_user':
+                        #         user = User.objects.get(username=user,ns_id=mode)
+                        #         ser_us_gt = serialize_gt('concepts', usecase, user.username, rep[0], rep[1], mode)
+                        #         last_gt = GroundTruthLogFile.objects.get(username=ag, gt_type='concepts',
+                        #                                                     gt_json=ser_gt, id_report=report,
+                        #                                                     language=rep[1], ns_id=mode)
+                        #         GroundTruthLogFile.objects.create(username=user, gt_type='concepts', gt_json=ser_us_gt,
+                        #                                           id_report=report,ns_id=mode,
+                        #                                           language=rep[1], insertion_time=last_gt.insertion_time)
 
                     if linked_created:
                         if GroundTruthLogFile.objects.filter(gt_type = 'concept-mention',username=ag,ns_id=mode,id_report = report,language=rep[1]).exists():
@@ -534,16 +534,16 @@ def create_auto_gt_1(usecase,fields,report_key,batch):
                         ser_gt = serialize_gt('concept-mention', usecase, 'Robot_user', rep[0], rep[1], mode)
                         GroundTruthLogFile.objects.create(username=ag, gt_type='concept-mention', gt_json=ser_gt, id_report=report,
                                                           language=rep[1], ns_id=mode,insertion_time=Now())
-                        for user in new_users:
-                            if user != 'Robot_user':
-                                user = User.objects.get(username=user,ns_id=mode)
-                                ser_us_gt = serialize_gt('concept-mention', usecase, user.username, rep[0], rep[1], mode)
-                                last_gt = GroundTruthLogFile.objects.get(username=ag, gt_type='concept-mention',
-                                                                            gt_json=ser_gt, id_report=report,
-                                                                            language=rep[1], ns_id=mode)
-                                GroundTruthLogFile.objects.create(username=user, gt_type='concept-mention', gt_json=ser_us_gt,
-                                                                  id_report=report,ns_id=mode,
-                                                                  language=rep[1], insertion_time=last_gt.insertion_time)
+                        # for user in new_users:
+                        #     if user != 'Robot_user':
+                        #         user = User.objects.get(username=user,ns_id=mode)
+                        #         ser_us_gt = serialize_gt('concept-mention', usecase, user.username, rep[0], rep[1], mode)
+                        #         last_gt = GroundTruthLogFile.objects.get(username=ag, gt_type='concept-mention',
+                        #                                                     gt_json=ser_gt, id_report=report,
+                        #                                                     language=rep[1], ns_id=mode)
+                        #         GroundTruthLogFile.objects.create(username=user, gt_type='concept-mention', gt_json=ser_us_gt,
+                        #                                           id_report=report,ns_id=mode,
+                        #                                           language=rep[1], insertion_time=last_gt.insertion_time)
         return True,''
 
     except Exception as error:

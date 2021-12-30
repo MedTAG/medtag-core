@@ -21,7 +21,7 @@ import {TableToShowContext} from "../TableToShow";
 // axios.defaults.xsrfHeaderName = "X-CSRFTOKEN";
 function DownloadModalRep(props) {
 
-    const { reportString } = useContext(AppContext);
+    const { reportString,selectedInstitute,selectedLanguage,selectedUse } = useContext(AppContext);
     const { rowstodownload } = useContext(TableToShowContext);
     const [Reports,SetReports] = useState([])
     const [ReportString, setReportsString] = reportString;
@@ -43,28 +43,42 @@ function DownloadModalRep(props) {
     const [ChosenUsers,SetChosenUsers] = useState([])
     const [EXAPresenceLabels,SetEXAPresenceLabels] = useState(false)
     const [EXAPresenceConcepts,SetEXAPresenceConcepts] = useState(false)
-
+    const [SelectedLang,SetSelectedLang] = selectedLanguage
+    const [SelectedInstitute,SetSelectedInstitute] =selectedInstitute
+    const [SelectedUse,SetSelectedUse] = selectedUse
     const act = useRef('none')
     const mode = useRef()
     var FileDownload = require('js-file-download');
 
     useEffect(()=>{
-        setReportsString('')
-        SetMentions_to_show([])
-        axios.get("http://0.0.0.0:8000/get_reports", {params: {all: 'all'}}).then(response => {
-            SetReports(response.data['report']);})
 
-        axios.get("http://0.0.0.0:8000/get_users_list")
-            .then(response => {
-                if(response.data.length>0){
-                    SetUsersList(response.data)
-                }})
-            .catch(error=>{
-                console.log(error)
-            })
+        if(SelectedUse !== '' && SelectedInstitute !== '' && SelectedLang !== ''){
+            setReportsString('')
+            SetMentions_to_show([])
+            axios.get("http://0.0.0.0:8000/get_reports", {params: {all: 'all',usec:SelectedUse,lang:SelectedLang,institute:SelectedInstitute}}).then(response => {
+                SetReports(response.data['report']);})
+        }
 
 
-    },[])
+    },[SelectedUse,SelectedInstitute,SelectedLang])
+
+    // useEffect(()=>{
+    //     setReportsString('')
+    //     SetMentions_to_show([])
+    //     axios.get("http://0.0.0.0:8000/get_reports", {params: {all: 'all'}}).then(response => {
+    //         SetReports(response.data['report']);})
+    //
+    //     axios.get("http://0.0.0.0:8000/get_users_list")
+    //         .then(response => {
+    //             if(response.data.length>0){
+    //                 SetUsersList(response.data)
+    //             }})
+    //         .catch(error=>{
+    //             console.log(error)
+    //         })
+    //
+    //
+    // },[])
 
     useEffect(()=>{
         if(RowsToDownload.length > 0){
@@ -109,16 +123,34 @@ function DownloadModalRep(props) {
             }
         })
         // console.log('chos',chosen_users)
-        if (user !== ''){
+        if (user !== '' && user !== 'all'){
             chosen_users.push(user)
             SetChosenUsers(chosen_users)
             // arr_new_users = arr_new_users.filter(username=>username!==user)
         }
-        // SetUsersList(arr_new_users)
+        else if(user === 'all'){
+            SetChosenUsers(UsersList)
+        }
 
     }
 
-
+    useEffect(()=>{
+        if(selectedActMajor !== 'none'){
+            var ids = []
+            console.log('list',props.report_list)
+            props.report_list.map(el=>{
+                ids.push([el['id_report'],el['language']])
+            })
+            console.log('list',ids)
+            axios.post("http://0.0.0.0:8000/get_users_list", {action:selectedActMajor,reports:ids})
+                .then(response => {
+                    SetUsersList(response.data)
+                })
+                .catch(error=>{
+                    console.log(error)
+                })
+        }
+    },[selectedActMajor,props.report_list])
 
     function changeUsersList(user){
 
@@ -331,10 +363,10 @@ function DownloadModalRep(props) {
                         </Form.Control></div><hr/></div>}
                         {selectedActMajor !== 'none' && selectedModeMajor !== '' && (UsersList.length > 0 || ChosenUsers.length > 0) &&<div style={{'padding-left':'1%','padding-right':'1%'}}>
                             {/*{selectedAct !== 'none' && selectedAnno !== false && <div>*/}
-                            <div className='sel_class'>Select at least 2 users you want to consider to create the ground-truth based on majority vote </div>
+                            <div className='sel_class'>Select at least a user you want to consider to create the ground-truth based on majority vote </div>
                             <Form.Control as="select"  className='selection maj_sel' onChange={(e)=>changeChosenList(e)} defaultValue="choose the annotation mode..." >
                                 <option value = ''>Select a user...</option>
-
+                                <option value = 'all'>All</option>
                                 {UsersList.map(user=>
                                     <option disabled={ChosenUsers.indexOf(user)!==-1} value={user}>{user}</option>
                                 )}
@@ -352,7 +384,7 @@ function DownloadModalRep(props) {
                                     </li>)}
                                 </ul>
                             </div>
-                            <Button disabled={ChosenUsers.length < 2} onClick={()=>downloadMajorityReports()} variant='primary'>Download</Button>
+                            <Button disabled={ChosenUsers.length === 0} onClick={()=>downloadMajorityReports()} variant='primary'>Download</Button>
 
                             <hr/>
                         </div>}

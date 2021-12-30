@@ -85,6 +85,7 @@ function NextPrevButtons(props){
 
     function submit(event,token){
         event.preventDefault();
+
         if(ShowAutoAnn === false && ShowMemberGt === false){
             // console.log('clickedcheck',ClickedCheck)
             var but_dx = document.getElementById('but_dx')
@@ -115,7 +116,8 @@ function NextPrevButtons(props){
                             console.log(error);
                         });
 
-                }else if (token.startsWith('annotation') && LoadingLabels === false && ((Annotation === 'Manual' && ClickedCheck === true) || (Annotation === 'Automatic'))) {
+                }else if (token.startsWith('annotation') && LoadingLabels === false && ((Annotation === 'Manual' && ClickedCheck === true) || (Annotation === 'Automatic' ))) {
+                    // }else if (token.startsWith('annotation') && LoadingLabels === false ) {
                     axios.post('http://127.0.0.1:8000/annotationlabel/insert', {
                         //labels: data.getAll('labels'),
                         // labels: LabToInsert,
@@ -321,10 +323,10 @@ function NextPrevButtons(props){
 
         <span  className='two_buttons_div_rep'>
 
-                        <Button id='but_dx' size='sm' disabled={LoadingReport} className="btn prevbtn" type="submit" onClick={(e)=>submit(e,TokenNextPrev[1])} name = "prev"  variant="info"><FontAwesomeIcon icon={faChevronLeft} /></Button>&nbsp;&nbsp;
+                        <Button id='but_dx' size='sm' disabled={LoadingReport || Reports.length === 1} className="btn prevbtn" type="submit" onClick={(e)=>submit(e,TokenNextPrev[1])} name = "prev"  variant="info"><FontAwesomeIcon icon={faChevronLeft} /></Button>&nbsp;&nbsp;
             {/*<Button  size='sm' className="btn prevbtn" type="submit" onClick={(e)=>onSubSx(e)} name = "prev"  variant="info"><FontAwesomeIcon icon={faChevronLeft} /></Button>&nbsp;&nbsp;*/}
             {/*<Button  size='sm' className="btn nextbtn"  type="submit" onClick={(e)=>onSubDx(e)}  name = "next"  variant="info"><FontAwesomeIcon icon={faChevronRight} /></Button>*/}
-            <Button id='but_sx' size='sm' className="btn nextbtn" disabled={LoadingReport} type="submit" onClick={(e)=>submit(e,TokenNextPrev[0])}  name = "next"  variant="info"><FontAwesomeIcon icon={faChevronRight} /></Button>
+            <Button id='but_sx' size='sm' className="btn nextbtn" disabled={LoadingReport || Reports.length === 1} type="submit" onClick={(e)=>submit(e,TokenNextPrev[0])}  name = "next"  variant="info"><FontAwesomeIcon icon={faChevronRight} /></Button>
             </span>
 
     );

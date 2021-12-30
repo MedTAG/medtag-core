@@ -1,7 +1,7 @@
 import React, {Component, useContext, useEffect, useState} from 'react'
 import axios from "axios";
 import 'bootstrap/dist/css/bootstrap.min.css';
-import {Container,Row,Col} from "react-bootstrap";
+import {Container, Row, Col, OverlayTrigger} from "react-bootstrap";
 import './report.css';
 import {AppContext, MentionContext} from "../../App";
 import Button from "react-bootstrap/Button";
@@ -12,6 +12,7 @@ import ReportSelection from "./ReportSelection";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import ErrorSnack from "./ErrorSnack";
 import Spinner from "react-bootstrap/Spinner";
+import Tooltip from "react-bootstrap/Tooltip";
 // axios.defaults.xsrfCookieName = "csrftoken";
 // axios.defaults.xsrfHeaderName = "X-CSRFTOKEN";
 function ReportListUpdated(props) {
@@ -48,7 +49,6 @@ function ReportListUpdated(props) {
     const [Annotation,SetAnnotation] = annotation
     const [UserChosen,SetUserChosen] = userchosen
     const [Reports,SetReports] = reports
-    const [reportsString, setReportsString] = reportString;
     const [ReportTranslation,SetReportTranslation] = useState([])
     const [ExtractFields,SetExtractFields] = useState([])
     const pubmed_fields_to_ann = ['title','abstract']
@@ -76,7 +76,7 @@ function ReportListUpdated(props) {
     },[ReportString,Translation])
 
     useEffect(()=>{
-        console.log('ccc',Children)
+        console.log('ccc',ReportString)
     },[ReportString,Translation])
 
 
@@ -137,7 +137,7 @@ function ReportListUpdated(props) {
 
         }
 
-        if(Report !== undefined){
+        if(Report !== undefined && Action !== 'none'){
             // console.log('AUTOANN',ShowAutoAnn)
             // console.log('AUTOANN',Report)
             if((ShowAutoAnn || ShowMemberGt)){
@@ -237,6 +237,9 @@ function ReportListUpdated(props) {
 
     }
 
+    // useEffect(()=>{
+    //     console.log('report',Reports[Index])
+    // },[ShowMajorityModal,showReportText,Reports,Index])
 
     useEffect(()=>{
 
@@ -263,91 +266,102 @@ function ReportListUpdated(props) {
         <div>
             {ReportString !== undefined && ShowAnnotationsStats === false  && ShowMajorityModal === false && showReportText === false  && <div>
                 <Row>
-                <Col md={4} className="titles no-click">
-                    <div>Reports' order:</div>
-                </Col>
-                <Col md={8}><div><Button size='sm' id='lexic' style={{'margin-top':'5px'}} onClick={(e)=>setOrder(e)}>Lexicographical</Button>&nbsp;&nbsp;<Button id='annot' style={{'margin-top':'5px'}} onClick={(e)=>setOrder1(e)} size='sm' >Annotated reports</Button></div></Col>
-                <Col md={4} className="titles no-click">
-                    <div>last update:</div>
-                </Col>
-                {((ShowAutoAnn === true || ShowMemberGt === true || SelectedLang !== Language) && CurTime !== false) ? <Col md={8}><div>{CurTime}</div></Col> :
-                    <>{ArrayInsertionTimes[Index] !== 0 ? <Col md={8}><div>{ArrayInsertionTimes[Index]}</div></Col> : <Col md={8}></Col>}</>}
+                    <Col md={4} className="titles no-click">
+                        <div>Reports' order:</div>
+                    </Col>
+                    <Col md={8}><div><Button size='sm' id='lexic' style={{'margin-top':'5px'}} onClick={(e)=>setOrder(e)}>Lexicographical</Button>&nbsp;&nbsp;<Button id='annot' style={{'margin-top':'5px'}} onClick={(e)=>setOrder1(e)} size='sm' >Annotated reports</Button></div></Col>
+                    <Col md={4} className="titles no-click">
+                        <div>last update:</div>
+                    </Col>
+                    {((ShowAutoAnn === true || ShowMemberGt === true || SelectedLang !== Language) && CurTime !== false) ? <Col md={8}><div>{CurTime}</div></Col> :
+                        <>{ArrayInsertionTimes[Index] !== 0 ? <Col md={8}><div>{ArrayInsertionTimes[Index]}</div></Col> : <Col md={8}></Col>}</>}
 
 
-                <Col md={4} className="titles no-click">
-                    {ReportType === 'reports' && <div>ID:</div>}
-                    {ReportType === 'pubmed' && <div>PUBMED ID:</div>}
-                </Col>
-                <Col md={8}>
-                    {ReportType === 'reports' && <div>{props.report_id}</div>}
-                    {ReportType === 'pubmed' && <div>{props.report_id.split('PUBMED_')[1]}</div>}
-                </Col>
+                    <Col md={4} className="titles no-click">
+                        {ReportType === 'reports' && <div>ID:</div>}
+                        {ReportType === 'pubmed' && <div>PUBMED ID:</div>}
+                    </Col>
+                    <Col md={8}>
+                        {ReportType === 'reports' && <div>{props.report_id.toString()}</div>}
+                        {ReportType === 'pubmed' && <div>{props.report_id.split('PUBMED_')[1]}</div>}
+                    </Col>
 
-                {ReportTranslation.length > 1 && <><Col md={4} className="titles no-click">
-                   <div>Available versions:</div>
-                </Col>
-                <Col md={8}>
-                    {ReportTranslation.map(rep=>
-                        <>{rep !== Language &&
-                        //onMouseDown={()=>get_trans(rep)} onMouseUp={()=>get_trans(Language)}
-                        <button
-                            style={{'border':'none','background-color':'white'}} onMouseDown={()=>get_trans(rep)} onMouseUp={()=>get_trans(Language)}
-                            type='button' ><Badge pill variant="primary">
-                            {rep}</Badge>
-                        </button>
+                    {ReportTranslation.length > 1 && <><Col md={4} className="titles no-click">
+                        <div>Available versions:</div>
+                    </Col>
+                        <Col md={8}>
+                            {ReportTranslation.map(rep=>
+                                <>{rep !== Language &&
+                                //onMouseDown={()=>get_trans(rep)} onMouseUp={()=>get_trans(Language)}
+                                <OverlayTrigger
+                                    key='right'
+                                    placement='right'
+                                    overlay={
+                                        <Tooltip id={`tooltip-top'`}>
+                                            Keep pressed to see the translation
+                                        </Tooltip>
+                                    }
+                                >
+                                    <button className='button_translation'
+                                            onMouseDown={()=>{document.getElementsByClassName('button_pressed')[0].style.background = 'orange';get_trans(rep)}} onMouseUp={()=>{document.getElementsByClassName('button_pressed')[0].style.background = '#007bff';get_trans(Language)}}
+                                            type='button' ><Badge className='button_pressed' pill variant="primary">
+                                        {rep}</Badge>
+                                    </button></OverlayTrigger>
 
-                        }&nbsp;&nbsp;</>
-                    )}
-                </Col></>}
+                                }&nbsp;&nbsp;</>
+                            )}
+                        </Col></>}
 
 
 
-            </Row>
+                </Row>
                 <hr/></div>}
 
             <div>
                 {(LoadingReport) ? <Spinner animation="border" role="status"/> : <div>
                     {ReportText !== false  &&  <div>
-
-                        {FieldsToAnn.map((field,ind)=><div>
-                                {ReportText[field] !== undefined && ReportText[field] !== null  && <Row>
-                                    {((props.action === 'mentions' || props.action === 'concept-mention') && (ShowAnnotationsStats === false && ShowMajorityModal === false && Translation === false)) ? <Col md={4} className="titles no-click"><div><FontAwesomeIcon style={{'width':'0.8rem'}} icon={faPencilAlt}/> {field}:</div></Col> : <Col md={4} className="titles no-click"><div>{field}:</div></Col>}
-                                    {ShowAnnotationsStats === false && ShowMajorityModal === false && Translation === false && <Col md={8}><ReportSection action={props.action} stop={ReportText[field].stop} start={ReportText[field].start} text={ReportText[field].text}  report = {props.report}/></Col>}
-                                    {(ShowAnnotationsStats === true || ShowMajorityModal === true || Translation !== false) && <Col md={8}><ReportSection action='noAction' stop={ReportText[field].stop} start={ReportText[field].start} text={ReportText[field].text}  report = {props.report}/></Col>}
-                                </Row>}
-                            </div>
-                        )}
-                        {(ShowAnnotationsStats === true || ShowMajorityModal === true ) && ExtractFields.length > 0 && <div>
-                            {ExtractFields.map((field,ind)=><div>
-                                    {ReportText[field] !== undefined && FieldsToAnn.indexOf(field) === -1 && Fields.indexOf(field) === -1 &&  ReportText[field] !== null  && <Row>
-                                        {((props.action === 'mentions' || props.action === 'concept-mention') && (ShowAnnotationsStats === false && ShowMajorityModal === false)) ? <Col md={4} className="titles no-click"><div><FontAwesomeIcon style={{'width':'0.8rem'}} icon={faPencilAlt}/> {field}:</div></Col> : <Col md={4} className="titles no-click"><div>{field}:</div></Col>}
-                                        {ShowAnnotationsStats === false && ShowMajorityModal === false && <Col md={8}><ReportSection action={props.action} stop={ReportText[field].stop} start={ReportText[field].start} text={ReportText[field].text}  report = {props.report}/></Col>}
-                                        {(ShowAnnotationsStats === true || ShowMajorityModal === true ) && <Col md={8}><ReportSection action='noAction' stop={ReportText[field].stop} start={ReportText[field].start} text={ReportText[field].text}  report = {props.report}/></Col>}
+                        {FieldsToAnn.length > 0 && <>
+                            {FieldsToAnn.map((field,ind)=><div>
+                                    {ReportText[field] !== undefined && ReportText[field] !== null  && <Row>
+                                        {((props.action === 'mentions' || props.action === 'concept-mention') && (ShowAnnotationsStats === false && ShowMajorityModal === false && Translation === false)) ? <Col md={4} className="titles no-click"><div><FontAwesomeIcon style={{'width':'0.8rem'}} icon={faPencilAlt}/> {field}:</div></Col> : <Col md={4} className="titles no-click"><div>{field}:</div></Col>}
+                                        {ShowAnnotationsStats === false && ShowMajorityModal === false && Translation === false && <Col md={8}><ReportSection action={props.action} stop={ReportText[field].stop} start={ReportText[field].start} text={ReportText[field].text}  report = {props.report}/></Col>}
+                                        {(ShowAnnotationsStats === true || ShowMajorityModal === true || Translation !== false) && <Col md={8}><ReportSection action='noAction' stop={ReportText[field].stop} start={ReportText[field].start} text={ReportText[field].text}  report = {props.report}/></Col>}
                                     </Row>}
                                 </div>
                             )}
+                        </>}
+
+                        {(ShowAnnotationsStats === true || ShowMajorityModal === true ) && ExtractFields.length > 0 && <div>
+                            {ExtractFields.length > 0 && <>
+                                {ExtractFields.map((field,ind)=><div>
+                                        {ReportText[field] !== undefined && FieldsToAnn.indexOf(field) === -1 && Fields.indexOf(field) === -1 &&  ReportText[field] !== null  && <Row>
+                                            {((props.action === 'mentions' || props.action === 'concept-mention') && (ShowAnnotationsStats === false && ShowMajorityModal === false)) ? <Col md={4} className="titles no-click"><div><FontAwesomeIcon style={{'width':'0.8rem'}} icon={faPencilAlt}/> {field}:</div></Col> : <Col md={4} className="titles no-click"><div>{field}:</div></Col>}
+                                            {ShowAnnotationsStats === false && ShowMajorityModal === false && <Col md={8}><ReportSection action={props.action} stop={ReportText[field].stop} start={ReportText[field].start} text={ReportText[field].text}  report = {props.report}/></Col>}
+                                            {(ShowAnnotationsStats === true || ShowMajorityModal === true ) && <Col md={8}><ReportSection action='noAction' stop={ReportText[field].stop} start={ReportText[field].start} text={ReportText[field].text}  report = {props.report}/></Col>}
+                                        </Row>}
+                                    </div>
+                                )}
+                            </>}
+
                         </div>}
-                        {Fields.map((field,ind)=><div>
-                                {ReportText[field] !== undefined && ReportText[field] !== null  && FieldsToAnn.indexOf(field) === -1 && <Row>
+                        {Fields.length > 0 && <>
+                            {Fields.map((field,ind)=><div>
+                                    {ReportText[field] !== undefined && ReportText[field] !== null  && <Row>
 
-                                    <Col md={4} className="titles no-click"><div>{field}:</div></Col>
-                                    <Col md={8}><ReportSection action='noAction' stop={ReportText[field].stop} start={ReportText[field].start} text={ReportText[field].text} report = {props.report}/></Col>
+                                        <Col md={4} className="titles no-click"><div>{field}:</div></Col>
+                                        <Col md={8}><ReportSection action='noAction' stop={ReportText[field].stop} start={ReportText[field].start} text={ReportText[field].text} report = {props.report}/></Col>
 
-                                </Row>}
-                            </div>
-                        )}
+                                    </Row>}
+                                </div>
+                            )}
+                        </>}
+
 
 
 
 
                     </div>}
-                    <div>
-                        <hr/>
-                        <Row>
-                            <Col md={12} className="titles no-click raw_diagnoses"><div>Does the <span style={{'font-style':'italic'}}>target diagnosis</span> correspond to the one
-                                whose index is the <span style={{'font-style':'italic'}}>internal id</span> in the <span style={{'font-style':'italic'}}>raw diagnoses</span> (note that if the internal ID/block number is 1 then it may be not reported, but it is not an error in this case)? If it does not, <Button className='errorNotify' size='sm' onClick={(event)=>ticketFunc(event)} variant='danger'>click here</Button></div></Col>
-                        </Row>
-                    </div>
+
                 </div>}
                 {/*{Translation !== false && <div>*/}
                 {/*    {FieldsToAnn.map((field,ind)=><div>*/}

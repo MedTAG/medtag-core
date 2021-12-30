@@ -63,34 +63,37 @@ def configure_concepts(cursor,load_concepts,author):
             concept_has_uc = []
             conc = []
             with transaction.atomic():
-                cursor.execute("SELECT c.concept_url FROM concept AS c inner join concept_has_uc as ch on ch.concept_url = c.concept_url where annotation_mode = %s and ch.name = %s",['Manual',usecase])
+                cursor.execute("SELECT c.concept_url FROM concept AS c inner join concept_has_uc as ch on ch.concept_url = c.concept_url where annotation_mode in %s and ch.name = %s",[tuple(['Manual','Manual and Automatic']),usecase])
                 ans = cursor.fetchall()
                 if len(ans) > 0:
                     concepts = []
                     for el in ans:
                         concepts.append(el[0])
-                    # cursor.execute("SELECT (id_report, language) FROM contains WHERE concept_url in %s",[tuple(concepts)])
-                    # ids_contains = cursor.fetchall()
-                    # con = []
-                    # for el in ids_contains:
-                    #     con.append((el[0],el[1]))
-                    # cursor.execute("SELECT (id_report, language) FROM linked WHERE concept_url in %s", [tuple(concepts)])
-                    # ids_linked = cursor.fetchall()
-                    # lin = []
-                    # for el in ids_linked:
-                    #     lin.append((el[0],el[1]))
-                    cursor.execute("DELETE FROM ground_truth_log_file WHERE gt_type = %s and (id_report,language) in (SELECT id_report, language FROM contains WHERE concept_url in %s)", ['concepts',tuple(concepts)])
-                    cursor.execute("DELETE FROM ground_truth_log_file WHERE gt_type = %s and (id_report,language) in (SELECT id_report, language FROM linked WHERE concept_url in %s)", ['concept-mention',tuple(concepts)])
-                    cursor.execute("DELETE FROM contains WHERE concept_url in %s",[tuple(concepts)])
-                    cursor.execute("DELETE FROM linked WHERE concept_url in %s", [tuple(concepts)])
-                    cursor.execute("DELETE FROM belong_to WHERE concept_url in %s ", [tuple(concepts)])
-                    cursor.execute("DELETE FROM concept_has_uc WHERE concept_url in %s", [tuple(concepts)])
-                    cursor.execute("DELETE FROM concept WHERE concept_url in %s", [tuple(concepts)])
-
+                    if author == 'admin':
+                        cursor.execute("DELETE FROM ground_truth_log_file WHERE gt_type = %s and (id_report,language) in (SELECT id_report, language FROM contains WHERE concept_url in %s AND ns_id = %s)", ['concepts',tuple(concepts),'Human'])
+                        cursor.execute("DELETE FROM ground_truth_log_file WHERE gt_type = %s and (id_report,language) in (SELECT id_report, language FROM linked WHERE concept_url in %s AND ns_id = %s)", ['concept-mention',tuple(concepts),'Human'])
+                        cursor.execute("DELETE FROM contains WHERE concept_url in %s AND ns_id = %s",[tuple(concepts),'Human'])
+                        cursor.execute("DELETE FROM linked WHERE concept_url in %s AND ns_id = %s", [tuple(concepts),'Human'])
+                        cursor.execute("DELETE FROM belong_to WHERE concept_url in %s ", [tuple(concepts)])
+                        cursor.execute("DELETE FROM concept_has_uc WHERE concept_url in %s", [tuple(concepts)])
+                        cursor.execute("DELETE FROM concept WHERE concept_url in %s", [tuple(concepts)])
+                cursor.execute(
+                    "SELECT c.concept_url FROM concept AS c inner join concept_has_uc as ch on ch.concept_url = c.concept_url where annotation_mode = %s and ch.name = %s",
+                    ['Automatic', usecase])
+                ans_auto = cursor.fetchall()
+                if len(ans_auto) > 0:
+                    concepts = []
+                    for el in ans_auto:
+                        concepts.append(el[0])
+                    if author == 'admin':
+                        cursor.execute("UPDATE concept SET annotation_mode = %s WHERE annotation_mode = %s",
+                                       ['Manual and Automatic', 'Automatic'])
 
                 for e in r:
                     if (e[0] is not None and e[1] is not None and e[2] is not None):
                         concept = e[0].toPython()
+
+                        # print(e[2].toPython())
                         if concept == 'SevereColonDysplasia':
                             concept = 'https://w3id.org/examode/ontology/SevereColonDysplasia'
                         elif concept == 'uterusNOS':
@@ -111,7 +114,9 @@ def configure_concepts(cursor,load_concepts,author):
                             query = ("INSERT INTO concept (concept_url,name,annotation_mode) VALUES(%s,%s,%s);")
                             values = (concept, e[1].toPython(),to_add)
                             cursor.execute(query, values)
-                        elif author == 'admin':
+                        # elif author == 'admin':
+                        else:
+
                             cursor.execute("UPDATE concept SET annotation_mode = %s WHERE concept_url = %s",
                                            ['Manual and Automatic', e[0].toPython()])
 
@@ -176,14 +181,14 @@ def configure_update_labels(cursor,load_labels):
             if load_labels is not None:
                 for el in load_labels:
                     for label in data['labels'][el]:
-                        cursor.execute("UPDATE annotation_label SET annotation_mode = %s WHERE label = %s AND name = %s",['Manual and Automatic',label,str(el).lower()])
+                        cursor.execute("UPDATE annotation_label SET annotation_mode = %s WHERE label = %s AND name = %s AND seq_number < %s",['Manual and Automatic',label,str(el).lower(),int(21)])
                     a = AnnotationLabel.objects.filter(name=str(el).lower(), annotation_mode='Manual')
                     if a.count() > 0:
                         up = True
                     if up:
-                        cursor.execute("DELETE FROM associate WHERE label NOT IN %s ",[tuple(data['labels'][el])])
-                        cursor.execute("DELETE FROM annotation_label WHERE label NOT IN %s AND name = %s",[tuple(data['labels'][el]),str(el).lower()])
-                        cursor.execute("DELETE FROM ground_truth_log_file WHERE gt_type = %s AND (id_report,language) IN (SELECT id_report, language FROM associate AS a INNER JOIN annotation_label AS anno ON anno.label = a.label WHERE anno.label IN %s) ",['labels',tuple(data['labels'])])
+                        cursor.execute("DELETE FROM ground_truth_log_file WHERE gt_type = %s AND ns_id = %s ",['labels','Human'])
+                        cursor.execute("DELETE FROM associate WHERE ns_id = %s",['Human'])
+                        cursor.execute("DELETE FROM annotation_label WHERE annotation_mode = %s",['Manual'])
 
 
 def check_file(reports,pubmedfiles, labels, concepts, jsonDisp, jsonAnn, username, password,load_concepts,load_labels):
@@ -205,11 +210,16 @@ def check_file(reports,pubmedfiles, labels, concepts, jsonDisp, jsonAnn, usernam
         load_labels = ''.join(load_labels)
         load_labels = load_labels.split(',')
         load_labels = list(set(load_labels))
+    else:
+        load_labels = ''
 
     if load_concepts is not None:
         load_concepts = ''.join(load_concepts)
         load_concepts = load_concepts.split(',')
         load_concepts = list(set(load_concepts))
+    else:
+        load_concepts = ''
+
 
     load_labels = [x.lower() for x in load_labels]
     load_concepts = [x.lower() for x in load_concepts]
@@ -661,10 +671,14 @@ def configure_data(pubmedfiles,reports, labels, concepts, jsondisp, jsonann, jso
                 load_labels = ''.join(load_labels)
                 load_labels = load_labels.split(',')
                 load_labels = list(set(load_labels))
+            else:
+                load_labels = ''
             if load_concepts is not None:
                 load_concepts = ''.join(load_concepts)
                 load_concepts = load_concepts.split(',')
                 load_concepts = list(set(load_concepts))
+            else:
+                load_concepts = ''
             load_labels = [x.lower() for x in load_labels]
             load_concepts = [x.lower() for x in load_concepts]
 
@@ -1044,6 +1058,9 @@ def check_for_update(type_req, pubmedfiles, reports, labels, concepts, jsonDisp,
 
                             if num[0] > 0 and num_uc[0] > 0:
                                 message = 'WARNING CONCEPTS FILE - ' + concepts[i].name + ' - The concept: ' + str(df.loc[ind, 'concept_url']) +' for the use case '+ str(df.loc[ind, 'usecase'])+ ' is already present in the database. It will be ignored.'
+
+                        # if Concept.objects.filter(annotation_mode = 'Manual and Automatic').count() > 0:
+                        #     message = 'WARNING CONCEPTS FILE - ' + concepts[i].name + ' - Uploading new concepts will remove ALL the existing ground truths for concepts and linking annotation types.'
 
                 return message
 
@@ -1725,7 +1742,7 @@ def update_db_util(reports,pubmedfiles,labels,concepts,jsondisp,jsonann,jsondisp
                                 if annotation_mode == 'Automatic':
                                     cursor.execute('UPDATE concept SET annotation_mode = %s WHERE concept_url = %s',['Manual and Automatic', el[0]])
 
-                        cursor.execute("UPDATE concept SET annotation_mode = %s WHERE concept_url IN (SELECT c.concept_url FROM concept as c inner join concept_has_uc as ch on ch.concept_url = c.concept_url where ch.name = %s and annotation_mode = %s)",['Automatic', str(usecase),'Manual and Automatic'])
+                        # cursor.execute("UPDATE concept SET annotation_mode = %s WHERE concept_url IN (SELECT c.concept_url FROM concept as c inner join concept_has_uc as ch on ch.concept_url = c.concept_url where ch.name = %s and annotation_mode = %s)",['Automatic', str(usecase),'Manual and Automatic'])
                         cursor.execute("SELECT * FROM concept_has_uc WHERE concept_url = %s AND name=%s;", (str(concept_url),str(usecase)))
                         ans = cursor.fetchall()
                         if len(ans) == 0:

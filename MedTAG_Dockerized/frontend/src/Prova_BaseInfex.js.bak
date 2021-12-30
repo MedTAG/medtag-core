@@ -179,6 +179,22 @@ function Prova_aseIndex() {
         return ordered
     }
 
+    useEffect(()=>{
+        console.log('r',Index)
+        if(Institute !== '' && Language !== '' && useCase !== '' && Annotation !== '' && Reports.length > 0 && Index !== false && Action !== 'none'){
+            console.log('r',Reports)
+            console.log('r',Index)
+            axios.get("http://127.0.0.1:8000/get_annotators_users_list",{params:{action:Action,id_report:Reports[Index].id_report.toString(),language:Reports[Index].language}})
+                .then(response => {
+                    // if(response.data.length>0){
+                    // console.log(response.data)
+                    SetUsersListAnnotations(response.data)
+                })
+                .catch(error=>{
+                    console.log(error)
+                })
+        }
+    },[Index,Action])
 
     useEffect(()=>{
         // console.log('setto colori')
@@ -191,8 +207,6 @@ function Prova_aseIndex() {
     useEffect(()=>{
 
         if((useCase !== '' && Language !== '' && Institute !== '' && Annotation !== '' && ReportType !== '' && BatchNumber !== '')) {
-
-            console.log('QUA CI ENTRO_0', ReportType)
 
             axios.get("http://127.0.0.1:8000/get_fields").then(response => {
                 SetFields(response.data['fields']);
@@ -236,6 +250,16 @@ function Prova_aseIndex() {
         SetLoadingReport(true)
     },[])
 
+    useEffect(()=>{
+        if(ClickedCheck === false && Index !== false && action !== 'none' && LabToInsert.length > 0){
+            axios.get('http://127.0.0.1:8000/check_gt_existence',{params:{id_report:Reports[Index].id_report,language: Reports[Index].language,action:Action}}).then(response=>{
+                if(response.data['count'] === 0){
+                    SetClickedCheck(true)
+                }
+            })
+        }
+
+    },[ClickedCheck,LabToInsert])
 
     useEffect(()=>{
         SetDisable_Buttons(true)
@@ -301,6 +325,7 @@ function Prova_aseIndex() {
                 setReports(response.data['report']);
                 setIndex(response.data['index'])
                 if(response.data['report'].length === 0){
+                    setIndex(false)
                     SetNoReports(true)
                 }
                 else{
@@ -324,9 +349,7 @@ function Prova_aseIndex() {
         SetMakeReq(false)
     },[])
 
-    useEffect(()=>{
-        console.log('loadingReport',LoadingReport)
-    },[LoadingReport])
+
 
     useEffect(()=>{
         // SetLoadingReport(true)

@@ -277,10 +277,7 @@ export default function TableToShow(props) {
             if (e.target.checked) {
 
                 var ind = props.columns.indexOf(column)
-                console.log('indice', ind)
-                console.log('indice', cols.slice(0, ind))
-                console.log('indice1', column)
-                console.log('indice2', cols.slice(ind))
+
                 if(cols[ind] === false){
                     cols[ind] = column
                 }
@@ -310,16 +307,20 @@ export default function TableToShow(props) {
         else{
             var new_r = []
             // console.log('valoreRIFERIMENTO',e.target.value)
+            // console.log('valoreRIFERIMENTO',ColumnsNew)
             // new_r = rows.filter(r=>r.keys.filter(k=>r[k].toLowerCase().includes(e.target.value.toLowerCase())))
             // setRows(new_r)
 
             rows.map((row,i)=>{
-                Object.keys(row).map((k,ind)=>{
-                    if(row[k] !== undefined){
-                        if(row[k].toString().toLowerCase().includes((e.target.value).toString().toLowerCase())){
+                ColumnsNew.map((k,ind)=>{
+                    var kk = k['name']
+                    if(row[kk] !== undefined && row[kk] !== null){
+                        // console.log('valore 1',row)
+                        // console.log('valore 3',row[kk])
+                        // console.log('valore 4',e.target.value)
+                        if(row[kk].toString().toLowerCase().includes((e.target.value).toString().toLowerCase())){
                             // console.log('chiave',k)
                             // console.log('indice',row['id'])
-                            // console.log('valore',row[k])
                             if(new_r.indexOf(row)===-1){
                                 new_r.push(row)
                             }
@@ -328,7 +329,7 @@ export default function TableToShow(props) {
                 })
 
             })
-            console.log('nuovo array',new_r)
+            // console.log('nuovo array',new_r)
 
             setFilteredRows(new_r)
         }

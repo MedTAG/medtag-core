@@ -29,6 +29,7 @@ urlpatterns = [
     path('get_fields', views.get_fields, name='get_fields'),
     path('registration', views.registration, name='registration'),
     path('logout', views.logout, name='logout'),
+    path('check_gt_existence', views.check_gt_existence, name='check_gt_existence'),
     path('get_annotators_users_list', views.get_annotators_users_list, name='get_annotators_users_list'),
     # path('signals_malfunctions', views.signals_malfunctions, name='signals_malfunctions'),
     path('check_input_files', views.check_input_files, name='check_input_files'),

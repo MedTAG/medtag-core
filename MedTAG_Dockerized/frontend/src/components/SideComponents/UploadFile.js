@@ -58,11 +58,12 @@ function UploadFile() {
     const [CompleteTransfer,SetCompleteTransfer] = useState(0)
     const [CompleteUpload,SetCompleteUpload] = useState(0)
     const [Overwrite,SetOverwrite] = useState(false)
+    const [MissingAuto,SetMissingAuto] = useState(false)
     const ref_user = useRef('')
 
     useEffect(()=>{
         window.scroll(0,0)
-        axios.post('http://127.0.0.1:8000/get_at_least_one_anno')
+        axios.post('http://0.0.0.0:8000/get_at_least_one_anno')
             .then(response => {
                 SetUsersListAnno(response.data['users'])
             })
@@ -97,6 +98,9 @@ function UploadFile() {
                         SetShowModal(false)
 
                     }
+                    else if(response.data['message'] === 'automatic missing'){
+                        SetMissingAuto(true)
+                    }
                     else{
                         SetCompleteUpload(response.data['message'])
                         SetShowModal(false)
@@ -125,9 +129,7 @@ function UploadFile() {
             }
         }
     }
-    useEffect(()=>{
-        console.log('complete_trans',CompleteTransfer)
-    },[CompleteTransfer])
+
 
     function handleCheckFiles(){
         var input = ''
@@ -255,20 +257,22 @@ function UploadFile() {
                             <Collapse style={{marginTop:'0px'}} in={showUpload}>
                                 <div>
                                     Upload a CSV file with the annotations. This file should be a CSV with annotations a team mate of yours who use MedTAG downloaded clicking on , or have the same file format.
+                                    <div><b>Please, before upload the csv make sure you have configured MedTAG with the same concepts and labels of the person you are uploading the annotations of.</b></div>
 
                                     <Form.Group style={{'margin-top':'20px','margin-bottom':'20px'}}>
-                                        <Form.File id="input_upload" onClick={(e) => {SetShowDeleteFiles(false);SetCompleteUpload(0);e.target.value = null;}} onChange={(e)=>{SetShowDeleteFiles(true);handleCheckFiles()}}  multiple/>
+                                        <Form.File id="input_upload" onClick={(e) => {SetShowDeleteFiles(false);SetCompleteUpload(0);e.target.value = null;}} onChange={(e)=>{SetShowDeleteFiles(true);handleCheckFiles()}} />
                                         {ShowDeleteFiles === true && <div><Button className='delete-button' onClick={(e)=>deleteInput(e)}><FontAwesomeIcon icon={faTimes} />Delete file</Button></div>}
                                     </Form.Group>
                                     {Checked === true && <div style={{color:'green',margin:'1% 0 1% 0'}}>Ok, you can confirm.</div>}
                                     {Checked !== 0 && Checked !== true && <div style={{color:'red',margin:'1% 0 1% 0'}}>An error occurred: {Checked}</div>}
                                     <div>
-                                        {CompleteUpload === 0 ? <Button type="file" onClick={()=>{SetShowModal(true);handleStartCopy();SetChecked(0)}} variant='primary'>Confirm</Button> : <div>
+                                        {CompleteUpload === 0 ? <Button type="file" onClick={()=>{SetMissingAuto(false);SetShowModal(true);handleStartCopy();SetChecked(0)}} variant='primary'>Confirm</Button> : <div>
                                             {CompleteUpload !== true && <div style={{color:'red'}}>An error occurred: </div>
                                             }
                                             {CompleteUpload === true && <div style={{color:'green'}}>Ok, files uploaded with no errors.</div>
                                             }
                                         </div>}
+                                        {MissingAuto && <div><b>Please, before adding Automatic annotations, perform automatic annotations</b></div>}
 
                                     </div>
                                 </div>

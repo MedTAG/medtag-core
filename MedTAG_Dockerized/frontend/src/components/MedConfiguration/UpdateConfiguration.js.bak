@@ -139,15 +139,6 @@ function UpdateConfiguration() {
     },[])
 
     useEffect(()=>{
-        // axios.get("http://127.0.0.1:8000/pubmed_missing_auto").then(response => {
-        //     SetPubMedMissingAuto(response.data);
-        //     SetPubMedUsesInserted(response.data['usecase'])
-        //     var arr = {}
-        //     Object.keys(response.data).map(key=>{
-        //         arr[key] = []
-        //     })
-        //     SetCommitPossible(true)
-        // }).catch(function (error){console.log(error)})
 
         axios.get("http://127.0.0.1:8000/report_missing_auto").then(response => {
             SetReportsMissingAuto(response.data);
@@ -184,7 +175,6 @@ function UpdateConfiguration() {
         })
 
         SetUpdateFields(false)
-        // SetCommitPossible(true)
     },[UpdateFields])
 
     // },[UpdateFields,AutoOpt])
@@ -1128,7 +1118,7 @@ function UpdateConfiguration() {
 
     return (
         <div className="App">
-            {Username !== Admin ?
+            {(Username !== Admin && Username !== 'Test') ?
                 <div><h1>FORBIDDEN</h1>
                     <div>
                         <a href="http://127.0.0.1:8000/index">
@@ -1384,7 +1374,7 @@ function UpdateConfiguration() {
                                                             {NoSelected.length > 0 && <div>Select <b>at least</b> a field for {NoSelected.join(', ')}</div>}
 
                                                             <div style={{'text-align':'center','margin-top':'2%'}}>
-                                                                {(ReportsMissingAuto[AutoOpt][Batch]['annotated']===ReportsMissingAuto[AutoOpt][Batch]['tot'] && CommitPossible) ? <div style={{'color':'green','font-weight':'bold'}}>All the reports for this configuration have been automatically annotated. </div> : <Button id='commit_extracted' disabled={FieldsAlreadyExtracted[AutoOpt].length === 0 && SelectedFields[AutoOpt].length === 0} size='lg' variant='success' onClick={()=>checkemptyuses(AutoOpt)}>Get the automatic annotations</Button>}
+                                                                {(ReportsMissingAuto[AutoOpt][Batch]['annotated']===ReportsMissingAuto[AutoOpt][Batch]['tot'] && CommitPossible && FieldsAlreadyExtracted[AutoOpt].length > 0) ? <div style={{'color':'green','font-weight':'bold'}}>All the reports for this configuration have been automatically annotated. </div> : <Button id='commit_extracted' disabled={FieldsAlreadyExtracted[AutoOpt].length === 0 && SelectedFields[AutoOpt].length === 0} size='lg' variant='success' onClick={()=>checkemptyuses(AutoOpt)}>Get the automatic annotations</Button>}
                                                             </div>
 
                                                         </div>

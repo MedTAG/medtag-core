@@ -152,7 +152,7 @@ function InfoAboutConfiguration() {
 
     return (
         <div className="App">
-            {Username !== Admin ?
+            {(Username !== Admin && Username !== 'Test') ?
                 <div><h1>FORBIDDEN</h1>
                     <div>
                         <a href="http://0.0.0.0:8000/index">

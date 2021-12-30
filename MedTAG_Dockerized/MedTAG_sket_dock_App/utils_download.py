@@ -30,10 +30,16 @@ def generate_bioc(json_keys,json_keys_to_ann,username,action,language,usecase,in
         collection1 = json_writer.collection
         today = str(date.today())
         collection.date = today
-        collection.source = 'MEDTAG Collection'
+        if report_type == 'reports':
+            collection.source = 'MEDTAG Collection'
+            collection1.source = 'MEDTAG Collection'
+
+        else:
+            collection.source = 'PUBMED Collection'
+            collection1.source = 'PUBMED Collection'
+
         collection.put_infon('username', username)
         collection1.date = today
-        collection1.source = 'MEDTAG Collection'
         collection1.put_infon('username', username)
         if action == 'mentions':
             collection.put_infon('annotation_type', 'mentions')
@@ -50,10 +56,14 @@ def generate_bioc(json_keys,json_keys_to_ann,username,action,language,usecase,in
                             [str(username), str(usecase),(language),institute, str(annotation_mode), batch, 'PUBMED'])
 
                     elif annotation_mode == 'Robot':
+                        # cambio
+                        # cursor.execute(
+                        #     "SELECT  DISTINCT r.name,r.id_report,r.language,r.institute FROM report AS r INNER JOIN annotate AS a ON r.id_report = a.id_report AND r.language = a.language   INNER JOIN mention as m on m.id_report = a.id_report and m.language = a.language and m.start = a.start and m.stop = a.stop  WHERE r.name = %s and  a.ns_id = %s and a.username = %s  and (a.id_report,a.language) IN (select g.id_report,g.language FROM ground_truth_log_file as g inner join ground_truth_log_file as gg on g.id_report = gg.id_report and g.language = gg.language and g.gt_type = gg.gt_type and g.ns_id = gg.ns_id where g.gt_type = %s and g.ns_id = %s and gg.insertion_time != g.insertion_time and gg.username = %s and g.username =%s AND r.batch = COALESCE (%s,r.batch) AND r.institute = COALESCE(%s,r.institute) AND r.language = COALESCE(%s,r.language) AND r.institute != %s)",
+                        #     [str(usecase), 'Robot', str(username), 'mentions', 'Robot','Robot_user',str(username), batch,institute,language, 'PUBMED'])
                         cursor.execute(
-                            "SELECT  DISTINCT r.name,r.id_report,r.language,r.institute FROM report AS r INNER JOIN annotate AS a ON r.id_report = a.id_report AND r.language = a.language   INNER JOIN mention as m on m.id_report = a.id_report and m.language = a.language and m.start = a.start and m.stop = a.stop  WHERE r.name = %s and  a.ns_id = %s and a.username = %s  and (a.id_report,a.language) IN (select g.id_report,g.language FROM ground_truth_log_file as g inner join ground_truth_log_file as gg on g.id_report = gg.id_report and g.language = gg.language and g.gt_type = gg.gt_type and g.ns_id = gg.ns_id where g.gt_type = %s and g.ns_id = %s and gg.insertion_time != g.insertion_time and gg.username = %s and g.username =%s AND r.batch = COALESCE (%s,r.batch) AND r.institute = COALESCE(%s,r.institute) AND r.language = COALESCE(%s,r.language) AND r.institute != %s)",
-                            [str(usecase), 'Robot', str(username), 'mentions', 'Robot','Robot_user',str(username), batch,institute,language, 'PUBMED'])
-
+                            "SELECT  DISTINCT r.name,r.id_report,r.language,r.institute FROM report AS r INNER JOIN annotate AS a ON r.id_report = a.id_report AND r.language = a.language   INNER JOIN mention as m on m.id_report = a.id_report and m.language = a.language and m.start = a.start and m.stop = a.stop  WHERE r.name = %s and  a.ns_id = %s and a.username = %s  and (a.id_report,a.language) IN (select g.id_report,g.language FROM ground_truth_log_file as g  where g.gt_type = %s and g.ns_id = %s and g.username =%s AND r.batch = COALESCE (%s,r.batch) AND r.institute = COALESCE(%s,r.institute) AND r.language = COALESCE(%s,r.language) AND r.institute != %s)",
+                            [str(usecase), 'Robot', str(username), 'mentions', 'Robot', str(username),
+                             batch, institute, language, 'PUBMED'])
 
                     reports = cursor.fetchall()
                 elif report_type == 'pubmed':
@@ -63,11 +73,16 @@ def generate_bioc(json_keys,json_keys_to_ann,username,action,language,usecase,in
                             [str(username), tuple(languages), str(usecase), str('PUBMED'), str(annotation_mode),
                              batch,tuple(languages)])
                     elif annotation_mode == 'Robot':
-                        cursor.execute(
-                            "SELECT  DISTINCT r.name,r.id_report,r.language,r.institute FROM report AS r INNER JOIN annotate AS a ON r.id_report = a.id_report AND r.language = a.language   INNER JOIN mention as m on m.id_report = a.id_report and m.language = a.language and m.start = a.start and m.stop = a.stop  WHERE r.name = %s and  a.ns_id = %s and a.username = %s  and (a.id_report,a.language) IN (select g.id_report,g.language FROM ground_truth_log_file as g inner join ground_truth_log_file as gg on g.id_report = gg.id_report and g.language = gg.language and g.gt_type = gg.gt_type and g.ns_id = gg.ns_id where g.gt_type = %s and g.ns_id = %s and gg.insertion_time != g.insertion_time and gg.username = %s and g.username =%s AND r.batch = COALESCE (%s,r.batch) AND r.institute = COALESCE(%s,r.institute) AND r.language = COALESCE(%s,r.language) AND r.institute = %s)",
-                            [str(usecase), 'Robot', str(username), 'mentions', 'Robot', 'Robot_user', str(username),
-                             batch, institute, tuple(languages), 'PUBMED'])
+                        # CAMBIO
+                        # cursor.execute(
+                        #     "SELECT  DISTINCT r.name,r.id_report,r.language,r.institute FROM report AS r INNER JOIN annotate AS a ON r.id_report = a.id_report AND r.language = a.language   INNER JOIN mention as m on m.id_report = a.id_report and m.language = a.language and m.start = a.start and m.stop = a.stop  WHERE r.name = %s and  a.ns_id = %s and a.username = %s  and (a.id_report,a.language) IN (select g.id_report,g.language FROM ground_truth_log_file as g inner join ground_truth_log_file as gg on g.id_report = gg.id_report and g.language = gg.language and g.gt_type = gg.gt_type and g.ns_id = gg.ns_id where g.gt_type = %s and g.ns_id = %s and gg.insertion_time != g.insertion_time and gg.username = %s and g.username =%s AND r.batch = COALESCE (%s,r.batch) AND r.institute = COALESCE(%s,r.institute) AND r.language = COALESCE(%s,r.language) AND r.institute = %s)",
+                        #     [str(usecase), 'Robot', str(username), 'mentions', 'Robot', 'Robot_user', str(username),
+                        #      batch, institute, tuple(languages), 'PUBMED'])
 
+                        cursor.execute(
+                            "SELECT  DISTINCT r.name,r.id_report,r.language,r.institute FROM report AS r INNER JOIN annotate AS a ON r.id_report = a.id_report AND r.language = a.language   INNER JOIN mention as m on m.id_report = a.id_report and m.language = a.language and m.start = a.start and m.stop = a.stop  WHERE r.name = %s and  a.ns_id = %s and a.username = %s  and (a.id_report,a.language) IN (select g.id_report,g.language FROM ground_truth_log_file as g where g.gt_type=%s and g.ns_id = %s and g.username =%s AND r.batch = COALESCE (%s,r.batch) AND r.institute = COALESCE(%s,r.institute) AND r.language in %s AND r.institute = %s)",
+                            [str(usecase), 'Robot', str(username), 'mentions', 'Robot', str(username),
+                             batch, institute, tuple(languages), 'PUBMED'])
 
                     reports = cursor.fetchall()
             documents = []
@@ -130,8 +145,8 @@ def generate_bioc(json_keys,json_keys_to_ann,username,action,language,usecase,in
                                 document.add_passage(passage)
                 collection.add_document(document)
                 collection1.add_document(document)
-            print(writer)
-            print(json_writer)
+            # print(writer)
+            # print(json_writer)
 
         elif action == 'concept-mention':
             collection.put_infon('annotation_type', 'linking')
@@ -149,10 +164,15 @@ def generate_bioc(json_keys,json_keys_to_ann,username,action,language,usecase,in
 
 
                     elif annotation_mode == 'Robot':
+                        # CAMBIA
+                        # cursor.execute(
+                        #     "SELECT  DISTINCT r.name,r.id_report,r.language,r.institute FROM report AS r INNER JOIN linked AS a ON r.id_report = a.id_report AND r.language = a.language INNER JOIN mention as m on m.id_report = a.id_report and m.language = a.language and a.start = m.start and a.stop = m.stop INNER JOIN concept as c on c.concept_url = a.concept_url inner join semantic_area as s on s.name = a.name WHERE r.name = %s AND a.ns_id = %s and a.username = %s  and (a.id_report,a.language) IN (select g.id_report,g.language FROM ground_truth_log_file as g inner join ground_truth_log_file as gg on g.id_report = gg.id_report and g.language = gg.language and g.gt_type = gg.gt_type and g.ns_id = gg.ns_id where g.gt_type = %s and g.ns_id = %s and gg.insertion_time != g.insertion_time and gg.username = %s and g.username =%s  AND r.batch = COALESCE(%s,r.batch) AND r.institute=COALESCE(%s,r.institute) AND r.language = COALESCE(%s,r.language) AND r.institute != %s)  ",
+                        #     [str(usecase), 'Robot', str(username), 'concept-mention', 'Robot',
+                        #      'Robot_user',
+                        #      str(username), batch,institute,language, 'PUBMED'])
                         cursor.execute(
-                            "SELECT  DISTINCT r.name,r.id_report,r.language,r.institute FROM report AS r INNER JOIN linked AS a ON r.id_report = a.id_report AND r.language = a.language INNER JOIN mention as m on m.id_report = a.id_report and m.language = a.language and a.start = m.start and a.stop = m.stop INNER JOIN concept as c on c.concept_url = a.concept_url inner join semantic_area as s on s.name = a.name WHERE r.name = %s AND a.ns_id = %s and a.username = %s  and (a.id_report,a.language) IN (select g.id_report,g.language FROM ground_truth_log_file as g inner join ground_truth_log_file as gg on g.id_report = gg.id_report and g.language = gg.language and g.gt_type = gg.gt_type and g.ns_id = gg.ns_id where g.gt_type = %s and g.ns_id = %s and gg.insertion_time != g.insertion_time and gg.username = %s and g.username =%s  AND r.batch = COALESCE(%s,r.batch) AND r.institute=COALESCE(%s,r.institute) AND r.language = COALESCE(%s,r.language) AND r.institute != %s)  ",
+                            "SELECT  DISTINCT r.name,r.id_report,r.language,r.institute FROM report AS r INNER JOIN linked AS a ON r.id_report = a.id_report AND r.language = a.language INNER JOIN mention as m on m.id_report = a.id_report and m.language = a.language and a.start = m.start and a.stop = m.stop INNER JOIN concept as c on c.concept_url = a.concept_url inner join semantic_area as s on s.name = a.name WHERE r.name = %s AND a.ns_id = %s and a.username = %s  and (a.id_report,a.language) IN (select g.id_report,g.language FROM ground_truth_log_file AS g where g.gt_type = %s and g.ns_id = %s and g.username =%s  AND r.batch = COALESCE(%s,r.batch) AND r.institute=COALESCE(%s,r.institute) AND r.language = COALESCE(%s,r.language) AND r.institute != %s)  ",
                             [str(usecase), 'Robot', str(username), 'concept-mention', 'Robot',
-                             'Robot_user',
                              str(username), batch,institute,language, 'PUBMED'])
 
 
@@ -164,10 +184,15 @@ def generate_bioc(json_keys,json_keys_to_ann,username,action,language,usecase,in
                             "SELECT DISTINCT r.name,r.id_report,r.language,r.institute FROM report AS r INNER JOIN linked AS a ON r.id_report = a.id_report AND r.language = a.language WHERE a.username = %s AND r.language in %s AND r.name = %s AND r.institute = %s AND a.ns_id = %s  AND r.batch IN %s",
                             [str(username), tuple(languages), str(usecase), str('PUBMED'),str(annotation_mode),tuple(batch_num)])
                         elif annotation_mode == 'Robot':
+                            # CAMBIO
+                            # cursor.execute(
+                            #     "SELECT  DISTINCT r.name,r.id_report,r.language,r.institute FROM report AS r INNER JOIN linked AS a ON r.id_report = a.id_report AND r.language = a.language INNER JOIN mention as m on m.id_report = a.id_report and m.language = a.language and a.start = m.start and a.stop = m.stop INNER JOIN concept as c on c.concept_url = a.concept_url inner join semantic_area as s on s.name = a.name WHERE r.name = %s AND a.ns_id = %s and a.username = %s AND r.institute = %s and r.language = %s and (a.id_report,a.language) IN (select g.id_report,g.language FROM ground_truth_log_file as g inner join ground_truth_log_file as gg on g.id_report = gg.id_report and g.language = gg.language and g.gt_type = gg.gt_type and g.ns_id = gg.ns_id where g.gt_type = %s and g.ns_id = %s and gg.insertion_time != g.insertion_time and gg.username = %s and g.username =%s  AND r.batch IN %s)  ",
+                            #     [str(usecase), 'Robot', str(username), str('PUBMED'), str(language), 'concept-mention', 'Robot',
+                            #      'Robot_user',
+                            #      str(username),tuple(batch_num)])
                             cursor.execute(
-                                "SELECT  DISTINCT r.name,r.id_report,r.language,r.institute FROM report AS r INNER JOIN linked AS a ON r.id_report = a.id_report AND r.language = a.language INNER JOIN mention as m on m.id_report = a.id_report and m.language = a.language and a.start = m.start and a.stop = m.stop INNER JOIN concept as c on c.concept_url = a.concept_url inner join semantic_area as s on s.name = a.name WHERE r.name = %s AND a.ns_id = %s and a.username = %s AND r.institute = %s and r.language = %s and (a.id_report,a.language) IN (select g.id_report,g.language FROM ground_truth_log_file as g inner join ground_truth_log_file as gg on g.id_report = gg.id_report and g.language = gg.language and g.gt_type = gg.gt_type and g.ns_id = gg.ns_id where g.gt_type = %s and g.ns_id = %s and gg.insertion_time != g.insertion_time and gg.username = %s and g.username =%s  AND r.batch IN %s)  ",
+                                "SELECT  DISTINCT r.name,r.id_report,r.language,r.institute FROM report AS r INNER JOIN linked AS a ON r.id_report = a.id_report AND r.language = a.language INNER JOIN mention as m on m.id_report = a.id_report and m.language = a.language and a.start = m.start and a.stop = m.stop INNER JOIN concept as c on c.concept_url = a.concept_url inner join semantic_area as s on s.name = a.name WHERE r.name = %s AND a.ns_id = %s and a.username = %s AND r.institute = %s and r.language = %s and (a.id_report,a.language) IN (select g.id_report,g.language FROM ground_truth_log_file as g where g.gt_type = %s and g.ns_id = %s and g.username =%s  AND r.batch IN %s)  ",
                                 [str(usecase), 'Robot', str(username), str('PUBMED'), str(language), 'concept-mention', 'Robot',
-                                 'Robot_user',
                                  str(username),tuple(batch_num)])
 
                     reports = cursor.fetchall()
@@ -298,33 +323,45 @@ def create_csv_to_download(report_type,annotation_mode,username,use,inst,lang,ac
                             [str(username),(lang), str(use), (inst),str(annotation_mode),(batch),'PUBMED'])
                 elif annotation_mode == 'Robot':
                     if action == 'labels':
-
                         cursor.execute(
-                            "SELECT DISTINCT a.username,a.ns_id,r.id_report,r.language,r.batch,r.institute,r.name,a.label FROM report AS r INNER JOIN associate AS a ON r.id_report = a.id_report AND r.language = a.language WHERE r.name = %s AND a.ns_id = %s and a.username = %s AND r.institute = COALESCE(%s,r.institute) and r.language = COALESCE(%s,r.language) and (a.id_report,a.language) IN (select g.id_report,g.language FROM ground_truth_log_file as g inner join ground_truth_log_file as gg on g.id_report = gg.id_report and g.language = gg.language and g.gt_type = gg.gt_type and g.ns_id = gg.ns_id where g.gt_type = %s and g.ns_id = %s and gg.insertion_time != g.insertion_time and gg.username = %s and g.username =%s AND r.batch = COALESCE(%s,r.batch) AND r.institute != %s)  ",
-                            [str(use), 'Robot', str(username), (inst), (lang), 'labels', 'Robot', 'Robot_user',
+                            "SELECT DISTINCT a.username,a.ns_id,r.id_report,r.language,r.batch,r.institute,r.name,a.label FROM report AS r INNER JOIN associate AS a ON r.id_report = a.id_report AND r.language = a.language WHERE r.name = %s AND a.ns_id = %s and a.username = %s AND r.institute = COALESCE(%s,r.institute) and r.language = COALESCE(%s,r.language) and (a.id_report,a.language) IN (select g.id_report,g.language FROM ground_truth_log_file as g where g.gt_type = %s and g.ns_id = %s and g.username =%s AND r.batch = COALESCE(%s,r.batch) AND r.institute != %s)  ",
+                            [str(use), 'Robot', str(username), (inst), (lang), 'labels', 'Robot',
                              str(username), batch, 'PUBMED'])
+                        # CAMBIO
                         # cursor.execute(
                         #     "SELECT DISTINCT a.username,a.ns_id,r.id_report,r.language,r.batch,r.institute,r.name,a.label FROM report AS r INNER JOIN associate AS a ON r.id_report = a.id_report AND r.language = a.language WHERE r.name = %s AND a.ns_id = %s and a.username = %s AND r.institute = COALESCE(%s,r.institute) and r.language = COALESCE(%s,r.language) and (a.id_report,a.language) IN (select g.id_report,g.language FROM ground_truth_log_file as g inner join ground_truth_log_file as gg on g.id_report = gg.id_report and g.language = gg.language and g.gt_type = gg.gt_type and g.ns_id = gg.ns_id where g.gt_type = %s and g.ns_id = %s and gg.insertion_time != g.insertion_time and gg.username = %s and g.username =%s AND r.batch = COALESCE(%s,r.batch) AND r.institute != %s)  ",
                         #     [str(use), 'Robot', str(username), str(inst), str(lang), 'labels', 'Robot', 'Robot_user',
                         #      str(username), batch, 'PUBMED'])
 
                     if action == 'mentions':
+                        # cursor.execute(
+                        #     "SELECT DISTINCT a.username,a.ns_id,r.id_report,r.language,r.batch,r.institute,r.name,a.start,a.stop,m.mention_text FROM report AS r INNER JOIN annotate AS a ON r.id_report = a.id_report AND r.language = a.language  INNER JOIN mention as m on m.id_report = a.id_report and m.language = a.language and m.start = a.start and m.stop = a.stop  WHERE r.name = %s and a.ns_id = %s and a.username = %s AND r.institute = COALESCE(%s,r.institute) and r.language = COALESCE(%s,r.language) and (a.id_report,a.language) IN (select g.id_report,g.language FROM ground_truth_log_file as g inner join ground_truth_log_file as gg on g.id_report = gg.id_report and g.language = gg.language and g.gt_type = gg.gt_type and g.ns_id = gg.ns_id where g.gt_type = %s and g.ns_id = %s and gg.insertion_time != g.insertion_time and gg.username = %s and g.username =%s AND r.batch = COALESCE(%s,r.batch) AND r.institute != %s)  ",
+                        #     [str(use),'Robot', str(username), (inst), (lang), 'mentions', 'Robot', 'Robot_user',
+                        #      str(username),batch,'PUBMED'])
                         cursor.execute(
-                            "SELECT DISTINCT a.username,a.ns_id,r.id_report,r.language,r.batch,r.institute,r.name,a.start,a.stop,m.mention_text FROM report AS r INNER JOIN annotate AS a ON r.id_report = a.id_report AND r.language = a.language  INNER JOIN mention as m on m.id_report = a.id_report and m.language = a.language and m.start = a.start and m.stop = a.stop  WHERE r.name = %s and a.ns_id = %s and a.username = %s AND r.institute = COALESCE(%s,r.institute) and r.language = COALESCE(%s,r.language) and (a.id_report,a.language) IN (select g.id_report,g.language FROM ground_truth_log_file as g inner join ground_truth_log_file as gg on g.id_report = gg.id_report and g.language = gg.language and g.gt_type = gg.gt_type and g.ns_id = gg.ns_id where g.gt_type = %s and g.ns_id = %s and gg.insertion_time != g.insertion_time and gg.username = %s and g.username =%s AND r.batch = COALESCE(%s,r.batch) AND r.institute != %s)  ",
-                            [str(use),'Robot', str(username), (inst), (lang), 'mentions', 'Robot', 'Robot_user',
-                             str(username),batch,'PUBMED'])
+                            "SELECT DISTINCT a.username,a.ns_id,r.id_report,r.language,r.batch,r.institute,r.name,a.start,a.stop,m.mention_text FROM report AS r INNER JOIN annotate AS a ON r.id_report = a.id_report AND r.language = a.language  INNER JOIN mention as m on m.id_report = a.id_report and m.language = a.language and m.start = a.start and m.stop = a.stop  WHERE r.name = %s and a.ns_id = %s and a.username = %s AND r.institute = COALESCE(%s,r.institute) and r.language = COALESCE(%s,r.language) and (a.id_report,a.language) IN (select g.id_report,g.language FROM ground_truth_log_file as g where g.gt_type = %s and g.ns_id = %s and g.username =%s AND r.batch = COALESCE(%s,r.batch) AND r.institute != %s)  ",
+                            [str(use), 'Robot', str(username), (inst), (lang), 'mentions', 'Robot',
+                             str(username), batch, 'PUBMED'])
 
                     if action == 'concepts':
+                        # cursor.execute(
+                        #     "SELECT DISTINCT a.username,a.ns_id,r.id_report,r.language,r.batch,r.institute,r.name,a.concept_url,c.name,a.name FROM report AS r INNER JOIN contains AS a ON r.id_report = a.id_report AND r.language = a.language  INNER JOIN concept as c on c.concept_url = a.concept_url INNER JOIN semantic_area as s on a.name = s.name WHERE r.name = %s AND a.ns_id = %s and a.username = %s AND r.institute = COALESCE(%s,r.institute) and r.language = COALESCE(%s,r.language) and (a.id_report,a.language) IN (select g.id_report,g.language FROM ground_truth_log_file as g inner join ground_truth_log_file as gg on g.id_report = gg.id_report and g.language = gg.language and g.gt_type = gg.gt_type and g.ns_id = gg.ns_id where g.gt_type = %s and g.ns_id = %s and gg.insertion_time != g.insertion_time and gg.username = %s and g.username =%s AND r.batch = COALESCE(%s,r.batch) AND r.institute != %s)  ",
+                        #     [str(use),'Robot', str(username), (inst), (lang), 'concepts', 'Robot', 'Robot_user',
+                        #      str(username),batch,'PUBMED'])
                         cursor.execute(
-                            "SELECT DISTINCT a.username,a.ns_id,r.id_report,r.language,r.batch,r.institute,r.name,a.concept_url,c.name,a.name FROM report AS r INNER JOIN contains AS a ON r.id_report = a.id_report AND r.language = a.language  INNER JOIN concept as c on c.concept_url = a.concept_url INNER JOIN semantic_area as s on a.name = s.name WHERE r.name = %s AND a.ns_id = %s and a.username = %s AND r.institute = COALESCE(%s,r.institute) and r.language = COALESCE(%s,r.language) and (a.id_report,a.language) IN (select g.id_report,g.language FROM ground_truth_log_file as g inner join ground_truth_log_file as gg on g.id_report = gg.id_report and g.language = gg.language and g.gt_type = gg.gt_type and g.ns_id = gg.ns_id where g.gt_type = %s and g.ns_id = %s and gg.insertion_time != g.insertion_time and gg.username = %s and g.username =%s AND r.batch = COALESCE(%s,r.batch) AND r.institute != %s)  ",
-                            [str(use),'Robot', str(username), (inst), (lang), 'concepts', 'Robot', 'Robot_user',
-                             str(username),batch,'PUBMED'])
+                            "SELECT DISTINCT a.username,a.ns_id,r.id_report,r.language,r.batch,r.institute,r.name,a.concept_url,c.name,a.name FROM report AS r INNER JOIN contains AS a ON r.id_report = a.id_report AND r.language = a.language  INNER JOIN concept as c on c.concept_url = a.concept_url INNER JOIN semantic_area as s on a.name = s.name WHERE r.name = %s AND a.ns_id = %s and a.username = %s AND r.institute = COALESCE(%s,r.institute) and r.language = COALESCE(%s,r.language) and (a.id_report,a.language) IN (select g.id_report,g.language FROM ground_truth_log_file as g where g.gt_type = %s and g.ns_id = %s and g.username =%s AND r.batch = COALESCE(%s,r.batch) AND r.institute != %s)  ",
+                            [str(use), 'Robot', str(username), (inst), (lang), 'concepts', 'Robot',
+                             str(username), batch, 'PUBMED'])
 
                     if action == 'concept-mention':
+                        # cursor.execute(
+                        #     "SELECT DISTINCT a.username,a.ns_id,r.id_report,r.language,r.batch,r.institute,r.name,a.start,a.stop,m.mention_text,c.name,c.concept_url,a.name FROM report AS r INNER JOIN linked AS a ON r.id_report = a.id_report AND r.language = a.language INNER JOIN mention as m on m.id_report = a.id_report and m.language = a.language and a.start = m.start and a.stop = m.stop INNER JOIN concept as c on c.concept_url = a.concept_url inner join semantic_area as s on s.name = a.name WHERE r.name = %s AND a.ns_id = %s and a.username = %s AND r.institute = COALESCE(%s,r.institute) and r.language = COALESCE(%s,r.language) and (a.id_report,a.language) IN (select g.id_report,g.language FROM ground_truth_log_file as g inner join ground_truth_log_file as gg on g.id_report = gg.id_report and g.language = gg.language and g.gt_type = gg.gt_type and g.ns_id = gg.ns_id where g.gt_type = %s and g.ns_id = %s and gg.insertion_time != g.insertion_time and gg.username = %s and g.username =%s AND r.batch = COALESCE(%s,r.batch) AND r.institute != %s)  ",
+                        #     [str(use),'Robot', str(username), (inst), (lang), 'concept-mention', 'Robot', 'Robot_user',
+                        #      str(username),batch,'PUBMED'])
                         cursor.execute(
-                            "SELECT DISTINCT a.username,a.ns_id,r.id_report,r.language,r.batch,r.institute,r.name,a.start,a.stop,m.mention_text,c.name,c.concept_url,a.name FROM report AS r INNER JOIN linked AS a ON r.id_report = a.id_report AND r.language = a.language INNER JOIN mention as m on m.id_report = a.id_report and m.language = a.language and a.start = m.start and a.stop = m.stop INNER JOIN concept as c on c.concept_url = a.concept_url inner join semantic_area as s on s.name = a.name WHERE r.name = %s AND a.ns_id = %s and a.username = %s AND r.institute = COALESCE(%s,r.institute) and r.language = COALESCE(%s,r.language) and (a.id_report,a.language) IN (select g.id_report,g.language FROM ground_truth_log_file as g inner join ground_truth_log_file as gg on g.id_report = gg.id_report and g.language = gg.language and g.gt_type = gg.gt_type and g.ns_id = gg.ns_id where g.gt_type = %s and g.ns_id = %s and gg.insertion_time != g.insertion_time and gg.username = %s and g.username =%s AND r.batch = COALESCE(%s,r.batch) AND r.institute != %s)  ",
-                            [str(use),'Robot', str(username), (inst), (lang), 'concept-mention', 'Robot', 'Robot_user',
-                             str(username),batch,'PUBMED'])
+                            "SELECT DISTINCT a.username,a.ns_id,r.id_report,r.language,r.batch,r.institute,r.name,a.start,a.stop,m.mention_text,c.name,c.concept_url,a.name FROM report AS r INNER JOIN linked AS a ON r.id_report = a.id_report AND r.language = a.language INNER JOIN mention as m on m.id_report = a.id_report and m.language = a.language and a.start = m.start and a.stop = m.stop INNER JOIN concept as c on c.concept_url = a.concept_url inner join semantic_area as s on s.name = a.name WHERE r.name = %s AND a.ns_id = %s and a.username = %s AND r.institute = COALESCE(%s,r.institute) and r.language = COALESCE(%s,r.language) and (a.id_report,a.language) IN (select g.id_report,g.language FROM ground_truth_log_file as g where g.gt_type = %s and g.ns_id = %s and g.username =%s AND r.batch = COALESCE(%s,r.batch) AND r.institute != %s)  ",
+                            [str(use), 'Robot', str(username), (inst), (lang), 'concept-mention', 'Robot',
+                             str(username), batch, 'PUBMED'])
 
 
                 reports = cursor.fetchall()
@@ -364,29 +401,27 @@ def create_csv_to_download(report_type,annotation_mode,username,use,inst,lang,ac
                 elif annotation_mode == 'Robot':
                     if action == 'labels':
                         cursor.execute(
-                            "SELECT  a.username,a.ns_id,r.id_report,r.language,r.batch,r.institute,r.name,a.label FROM report AS r INNER JOIN associate AS a ON r.id_report = a.id_report AND r.language = a.language  WHERE r.name = %s AND a.ns_id = %s and a.username = %s AND r.institute = %s and r.language in %s and (a.id_report,a.language) IN (select g.id_report,g.language FROM ground_truth_log_file as g inner join ground_truth_log_file as gg on g.id_report = gg.id_report and g.language = gg.language and g.gt_type = gg.gt_type and g.ns_id = gg.ns_id where g.gt_type = %s and g.ns_id = %s and gg.insertion_time != g.insertion_time and gg.username = %s and g.username =%s AND r.batch =COALESCE(%s,r.batch))  ",
+                            "SELECT  a.username,a.ns_id,r.id_report,r.language,r.batch,r.institute,r.name,a.label FROM report AS r INNER JOIN associate AS a ON r.id_report = a.id_report AND r.language = a.language  WHERE r.name = %s AND a.ns_id = %s and a.username = %s AND r.institute = %s and r.language in %s and (a.id_report,a.language) IN (select g.id_report,g.language FROM ground_truth_log_file as g where g.gt_type = %s and g.ns_id = %s and g.username =%s AND r.batch =COALESCE(%s,r.batch))  ",
                             [str(use), 'Robot', str(username), 'PUBMED', tuple(languages), 'labels', 'Robot',
-                             'Robot_user', str(username),batch])
+                             str(username), batch])
 
                     if action == 'mentions':
                         cursor.execute(
-                            "SELECT DISTINCT a.username,a.ns_id,r.id_report,r.language,r.batch,r.institute,r.name,a.start,a.stop,m.mention_text FROM report AS r INNER JOIN annotate AS a ON r.id_report = a.id_report AND r.language = a.language  INNER JOIN mention as m on m.id_report = a.id_report and m.language = a.language and m.start = a.start and m.stop = a.stop  WHERE r.name = %s and  a.ns_id = %s and a.username = %s AND r.institute = %s and r.language = %s and (a.id_report,a.language) IN (select g.id_report,g.language FROM ground_truth_log_file as g inner join ground_truth_log_file as gg on g.id_report = gg.id_report and g.language = gg.language and g.gt_type = gg.gt_type and g.ns_id = gg.ns_id where g.gt_type = %s and g.ns_id = %s and gg.insertion_time != g.insertion_time and gg.username = %s and g.username =%s AND r.batch =COALESCE(%s,r.batch))  ",
+                            "SELECT DISTINCT a.username,a.ns_id,r.id_report,r.language,r.batch,r.institute,r.name,a.start,a.stop,m.mention_text FROM report AS r INNER JOIN annotate AS a ON r.id_report = a.id_report AND r.language = a.language  INNER JOIN mention as m on m.id_report = a.id_report and m.language = a.language and m.start = a.start and m.stop = a.stop  WHERE r.name = %s and  a.ns_id = %s and a.username = %s AND r.institute = %s and r.language = %s and (a.id_report,a.language) IN (select g.id_report,g.language FROM ground_truth_log_file as g where g.gt_type = %s and g.ns_id = %s and g.username =%s AND r.batch =COALESCE(%s,r.batch))  ",
                             [str(use), 'Robot', str(username), str(inst), str(lang), 'mentions', 'Robot',
-                             'Robot_user',str(username),batch])
+                             str(username), batch])
 
                     if action == 'concepts':
                         cursor.execute(
-                            "SELECT DISTINCT a.username,a.ns_id,r.id_report,r.language,r.batch,r.institute,r.name,a.concept_url,c.name,a.name FROM report AS r INNER JOIN contains AS a ON r.id_report = a.id_report AND r.language = a.language INNER JOIN concept as c on c.concept_url = a.concept_url INNER JOIN semantic_area as s on a.name = s.name WHERE r.name = %s AND a.ns_id = %s and a.username = %s AND r.institute = %s and r.language = %s and (a.id_report,a.language) IN (select g.id_report,g.language FROM ground_truth_log_file as g inner join ground_truth_log_file as gg on g.id_report = gg.id_report and g.language = gg.language and g.gt_type = gg.gt_type and g.ns_id = gg.ns_id where g.gt_type = %s and g.ns_id = %s and gg.insertion_time != g.insertion_time and gg.username = %s and g.username =%s AND r.batch =COALESCE(%s,r.batch))  ",
+                            "SELECT DISTINCT a.username,a.ns_id,r.id_report,r.language,r.batch,r.institute,r.name,a.concept_url,c.name,a.name FROM report AS r INNER JOIN contains AS a ON r.id_report = a.id_report AND r.language = a.language INNER JOIN concept as c on c.concept_url = a.concept_url INNER JOIN semantic_area as s on a.name = s.name WHERE r.name = %s AND a.ns_id = %s and a.username = %s AND r.institute = %s and r.language = %s and (a.id_report,a.language) IN (select g.id_report,g.language FROM ground_truth_log_file as g where g.gt_type = %s and g.ns_id = %s and g.username =%s AND r.batch =COALESCE(%s,r.batch))  ",
                             [str(use), 'Robot', str(username), str(inst), str(lang), 'concepts', 'Robot',
-                             'Robot_user',
-                             str(username),batch])
+                             str(username), batch])
 
                     if action == 'concept-mention':
                         cursor.execute(
-                            "SELECT DISTINCT a.username,a.ns_id,r.id_report,r.language,r.batch,r.institute,r.name,a.start,a.stop,m.mention_text,c.name,c.concept_url,a.name FROM report AS r INNER JOIN linked AS a ON r.id_report = a.id_report AND r.language = a.language INNER JOIN mention as m on m.id_report = a.id_report and m.language = a.language and a.start = m.start and a.stop = m.stop INNER JOIN concept as c on c.concept_url = a.concept_url inner join semantic_area as s on s.name = a.name WHERE r.name = %s AND a.ns_id = %s and a.username = %s AND r.institute = %s and r.language = %s and (a.id_report,a.language) IN (select g.id_report,g.language FROM ground_truth_log_file as g inner join ground_truth_log_file as gg on g.id_report = gg.id_report and g.language = gg.language and g.gt_type = gg.gt_type and g.ns_id = gg.ns_id where g.gt_type = %s and g.ns_id = %s and gg.insertion_time != g.insertion_time and gg.username = %s and g.username =%s AND r.batch =COALESCE(%s,r.batch))  ",
+                            "SELECT DISTINCT a.username,a.ns_id,r.id_report,r.language,r.batch,r.institute,r.name,a.start,a.stop,m.mention_text,c.name,c.concept_url,a.name FROM report AS r INNER JOIN linked AS a ON r.id_report = a.id_report AND r.language = a.language INNER JOIN mention as m on m.id_report = a.id_report and m.language = a.language and a.start = m.start and a.stop = m.stop INNER JOIN concept as c on c.concept_url = a.concept_url inner join semantic_area as s on s.name = a.name WHERE r.name = %s AND a.ns_id = %s and a.username = %s AND r.institute = %s and r.language = %s and (a.id_report,a.language) IN (select g.id_report,g.language FROM ground_truth_log_file as g where g.gt_type = %s and g.ns_id = %s and g.username =%s AND r.batch =COALESCE(%s,r.batch))  ",
                             [str(use), 'Robot', str(username), str(inst), str(lang), 'concept-mention', 'Robot',
-                             'Robot_user',
-                             str(username),batch])
+                             str(username), batch])
 
                 reports = cursor.fetchall()
                 reports = sorted(reports, key=lambda x: x[1])
@@ -468,12 +503,16 @@ def create_json_to_download(report_type,action,username,use,annotation_mode = No
 
         if annotation_mode != 'both':
             cursor.execute(
-                "SELECT DISTINCT r.id_report,r.language,r.institute FROM report AS r INNER JOIN ground_truth_log_file AS g ON r.id_report = g.id_report AND g.language = r.language WHERE gt_type = %s AND r.name = %s AND g.ns_id = %s AND r.language = COALESCE(%s, r.language) AND r.institute = COALESCE(%s,r.institute) AND institute != %s AND r.batch = COALESCE(%s,r.batch)",
-                [str(action), str(use), str(annotation_mode),lang, inst, 'PUBMED',batch])
+                "SELECT DISTINCT r.id_report,r.language,r.institute FROM report AS r INNER JOIN ground_truth_log_file AS g ON r.id_report = g.id_report AND g.language = r.language WHERE gt_type = %s AND r.name = %s AND g.ns_id = %s AND r.language = COALESCE(%s, r.language) AND r.institute = COALESCE(%s,r.institute) AND institute != %s AND r.batch = COALESCE(%s,r.batch) AND username = %s",
+                [str(action), str(use), str(annotation_mode), lang, inst, 'PUBMED', batch, username])
             if annotation_mode == 'Robot':
+                # cursor.execute(
+                #     "SELECT DISTINCT r.id_report,r.language,r.institute FROM report AS r INNER JOIN ground_truth_log_file AS g ON r.id_report = g.id_report AND g.language = r.language inner join ground_truth_log_file as gg on gg.id_report = g.id_report and gg.language = g.language and gg.gt_type = g.gt_type and gg.ns_id = g.ns_id WHERE gg.insertion_time != g.insertion_time and g.gt_type = %s AND r.name = %s AND g.ns_id = %s AND r.language = COALESCE(%s, r.language) AND r.institute = COALESCE(%s,r.institute) AND institute != %s and g.username != %s and gg.username = %s AND r.batch = COALESCE(%s,r.batch)",
+                #     [str(action), str(use), str(annotation_mode),lang,inst, 'PUBMED', 'Robot_user', 'Robot_user',batch])
                 cursor.execute(
-                    "SELECT DISTINCT r.id_report,r.language,r.institute FROM report AS r INNER JOIN ground_truth_log_file AS g ON r.id_report = g.id_report AND g.language = r.language inner join ground_truth_log_file as gg on gg.id_report = g.id_report and gg.language = g.language and gg.gt_type = g.gt_type and gg.ns_id = g.ns_id WHERE gg.insertion_time != g.insertion_time and g.gt_type = %s AND r.name = %s AND g.ns_id = %s AND r.language = COALESCE(%s, r.language) AND r.institute = COALESCE(%s,r.institute) AND institute != %s and g.username != %s and gg.username = %s AND r.batch = COALESCE(%s,r.batch)",
-                    [str(action), str(use), str(annotation_mode),lang,inst, 'PUBMED', 'Robot_user', 'Robot_user',batch])
+                    "SELECT DISTINCT r.id_report,r.language,r.institute FROM report AS r INNER JOIN ground_truth_log_file AS g ON r.id_report = g.id_report AND g.language = r.language WHERE g.gt_type = %s AND r.name = %s AND g.ns_id = %s AND r.language = COALESCE(%s, r.language) AND r.institute = COALESCE(%s,r.institute) AND institute != %s and g.username != %s  AND r.batch = COALESCE(%s,r.batch) AND username = %s",
+                    [str(action), str(use), str(annotation_mode), lang, inst, 'PUBMED', 'Robot_user',
+                     batch, username])
 
         ids = cursor.fetchall()
         id_rep = []
@@ -549,12 +588,15 @@ def create_json_to_download(report_type,action,username,use,annotation_mode = No
 
     elif report_type == 'pubmed':
         cursor.execute(
-            "SELECT DISTINCT r.id_report,r.language,r.institute FROM report AS r INNER JOIN ground_truth_log_file AS g ON r.id_report = g.id_report AND g.language = r.language WHERE gt_type = %s AND r.name = %s AND g.ns_id = %s AND institute = %s and r.language = %s AND r.batch = COALESCE(%s,r.batch)",
-            [str(action), str(use), str(annotation_mode),str(inst), str(lang), batch])
+            "SELECT DISTINCT r.id_report,r.language,r.institute FROM report AS r INNER JOIN ground_truth_log_file AS g ON r.id_report = g.id_report AND g.language = r.language WHERE gt_type = %s AND r.name = %s AND g.ns_id = %s AND institute = %s and r.language = %s AND r.batch = COALESCE(%s,r.batch) AND username = %s",
+            [str(action), str(use), str(annotation_mode), str(inst), str(lang), batch, username])
         if annotation_mode == 'Robot':
+            # cursor.execute(
+            #     "SELECT DISTINCT r.id_report,r.language,r.institute FROM report AS r INNER JOIN ground_truth_log_file AS g ON r.id_report = g.id_report AND g.language = r.language inner join ground_truth_log_file as gg on gg.id_report = g.id_report and gg.language = g.language and gg.gt_type = g.gt_type and gg.ns_id = g.ns_id WHERE gg.insertion_time != g.insertion_time and g.gt_type = %s AND r.name = %s AND g.ns_id = %s AND institute = %s and r.language = %s and g.username != %s and gg.username = %s AND r.batch = COALESCE(%s,r.batch)",
+            #     [str(action), str(use), str(annotation_mode), str(inst),str(lang),  'Robot_user', 'Robot_user',batch])
             cursor.execute(
-                "SELECT DISTINCT r.id_report,r.language,r.institute FROM report AS r INNER JOIN ground_truth_log_file AS g ON r.id_report = g.id_report AND g.language = r.language inner join ground_truth_log_file as gg on gg.id_report = g.id_report and gg.language = g.language and gg.gt_type = g.gt_type and gg.ns_id = g.ns_id WHERE gg.insertion_time != g.insertion_time and g.gt_type = %s AND r.name = %s AND g.ns_id = %s AND institute = %s and r.language = %s and g.username != %s and gg.username = %s AND r.batch = COALESCE(%s,r.batch)",
-                [str(action), str(use), str(annotation_mode), str(inst),str(lang),  'Robot_user', 'Robot_user',batch])
+                "SELECT DISTINCT r.id_report,r.language,r.institute FROM report AS r INNER JOIN ground_truth_log_file AS g ON r.id_report = g.id_report AND g.language = r.language WHERE  g.gt_type = %s AND r.name = %s AND g.ns_id = %s AND institute = %s and r.language = %s and g.username != %s  AND r.batch = COALESCE(%s,r.batch) AND username = %s",
+                [str(action), str(use), str(annotation_mode), str(inst), str(lang), 'Robot_user', batch, username])
         ids = cursor.fetchall()
         id_rep = []
         for el in ids:
@@ -978,7 +1020,7 @@ def download_report_gt(report_list,action,mode=None,format = None,response = Non
                 cursor = connection.cursor()
                 if action == 'labels':
                     cursor.execute(
-                        "SELECT a.username,a.ns_id,r.id_report,r.language,r.institute,r.name, a.label FROM report AS r INNER JOIN associate AS a ON r.id_report = a.id_report AND r.language = a.language WHERE a.id_report = %s AND r.language = %s  AND ns_id = %s ",
+                        "SELECT a.username,a.ns_id,r.id_report,r.language,r.batch,r.institute,r.name, a.label FROM report AS r INNER JOIN associate AS a ON r.id_report = a.id_report AND r.language = a.language WHERE a.id_report = %s AND r.language = %s  AND ns_id = %s ",
                         [str(report['id_report']), str(report['language']), 'Human'])
                     reports_human_labels = cursor.fetchall()
 
@@ -991,7 +1033,7 @@ def download_report_gt(report_list,action,mode=None,format = None,response = Non
                         ins_arr.append(el.insertion_time)
                     if len(ins_arr) > 0:
                         cursor.execute(
-                            "SELECT a.username,a.ns_id,r.id_report,r.language,r.institute,r.name, a.label FROM report AS r INNER JOIN associate AS a ON r.id_report = a.id_report AND r.language = a.language WHERE a.id_report = %s AND r.language = %s  AND ns_id = %s AND a.insertion_time not in %s",
+                            "SELECT a.username,a.ns_id,r.id_report,r.language,r.batch,r.institute,r.name, a.label FROM report AS r INNER JOIN associate AS a ON r.id_report = a.id_report AND r.language = a.language WHERE a.id_report = %s AND r.language = %s  AND ns_id = %s AND a.insertion_time not in %s",
                             [str(report['id_report']), str(report['language']), 'Robot',tuple(ins_arr)])
                         reports_robot_labels = cursor.fetchall()
                     if mode == 'both':
@@ -1003,7 +1045,7 @@ def download_report_gt(report_list,action,mode=None,format = None,response = Non
 
                 if action == 'mentions':
                    cursor.execute(
-                       "SELECT a.username,a.ns_id,r.id_report,r.language,r.institute,r.name,a.start,a.stop,m.mention_text FROM report AS r INNER JOIN annotate AS a ON r.id_report = a.id_report AND r.language = a.language INNER JOIN mention AS m ON m.id_report = a.id_report AND m.language = a.language AND a.start = m.start AND a.stop = m.stop WHERE r.id_report = %s AND r.language = %s  AND ns_id = %s",
+                       "SELECT a.username,a.ns_id,r.id_report,r.language,r.batch,r.institute,r.name,a.start,a.stop,m.mention_text FROM report AS r INNER JOIN annotate AS a ON r.id_report = a.id_report AND r.language = a.language INNER JOIN mention AS m ON m.id_report = a.id_report AND m.language = a.language AND a.start = m.start AND a.stop = m.stop WHERE r.id_report = %s AND r.language = %s  AND ns_id = %s",
                        [str(report['id_report']), str(report['language']), 'Human'])
                    reports_human_mentions = cursor.fetchall()
                    agent_ns = NameSpace.objects.get(ns_id='Robot')
@@ -1016,7 +1058,7 @@ def download_report_gt(report_list,action,mode=None,format = None,response = Non
                        ins_arr.append(el.insertion_time)
                    if len(ins_arr) > 0:
                        cursor.execute(
-                           "SELECT a.username,a.ns_id,r.id_report,r.language,r.institute,r.name,a.start,a.stop,m.mention_text FROM report AS r INNER JOIN annotate AS a ON r.id_report = a.id_report AND r.language = a.language INNER JOIN mention AS m ON m.id_report = a.id_report AND m.language = a.language AND a.start = m.start AND a.stop = m.stop WHERE r.id_report = %s AND r.language = %s  AND ns_id = %s and a.insertion_time not in %s",
+                           "SELECT a.username,a.ns_id,r.id_report,r.language,r.batch,r.institute,r.name,a.start,a.stop,m.mention_text FROM report AS r INNER JOIN annotate AS a ON r.id_report = a.id_report AND r.language = a.language INNER JOIN mention AS m ON m.id_report = a.id_report AND m.language = a.language AND a.start = m.start AND a.stop = m.stop WHERE r.id_report = %s AND r.language = %s  AND ns_id = %s and a.insertion_time not in %s",
                            [str(report['id_report']), str(report['language']), 'Robot',tuple(ins_arr)])
                        reports_robot_mentions = cursor.fetchall()
 
@@ -1028,7 +1070,7 @@ def download_report_gt(report_list,action,mode=None,format = None,response = Non
                        reports = reports_robot_mentions
                 elif action == 'concepts':
                    cursor.execute(
-                       "SELECT a.username,a.ns_id,r.id_report,r.language,r.institute,r.name,c.concept_url, c.name, a.name FROM report AS r INNER JOIN contains AS a ON r.id_report = a.id_report  AND r.language = a.language INNER JOIN concept AS c ON c.concept_url = a.concept_url WHERE r.id_report = %s AND r.language = %s  AND ns_id = %s",
+                       "SELECT a.username,a.ns_id,r.id_report,r.language,r.batch,r.institute,r.name,c.concept_url, c.name, a.name FROM report AS r INNER JOIN contains AS a ON r.id_report = a.id_report  AND r.language = a.language INNER JOIN concept AS c ON c.concept_url = a.concept_url WHERE r.id_report = %s AND r.language = %s  AND ns_id = %s",
                        [str(report['id_report']), str(report['language']), 'Human'])
                    reports_human_concepts = cursor.fetchall()
                    agent_ns = NameSpace.objects.get(ns_id='Robot')
@@ -1041,7 +1083,7 @@ def download_report_gt(report_list,action,mode=None,format = None,response = Non
                        ins_arr.append(el.insertion_time)
                    if len(ins_arr) > 0:
                        cursor.execute(
-                           "SELECT a.username,a.ns_id,r.id_report,r.language,r.institute,r.name,c.concept_url, c.name, a.name FROM report AS r INNER JOIN contains AS a ON r.id_report = a.id_report  AND r.language = a.language INNER JOIN concept AS c ON c.concept_url = a.concept_url WHERE r.id_report = %s AND r.language = %s  AND ns_id = %s and a.insertion_time not in %s",
+                           "SELECT a.username,a.ns_id,r.id_report,r.language,r.batch,r.institute,r.name,c.concept_url, c.name, a.name FROM report AS r INNER JOIN contains AS a ON r.id_report = a.id_report  AND r.language = a.language INNER JOIN concept AS c ON c.concept_url = a.concept_url WHERE r.id_report = %s AND r.language = %s  AND ns_id = %s and a.insertion_time not in %s",
                            [str(report['id_report']), str(report['language']), 'Robot',tuple(ins_arr)])
                        reports_robot_concepts = cursor.fetchall()
 
@@ -1054,7 +1096,7 @@ def download_report_gt(report_list,action,mode=None,format = None,response = Non
 
                 elif action == 'concept-mention':
                     cursor.execute(
-                        "SELECT a.username,a.ns_id,r.id_report,r.language,r.institute,r.name,a.start,a.stop,m.mention_text,c.name,c.concept_url,a.name FROM report AS r INNER JOIN linked AS a ON r.id_report = a.id_report AND r.language = a.language INNER JOIN concept as c ON a.concept_url = c.concept_url INNER JOIN mention AS m ON m.id_report = a.id_report AND m.language = a.language AND a.start = m.start AND a.stop = m.stop WHERE r.id_report = %s AND r.language = %s AND ns_id = %s",
+                        "SELECT a.username,a.ns_id,r.id_report,r.language,r.batch,r.institute,r.name,a.start,a.stop,m.mention_text,c.name,c.concept_url,a.name FROM report AS r INNER JOIN linked AS a ON r.id_report = a.id_report AND r.language = a.language INNER JOIN concept as c ON a.concept_url = c.concept_url INNER JOIN mention AS m ON m.id_report = a.id_report AND m.language = a.language AND a.start = m.start AND a.stop = m.stop WHERE r.id_report = %s AND r.language = %s AND ns_id = %s",
                         [str(report['id_report']), str(report['language']), 'Human'])
                     reports_human_linking = cursor.fetchall()
                     agent_ns = NameSpace.objects.get(ns_id='Robot')
@@ -1067,7 +1109,7 @@ def download_report_gt(report_list,action,mode=None,format = None,response = Non
                         ins_arr.append(el.insertion_time)
                     if len(ins_arr) >0:
                         cursor.execute(
-                            "SELECT a.username,a.ns_id,r.id_report,r.language,r.institute,r.name,a.start,a.stop,m.mention_text,c.name,c.concept_url,a.name FROM report AS r INNER JOIN linked AS a ON r.id_report = a.id_report AND r.language = a.language INNER JOIN concept as c ON a.concept_url = c.concept_url INNER JOIN mention AS m ON m.id_report = a.id_report AND m.language = a.language AND a.start = m.start AND a.stop = m.stop WHERE r.id_report = %s AND r.language = %s AND ns_id = %s and a.insertion_time not in %s",
+                            "SELECT a.username,a.ns_id,r.id_report,r.language,r.batch,r.institute,r.name,a.start,a.stop,m.mention_text,c.name,c.concept_url,a.name FROM report AS r INNER JOIN linked AS a ON r.id_report = a.id_report AND r.language = a.language INNER JOIN concept as c ON a.concept_url = c.concept_url INNER JOIN mention AS m ON m.id_report = a.id_report AND m.language = a.language AND a.start = m.start AND a.stop = m.stop WHERE r.id_report = %s AND r.language = %s AND ns_id = %s and a.insertion_time not in %s",
                             [str(report['id_report']), str(report['language']), 'Robot',tuple(ins_arr)])
                         reports_robot_linking = cursor.fetchall()
                     if mode == 'both':
@@ -1085,7 +1127,7 @@ def download_report_gt(report_list,action,mode=None,format = None,response = Non
                         else:
                             row[1] = 'Automatic'
                         if action == 'mentions' or action == 'concept-mention':
-                            row[8] = re.sub('[^a-zA-Z0-9n\-_/\' ]+', '', row[8])
+                            row[9] = re.sub('[^a-zA-Z0-9n\-_/\' ]+', '', row[9])
                         row_list.append(row)
 
 

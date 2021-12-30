@@ -111,15 +111,15 @@ function ChangeMemberGT(props){
         but2.current.className = 'btn btn-outline-primary btn-sm'
         but3.current.className = 'btn btn-outline-primary btn-sm'
 
-        axios.get("http://0.0.0.0:8000/get_users_list")
-            .then(response => {
-                if(response.data.length>0){
-                    console.log(response.data)
-                    SetUsersList(response.data)
-                }})
-            .catch(error=>{
-                console.log(error)
-            })
+        // axios.get("http://0.0.0.0:8000/get_users_list")
+        //     .then(response => {
+        //         if(response.data.length>0){
+        //             console.log(response.data)
+        //             SetUsersList(response.data)
+        //         }})
+        //     .catch(error=>{
+        //         console.log(error)
+        //     })
 
         axios.get("http://0.0.0.0:8000/check_auto_presence_for_configuration",
             {params: {batch:BatchNumber,usecase:UseCase,institute:Institute,language:Language,report_type:ReportType}})
@@ -285,11 +285,11 @@ function ChangeMemberGT(props){
             username_to_call = UserChosen
 
         }
-        console.log('CONCEPTS',ClickBottomMenu)
-        console.log('CONCEPTS',username_to_call)
-        console.log('CONCEPTS',ns_id)
-        console.log('CONCEPTS',ShowAutoAnn)
-        console.log('CONCEPTS',ShowMemberGt)
+        // console.log('CONCEPTS',ClickBottomMenu)
+        // console.log('CONCEPTS',username_to_call)
+        // console.log('CONCEPTS',ns_id)
+        // console.log('CONCEPTS',ShowAutoAnn)
+        // console.log('CONCEPTS',ShowMemberGt)
 
         if(ClickBottomMenu){
             SetLoadingChangeGT(true)
@@ -297,10 +297,10 @@ function ChangeMemberGT(props){
             axios.get("http://0.0.0.0:8000/report_start_end", {params: {ns_id:ns_id,report_id: Reports[Index].id_report.toString()}}).then(response => {
                 SetFinalCount(response.data['final_count']);SetFinalCountReached(false);SetChangeButton(true)
             })
-            // axios.get("http://0.0.0.0:8000/get_fields",{params:{ns_id:ns_id}}).then(response => {SetFields(response.data['fields']);SetFieldsToAnn(response.data['fields_to_ann']);})
+            axios.get("http://0.0.0.0:8000/get_fields",{params:{ns_id:ns_id}}).then(response => {SetFields(response.data['fields']);SetFieldsToAnn(response.data['fields_to_ann']);})
 
             if(Action === 'labels' ){
-                // axios.get("http://0.0.0.0:8000/annotationlabel/all_labels",{params:{ns_id:ns_id}}).then(response => {setLabels(response.data['labels'])})
+                axios.get("http://0.0.0.0:8000/annotationlabel/all_labels",{params:{ns_id:ns_id}}).then(response => {setLabels(response.data['labels'])})
                 axios.get("http://0.0.0.0:8000/annotationlabel/user_labels", {params: {language:Language,ns_id:ns_id,username:username_to_call,report_id: Reports[Index].id_report.toString()}}).then(response => {
                     setLabels_to_show(response.data[Action.toString()]);
                     SetLoadingChangeGT(false);console.log('load false 1');SetMakeReq(false);console.log('falso');
@@ -309,8 +309,8 @@ function ChangeMemberGT(props){
             }
             else if(Action === 'concepts' ){
                 // console.log('CONCEPTS')
-                // axios.get("http://0.0.0.0:8000/get_semantic_area",{params: {ns_id:ns_id}}).then(response => SetSemanticArea(response.data['area']))
-                // axios.get("http://0.0.0.0:8000/conc_view",{params: {ns_id:ns_id}}).then(response => {SetConcepts(response.data['concepts'])})
+                axios.get("http://0.0.0.0:8000/get_semantic_area",{params: {ns_id:ns_id}}).then(response => SetSemanticArea(response.data['area']))
+                axios.get("http://0.0.0.0:8000/conc_view",{params: {ns_id:ns_id}}).then(response => {SetConcepts(response.data['concepts'])})
                 axios.get("http://0.0.0.0:8000/contains", {params: {language:Language,ns_id:ns_id,username:username_to_call,report_id: Reports[Index].id_report.toString()}}).then(response => {setSelectedConcepts(response.data);SetLoadingChangeGT(false);console.log('load false 2');})
                 SetMakeReq(false)
             }
@@ -613,44 +613,45 @@ function ChangeMemberGT(props){
         <div className="buttongroup">
 
             <ButtonGroup>
-                    <OverlayTrigger
-                        key='top'
-                        placement='top'
-                        overlay={
-                            <Tooltip id={`tooltip-top'`}>
-                                Your annotation
-                            </Tooltip>
-                        }
-                    >
-                    <Button disabled = {UsersList.length < 2 && RobotPresence === false} ref ={but1} onClick={()=>UserGT()} id='current' size = 'sm' variant="secondary">
+                <OverlayTrigger
+                    key='top'
+                    placement='top'
+                    overlay={
+                        <Tooltip id={`tooltip-top'`}>
+                            Your annotation
+                        </Tooltip>
+                    }
+                >
+                    <Button  ref ={but1} onClick={()=>UserGT()} id='current' size = 'sm' variant="secondary">
                         <FontAwesomeIcon icon={faUser} />
                     </Button>
-                    </OverlayTrigger>
-                    <OverlayTrigger
-                        key='top'
-                        placement='top'
-                        overlay={
-                            <Tooltip id={`tooltip-top'`}>
-                                Robot's annotation
-                            </Tooltip>
-                        }
-                    >
-                        <Button disabled={RobotPresence === false || Annotation === 'Automatic' || Language !== 'english'} ref={but2} onClick={() => RobotGT()} id='robot' size='sm' variant="secondary">
-                            <FontAwesomeIcon icon={faRobot}/>
-                        </Button></OverlayTrigger>
-                    <OverlayTrigger
-                        key='top'
-                        placement='top'
-                        overlay={
-                            <Tooltip id={`tooltip-top'`}>
-                                {UserChosen}'s annotation
-                            </Tooltip>
-                        }
-                    >
+                </OverlayTrigger>
+                <OverlayTrigger
+                    key='top'
+                    placement='top'
+                    overlay={
+                        <Tooltip id={`tooltip-top'`}>
+                            Robot's annotation
+                        </Tooltip>
+                    }
+                >
+                    {/*<Button disabled={RobotPresence === false || Annotation === 'Automatic' || Language !== 'English'} ref={but2} onClick={() => RobotGT()} id='robot' size='sm' variant="secondary">*/}
+                    <Button disabled={RobotPresence === false || Annotation === 'Automatic' || Language !== 'english'} ref={but2} onClick={() => RobotGT()} id='robot' size='sm' variant="secondary">
+                        <FontAwesomeIcon icon={faRobot}/>
+                    </Button></OverlayTrigger>
+                <OverlayTrigger
+                    key='top'
+                    placement='top'
+                    overlay={
+                        <Tooltip id={`tooltip-top'`}>
+                            {UserChosen}'s annotation
+                        </Tooltip>
+                    }
+                >
                     <Button disabled={UsersListAnnotations.length === 0} ref = {but3} onClick={()=>MemberGT()} id='mate' size = 'sm' variant="secondary">
                         <FontAwesomeIcon icon={faUserEdit} />
                     </Button></OverlayTrigger>
-                </ButtonGroup>
+            </ButtonGroup>
         </div>
     );
 

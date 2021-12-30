@@ -53,27 +53,18 @@ function SideBar(props){
                      type='button' ><a className='logout_a' style={{'font-size':'1rem'}} href="http://127.0.0.1:8000/logout"> <Badge pill variant="dark">
                                             Logout <FontAwesomeIcon icon={faSignOutAlt}/></Badge></a></button></div>
                 <hr />
-                    {/*<Link onClick={()=>SetShowBar(false)} to="/index">Home</Link>*/}
-                    {/*<Link onClick={()=>SetShowBar(false)} to="/my_stats">My stats</Link>*/}
-                    {/*<Link onClick={()=>SetShowBar(false)} to="/tutorial">Tutorial</Link>*/}
-                    {/*<Link onClick={()=>SetShowBar(false)} to="/credits">Credits</Link>*/}
-                    {/*<Link onClick={()=>SetShowBar(false)} to="/uploadFile">Upload/Transfer annotations</Link>*/}
-                    {/*<hr/>*/}
-                    {/*{(Admin === Username || (Admin === '' && Username === 'Test') || Username === 'Test') &&<div> <Link onClick={()=>SetShowBar(false)} to="/infoAboutConfiguration">Configure</Link>*/}
-
-                    {/*    <Link onClick={()=>SetShowBar(false)} to="/reports_stats">Reports' stats</Link>*/}
-                    {/*    <Link onClick={()=>SetShowBar(false)} to="/team_members_stats">Members' stats</Link>*/}
-
-                    <Link onClick={()=>SetShowBar(false)} to="/exatag/index">Home</Link>
-                    <Link onClick={()=>SetShowBar(false)} to="/exatag/my_stats">My stats</Link>
-                    <Link onClick={()=>SetShowBar(false)} to="/exatag/tutorial">Tutorial</Link>
-                    <Link onClick={()=>SetShowBar(false)} to="/exatag/credits">Credits</Link>
-                    <Link onClick={()=>SetShowBar(false)} to="/exatag/uploadFile">Upload/Transfer annotations</Link>
+                    <Link onClick={()=>SetShowBar(false)} to="/index">Home</Link>
+                    <Link onClick={()=>SetShowBar(false)} to="/my_stats">My stats</Link>
+                    <Link onClick={()=>SetShowBar(false)} to="/tutorial">Tutorial</Link>
+                    <Link onClick={()=>SetShowBar(false)} to="/credits">Credits</Link>
+                    <Link onClick={()=>SetShowBar(false)} to="/uploadFile">Upload/Transfer annotations</Link>
                     <hr/>
                     {(Admin === Username || (Admin === '' && Username === 'Test') || Username === 'Test') &&<div> <Link onClick={()=>SetShowBar(false)} to="/infoAboutConfiguration">Configure</Link>
 
-                        <Link onClick={()=>SetShowBar(false)} to="/exatag/reports_stats">Reports' stats</Link>
-                        <Link onClick={()=>SetShowBar(false)} to="/exatag/team_members_stats">Members' stats</Link>
+                        <Link onClick={()=>SetShowBar(false)} to="/reports_stats">Reports' stats</Link>
+                        <Link onClick={()=>SetShowBar(false)} to="/team_members_stats">Members' stats</Link>
+
+
                     </div>}
 
 

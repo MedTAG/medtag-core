@@ -14,7 +14,7 @@ import Spinner from "react-bootstrap/Spinner";
 // axios.defaults.xsrfHeaderName = "X-CSRFTOKEN";
 function ReportToText(props) {
 
-    const { index,institute,showreporttext,loadingMentions,color,tokens,fields,mentionsList,loadingColors,showannotations,finalcount,fieldsToAnn,reached,orderVar, errorSnack,reports, reportString, insertionTimes } = useContext(AppContext);
+    const { index,institute,selectedLanguage,selectedUse,selectedInstitute,showreporttext,loadingMentions,color,tokens,fields,mentionsList,loadingColors,showannotations,finalcount,fieldsToAnn,reached,orderVar, errorSnack,reports, reportString, insertionTimes } = useContext(AppContext);
     const [Reports,SetReports] = useState([])
     const [ReportString, setReportsString] = reportString;
     //Report sections
@@ -23,16 +23,21 @@ function ReportToText(props) {
     const [FinalCount, SetFinalCount] = finalcount;
     const [Fields, SetFields] = fields;
     const [FieldsToAnn, SetFieldsToAnn] = fieldsToAnn;
-
+    const [SelectedLang,SetSelectedLang] = selectedLanguage
+    const [SelectedInstitute,SetSelectedInstitute] =selectedInstitute
+    const [SelectedUse,SetSelectedUse] = selectedUse
     const [showReportText,SetshowReportText] = showreporttext;
 
 
     useEffect(()=>{
-        setReportsString('')
-        axios.get("http://0.0.0.0:8000/get_reports", {params: {all: 'all'}}).then(response => {
-            SetReports(response.data['report']);})
+        if(SelectedUse !== '' && SelectedInstitute !== '' && SelectedLang !== ''){
+            setReportsString('')
+            axios.get("http://0.0.0.0:8000/get_reports", {params: {all: 'all',usec:SelectedUse,lang:SelectedLang,institute:SelectedInstitute}}).then(response => {
+                SetReports(response.data['report']);})
+        }
 
-    },[])
+
+    },[SelectedUse,SelectedInstitute,SelectedLang])
 
 
 
@@ -55,11 +60,12 @@ function ReportToText(props) {
 
     useEffect(()=>{
         if(Reports.length > 0){
-
+            console.log('report',props.id_report)
+            console.log('report language',props.language)
             if(props.id_report !== false){
                 Reports.map((report,ind)=>{
-                    if(report.id_report === props.id_report){
-
+                    if(report.id_report === props.id_report && report.language === props.language){
+                        console.log('report',Reports[ind])
                         SetNewInd(ind)
                     }
 
@@ -69,7 +75,7 @@ function ReportToText(props) {
 
 
 
-    },[props.id_report,Reports])
+    },[props.id_report,Reports,props.language])
 
 
 
@@ -80,9 +86,6 @@ function ReportToText(props) {
             }
         }
     },[newInd])
-
-
-
 
 
 
