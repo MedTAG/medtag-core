@@ -355,7 +355,7 @@ def create_auto_gt_1(usecase,fields,report_key,batch):
                                 concept_area = concept[2]
                                 if concept_url == 'SevereColonDysplasia':
                                     concept_url = 'https://w3id.org/examode/ontology/SevereColonDysplasia'
-                                elif concept == 'uterusNOS':
+                                elif concept_url == 'uterusNOS':
                                     concept_url = 'https://w3id.org/examode/ontology/UterusNOS'
                                 concept_row = Concept.objects.filter(concept_url=concept_url)
                                 if concept_row.exists():

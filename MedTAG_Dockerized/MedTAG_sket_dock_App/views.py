@@ -477,7 +477,7 @@ def annotationlabel(request,action=None):
             else:
                 return JsonResponse(json_response)
         else:
-            json_response = {'msg': 'nothing to do'}
+            json_response = restore_robot_annotation(report1, 'labels', user)
             return JsonResponse(json_response)
 
 
@@ -711,8 +711,9 @@ def mention_insertion(request,action=None):
             else:
                 return JsonResponse(json_response)
         else:
-            json_resp = {'msg':'ok'}
-            return JsonResponse(json_resp)
+            json_response = restore_robot_annotation(report1, 'mentions', user)
+            # json_response = {'message': 'Nothing to do'}
+            return JsonResponse(json_response)
 
 
     elif request.method == 'POST' and action.lower() == 'insert':
@@ -1020,8 +1021,9 @@ def insert_link(request,action=None):
             else:
                 return JsonResponse(json_response)
         else:
-            json_resp = {'msg':'ok'}
-            return JsonResponse(json_resp)
+            json_response = restore_robot_annotation(report1, 'concept-mention', user)
+            # json_response = {'message': 'Nothing to do'}
+            return JsonResponse(json_response)
 
 
     elif request.method == 'POST' and action.lower() == 'insert':
@@ -2182,7 +2184,7 @@ def report_start_end(request):
     json_keys_to_ann = data['fields_to_ann']
     json_keys = (data['all_fields'])
 
-    language = request.session['language']
+    language = request.GET.get('language',request.session['language'])
     request_auto = request.GET.get('ns_id',None)
     if request_auto is not None and request_auto == 'Robot' and request.session['institute'] != 'PUBMED':
         # In this case we require automatic annotation: the keys to annotate change
