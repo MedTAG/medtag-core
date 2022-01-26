@@ -143,14 +143,14 @@ def aux_start_end(report_field,mention,use,report):
         if element_1.startswith('"') and element_1.endswith('"'):
             # element_1 = element_1.replace('"','')
             element_1 = element_1[1:-1]
-        print(report_string)
+        # print(report_string)
         before_element = report_string.split(report_field)[0]
         after_element = report_string.split(report_field)[1]
         until_element_value = len(before_element) + len(report_field) + len(after_element.split(str(element_1))[0])
         # start_element = until_element_value + 1
         start_element = until_element_value
         end_element = start_element + len(str(element_1)) - 1
-        print(report_string[start_element:end_element])
+        # print(report_string[start_element:end_element])
         mention_1 = inverse_sanitizers(use, report_string, start_element, end_element, mention)
         # before_mention_element = str(element_1).split(mention_1)[0]
         # start_mention_element = until_element_value + len(before_mention_element) + 1
@@ -162,14 +162,14 @@ def aux_start_end(report_field,mention,use,report):
                                                  language=report.language)
         split_su_elemento = element_1.split(' ')
         mention_split = mention_1.split(' ')
-        print(split_su_elemento)
+        # print(split_su_elemento)
         no_collision = True
         indices = [i for i, e in enumerate(split_su_elemento) if mention_split[0] in e]
         for index in indices:
-            print(split_su_elemento[index])
+            # print(split_su_elemento[index])
             start = start_element
             for ii in range(0,index):
-                print(split_su_elemento[ii],str(len(split_su_elemento[ii])))
+                # print(split_su_elemento[ii],str(len(split_su_elemento[ii])))
                 start = start + len(split_su_elemento[ii]) + 1
             # print(start)
             # end = start + len(split_su_elemento[index]) - 1
@@ -184,7 +184,7 @@ def aux_start_end(report_field,mention,use,report):
                         # print(split_su_elemento[count_ind])
                         current_len = current_len + len(split_su_elemento[count_ind]) + 1
                         end = start + current_len - 1
-                        print(report_string[end])
+                        # print(report_string[end])
                         count_ind = count_ind + 1
                         # print(element_1[start:end])
 
@@ -214,11 +214,11 @@ def aux_start_end(report_field,mention,use,report):
                     # else:
                     #     no_collision = True
 
-                print(mention_1)
-                print(report_string[start:end])
-                print(report_string[start:end])
+                # print(mention_1)
+                # print(report_string[start:end])
+                # print(report_string[start:end])
                 if no_collision:
-                    return start, end, report_string[start-1:end+1]
+                    return start, end, mention_1
     return None,None,None
 
 
