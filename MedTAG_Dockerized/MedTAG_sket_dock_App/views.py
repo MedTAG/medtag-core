@@ -2186,7 +2186,7 @@ def report_start_end(request):
 
     language = request.GET.get('language',request.session['language'])
     request_auto = request.GET.get('ns_id',None)
-    if request_auto is not None and request_auto == 'Robot' and request.session['institute'] != 'PUBMED':
+    if request.session['mode'] == 'Robot' or (request_auto is not None and request_auto == 'Robot' and request.session['institute'] != 'PUBMED'):
         # In this case we require automatic annotation: the keys to annotate change
         workpath = os.path.dirname(os.path.abspath(__file__))  # Returns the Path your .py file is in
         with open(os.path.join(workpath,'./automatic_annotation/auto_fields/auto_fields.json')) as out:

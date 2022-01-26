@@ -64,6 +64,71 @@ def map_labels(usecase,label):
             return "No cancer"
 
 
+# def aux_start_end(report_field,mention,use,report):
+#
+#     """This method returns the start and end char of the mention found by sket."""
+#
+#     # report_json = Report.objects.get(id_report=report, language='english')
+#     languages = ['English','english']
+#     report_json = report.report_json
+#     report_string = json.dumps(report_json)
+#     if (report_json.get(report_field) is not None and report_json.get(report_field) != ""):
+#         element = report_json[report_field]
+#         element_1 = json.dumps(element)
+#         if element_1.startswith('"') and element_1.endswith('"'):
+#             element_1 = element_1.replace('"','')
+#
+#         before_element = report_string.split(report_field)[0]
+#         after_element = report_string.split(report_field)[1]
+#         until_element_value = len(before_element) + len(report_field) + len(after_element.split(str(element_1))[0])
+#         start_element = until_element_value + 1
+#         end_element = start_element + len(str(element_1)) - 1
+#         mention_1 = inverse_sanitizers(use, report_string, start_element, end_element, mention)
+#         before_mention_element = str(element_1).split(mention_1)[0]
+#         start_mention_element = until_element_value + len(before_mention_element) + 1
+#         end_mention_element = start_mention_element + len(str(mention_1)) - 1
+#
+#         mention_3 = mention_1
+#         element_2 = re.sub("[^0-9a-zA-Z]"," ",element_1) # mi serve per non far tirare l'eccezione a regex
+#         mention_2 = re.sub("[^0-9a-zA-Z]", " ", mention_1)
+#         if element_1.count(mention_1) > 0:
+#             starts = [m.start() for m in re.finditer(mention_2, element_2)]
+#             no_collision = True
+#             for start in starts:
+#                 mention_3 = mention_1
+#                 # mention reprocessing: example: (mild in this case re throws an exception: it want (mild)
+#                 int_last_char = start + len(mention_1) -1
+#                 int_next_of_last = int_last_char+1
+#                 while int_next_of_last <= len(element_1)-1 and element_1[int_next_of_last] != ' ':
+#                     last_next_char = element_1[int_next_of_last]
+#                     mention_3 = mention_3 + last_next_char
+#                     # mention_3 = mention_1 + last_next_char
+#                     int_next_of_last += 1
+#
+#                 rob_ns = NameSpace.objects.get(ns_id='Robot')
+#                 user_rob = User.objects.get(username='Robot_user', ns_id=rob_ns)
+#                 mentions_annos = Annotate.objects.filter(username=user_rob, ns_id=rob_ns, id_report=report,
+#                                                          language=report.language)
+#
+#                 start_ment = int(start_element) + int(start)
+#                 stop_ment = int(start_ment) + len(mention_3) - 1  # nella mention devo incontrare il primo spazio se no è troncata e può dare problemi
+#                 start_mention_element = start_ment
+#                 end_mention_element = stop_ment
+#
+#                 if len(starts) > 1:
+#                     for annot in mentions_annos:
+#                         mention = Mention.objects.get(start=annot.start_id,stop = annot.stop, id_report = report, language = annot.language)
+#                         stop = mention.stop
+#                         if (int(start_ment) >= int(mention.start) and int(start_ment) <= int(stop)) or (int(stop_ment) >= int(mention.start) and int(stop_ment) <= int(stop)):
+#                             no_collision = False
+#                         else:
+#                             no_collision = True
+#                             break
+#                 if no_collision:
+#                     break
+#
+#         return start_mention_element,end_mention_element,mention_3
+
 def aux_start_end(report_field,mention,use,report):
 
     """This method returns the start and end char of the mention found by sket."""
@@ -76,58 +141,86 @@ def aux_start_end(report_field,mention,use,report):
         element = report_json[report_field]
         element_1 = json.dumps(element)
         if element_1.startswith('"') and element_1.endswith('"'):
-            element_1 = element_1.replace('"','')
-
+            # element_1 = element_1.replace('"','')
+            element_1 = element_1[1:-1]
+        print(report_string)
         before_element = report_string.split(report_field)[0]
         after_element = report_string.split(report_field)[1]
         until_element_value = len(before_element) + len(report_field) + len(after_element.split(str(element_1))[0])
-        start_element = until_element_value + 1
+        # start_element = until_element_value + 1
+        start_element = until_element_value
         end_element = start_element + len(str(element_1)) - 1
+        print(report_string[start_element:end_element])
         mention_1 = inverse_sanitizers(use, report_string, start_element, end_element, mention)
-        before_mention_element = str(element_1).split(mention_1)[0]
-        start_mention_element = until_element_value + len(before_mention_element) + 1
-        end_mention_element = start_mention_element + len(str(mention_1)) - 1
+        # before_mention_element = str(element_1).split(mention_1)[0]
+        # start_mention_element = until_element_value + len(before_mention_element) + 1
+        # end_mention_element = start_mention_element + len(str(mention_1)) - 1
 
-        mention_3 = mention_1
-        element_2 = re.sub("[^0-9a-zA-Z]"," ",element_1) # mi serve per non far tirare l'eccezione a regex
-        mention_2 = re.sub("[^0-9a-zA-Z]", " ", mention_1)
-        if element_1.count(mention_1) > 0:
-            starts = [m.start() for m in re.finditer(mention_2, element_2)]
-            no_collision = True
-            for start in starts:
-                mention_3 = mention_1
-                # mention reprocessing: example: (mild in this case re throws an exception: it want (mild)
-                int_last_char = start + len(mention_1) -1
-                int_next_of_last = int_last_char+1
-                while int_next_of_last <= len(element_1)-1 and element_1[int_next_of_last] != ' ':
-                    last_next_char = element_1[int_next_of_last]
-                    mention_3 = mention_3 + last_next_char
-                    # mention_3 = mention_1 + last_next_char
-                    int_next_of_last += 1
+        rob_ns = NameSpace.objects.get(ns_id='Robot')
+        user_rob = User.objects.get(username='Robot_user', ns_id=rob_ns)
+        mentions_annos = Annotate.objects.filter(username=user_rob, ns_id=rob_ns, id_report=report,
+                                                 language=report.language)
+        split_su_elemento = element_1.split(' ')
+        mention_split = mention_1.split(' ')
+        print(split_su_elemento)
+        no_collision = True
+        indices = [i for i, e in enumerate(split_su_elemento) if mention_split[0] in e]
+        for index in indices:
+            print(split_su_elemento[index])
+            start = start_element
+            for ii in range(0,index):
+                print(split_su_elemento[ii],str(len(split_su_elemento[ii])))
+                start = start + len(split_su_elemento[ii]) + 1
+            # print(start)
+            # end = start + len(split_su_elemento[index]) - 1
+            # print(report_string[start:end])
+            count_ind = index
+            current_len = 0
+            found = True
+            # print(len(split_su_elemento))
+            for i in range(len(mention_split)):
+                if count_ind < len(split_su_elemento):
+                    if mention_split[i] in split_su_elemento[count_ind]:
+                        # print(split_su_elemento[count_ind])
+                        current_len = current_len + len(split_su_elemento[count_ind]) + 1
+                        end = start + current_len - 1
+                        print(report_string[end])
+                        count_ind = count_ind + 1
+                        # print(element_1[start:end])
 
-                rob_ns = NameSpace.objects.get(ns_id='Robot')
-                user_rob = User.objects.get(username='Robot_user', ns_id=rob_ns)
-                mentions_annos = Annotate.objects.filter(username=user_rob, ns_id=rob_ns, id_report=report,
-                                                         language=report.language)
+                    else:
+                        found = False
 
-                start_ment = int(start_element) + int(start)
-                stop_ment = int(start_ment) + len(mention_3) - 1  # nella mention devo incontrare il primo spazio se no è troncata e può dare problemi
-                start_mention_element = start_ment
-                end_mention_element = stop_ment
-
-                if len(starts) > 1:
-                    for annot in mentions_annos:
-                        mention = Mention.objects.get(start=annot.start_id,stop = annot.stop, id_report = report, language = annot.language)
-                        stop = mention.stop
-                        if (int(start_ment) >= int(mention.start) and int(start_ment) <= int(stop)) or (int(stop_ment) >= int(mention.start) and int(stop_ment) <= int(stop)):
-                            no_collision = False
-                        else:
-                            no_collision = True
-                            break
-                if no_collision:
+                else:
+                    found = False
                     break
 
-        return start_mention_element,end_mention_element,mention_3
+            if found:
+                # for annot in mention_list:
+
+                for annot in mentions_annos:
+                    mention = Mention.objects.get(start=annot.start_id, stop=annot.stop, id_report=report,
+                                                  language=annot.language)
+                    stop = mention.stop
+                    if (int(start) >= int(mention.start) and int(start) <= int(stop)) or (
+                            int(end) >= int(mention.start) and int(end) <= int(stop)):
+                        no_collision = False
+                    else:
+                        no_collision = True
+                        break
+                    # if (int(start) >= int(annot['start']) and int(start) <= int(annot['stop'])) or (
+                    #         int(end) >= int(annot['start']) and int(end) <= int(annot['stop'])):
+                    #     no_collision = False
+                    # else:
+                    #     no_collision = True
+
+                print(mention_1)
+                print(report_string[start:end])
+                print(report_string[start:end])
+                if no_collision:
+                    return start, end, report_string[start-1:end+1]
+    return None,None,None
+
 
 
 def create_concepts_all_dataset(use,rep,data_1,report_key):
@@ -362,83 +455,83 @@ def create_auto_gt_1(usecase,fields,report_key,batch):
                                     concept_row = concept_row.first()
                                     semantic_area = SemanticArea.objects.get(name=concept_area)
                                     start_mention_element,end_mention_element,mention = aux_start_end(report_field,mention_raw,use,report)
+                                    if start_mention_element is not None and end_mention_element is not None and mention is not None:
+                                        if not Mention.objects.filter(mention_text=mention,start=int(start_mention_element),
+                                                                      stop=int(end_mention_element), id_report=report,language=rep[1]).exists():
 
-                                    if not Mention.objects.filter(mention_text=mention,start=int(start_mention_element),
-                                                                  stop=int(end_mention_element), id_report=report,language=rep[1]).exists():
+                                            Mention.objects.create(mention_text=mention, start=int(start_mention_element),
+                                                                   stop=int(end_mention_element), id_report=report,
+                                                                   language=rep[1])
 
-                                        Mention.objects.create(mention_text=mention, start=int(start_mention_element),
-                                                               stop=int(end_mention_element), id_report=report,
-                                                               language=rep[1])
-
-                                    cur_mention = Mention.objects.get(mention_text=mention,
-                                                                      start=int(start_mention_element),
-                                                                      stop=int(end_mention_element), id_report=report,
-                                                                      language=rep[1])
-                                    if not Annotate.objects.filter(id_report=report, language=report.language,
-                                                                   start=cur_mention, stop=cur_mention.stop,
-                                                                   username=ag,
-                                                                   ns_id=mode).exists():
-                                        Annotate.objects.create(id_report=report, language=report.language,
-                                                                start=cur_mention,
-                                                                stop=cur_mention.stop, insertion_time=Now(),
-                                                                username=ag,
-                                                                ns_id=mode)
-                                        mentions_created = True
-                                        # se ad esempio all'inizio sono stati automaticamente annotati 100 reports e poi ne vengono inseriti altri 50, può essere che quei 50 non abbiano auto gt. Questo significa che bisogna aggiornare il db copiando le gt anche per quegli utenti che avevano già almeno una gt copiata per quello usecase.
-                                        for username in new_users:
-                                            if username != 'Robot_user':
-                                                user = User.objects.get(username=username, ns_id='Robot')
-                                                last_anno = Annotate.objects.get(id_report=report, language=report.language,
-                                                                        start=cur_mention,username=ag, ns_id=mode,
-                                                                        stop=cur_mention.stop)
-                                                Annotate.objects.create(id_report=report, language=report.language,
-                                                                        start=cur_mention,
-                                                                        stop=cur_mention.stop, insertion_time=last_anno.insertion_time,
-                                                                        username=user,
-                                                                        ns_id=mode)
+                                        cur_mention = Mention.objects.get(mention_text=mention,
+                                                                          start=int(start_mention_element),
+                                                                          stop=int(end_mention_element), id_report=report,
+                                                                          language=rep[1])
+                                        if not Annotate.objects.filter(id_report=report, language=report.language,
+                                                                       start=cur_mention, stop=cur_mention.stop,
+                                                                       username=ag,
+                                                                       ns_id=mode).exists():
+                                            Annotate.objects.create(id_report=report, language=report.language,
+                                                                    start=cur_mention,
+                                                                    stop=cur_mention.stop, insertion_time=Now(),
+                                                                    username=ag,
+                                                                    ns_id=mode)
+                                            mentions_created = True
+                                            # se ad esempio all'inizio sono stati automaticamente annotati 100 reports e poi ne vengono inseriti altri 50, può essere che quei 50 non abbiano auto gt. Questo significa che bisogna aggiornare il db copiando le gt anche per quegli utenti che avevano già almeno una gt copiata per quello usecase.
+                                            for username in new_users:
+                                                if username != 'Robot_user':
+                                                    user = User.objects.get(username=username, ns_id='Robot')
+                                                    last_anno = Annotate.objects.get(id_report=report, language=report.language,
+                                                                            start=cur_mention,username=ag, ns_id=mode,
+                                                                            stop=cur_mention.stop)
+                                                    Annotate.objects.create(id_report=report, language=report.language,
+                                                                            start=cur_mention,
+                                                                            stop=cur_mention.stop, insertion_time=last_anno.insertion_time,
+                                                                            username=user,
+                                                                            ns_id=mode)
 
 
-                                    if not Linked.objects.filter(id_report=report, language=report.language,
-                                                                 start=cur_mention, stop=cur_mention.stop,
-                                                                 concept_url=concept_row, name=semantic_area,
-                                                                 username=ag,
-                                                                 ns_id=mode).exists():
-                                        Linked.objects.create(id_report=report, language=report.language,
-                                                              start=cur_mention,
-                                                              stop=cur_mention.stop, insertion_time=Now(),
-                                                              concept_url=concept_row, name=semantic_area, username=ag,
-                                                              ns_id=mode)
-                                        linked_created = True
-                                        for username in new_users:
-                                            if username != 'Robot_user':
-                                                user = User.objects.get(username=username, ns_id='Robot')
-                                                last_linked = Linked.objects.get(id_report=report, language=report.language,
-                                                                      start=cur_mention,username=ag, ns_id=mode,
-                                                                      stop=cur_mention.stop,concept_url=concept_row, name=semantic_area)
-                                                Linked.objects.create(id_report=report, language=report.language,
-                                                                      start=cur_mention,
-                                                                      stop=cur_mention.stop, insertion_time=last_linked.insertion_time,
-                                                                      concept_url=concept_row, name=semantic_area,
-                                                                      username=user,
-                                                                      ns_id=mode)
+                                        if not Linked.objects.filter(id_report=report, language=report.language,
+                                                                     start=cur_mention, stop=cur_mention.stop,
+                                                                     concept_url=concept_row, name=semantic_area,
+                                                                     username=ag,
+                                                                     ns_id=mode).exists():
+                                            Linked.objects.create(id_report=report, language=report.language,
+                                                                  start=cur_mention,
+                                                                  stop=cur_mention.stop, insertion_time=Now(),
+                                                                  concept_url=concept_row, name=semantic_area, username=ag,
+                                                                  ns_id=mode)
+                                            linked_created = True
+                                            for username in new_users:
+                                                if username != 'Robot_user':
+                                                    user = User.objects.get(username=username, ns_id='Robot')
+                                                    last_linked = Linked.objects.get(id_report=report, language=report.language,
+                                                                          start=cur_mention,username=ag, ns_id=mode,
+                                                                          stop=cur_mention.stop,concept_url=concept_row, name=semantic_area)
+                                                    Linked.objects.create(id_report=report, language=report.language,
+                                                                          start=cur_mention,
+                                                                          stop=cur_mention.stop, insertion_time=last_linked.insertion_time,
+                                                                          concept_url=concept_row, name=semantic_area,
+                                                                          username=user,
+                                                                          ns_id=mode)
 
-                                    if not Contains.objects.filter(id_report=report, language=report.language,
-                                                                   concept_url=concept_row, name=semantic_area,
-                                                                   username=ag,
-                                                                   ns_id=mode).exists():
-                                        Contains.objects.create(id_report=report, language=report.language,
-                                                                concept_url=concept_row, name=semantic_area,
-                                                                insertion_time=Now(), username=ag, ns_id=mode)
-                                        for username in new_users:
-                                            if username != 'Robot_user':
-                                                user = User.objects.get(username=username, ns_id='Robot')
-                                                last_contains = Contains.objects.get(username=ag, ns_id=mode,id_report=report, language=report.language,
-                                                                        concept_url=concept_row, name=semantic_area)
-                                                Contains.objects.create(id_report=report, language=report.language,
-                                                                        concept_url=concept_row, name=semantic_area,
-                                                                        insertion_time=last_contains.insertion_time, username=user, ns_id=mode)
+                                        if not Contains.objects.filter(id_report=report, language=report.language,
+                                                                       concept_url=concept_row, name=semantic_area,
+                                                                       username=ag,
+                                                                       ns_id=mode).exists():
+                                            Contains.objects.create(id_report=report, language=report.language,
+                                                                    concept_url=concept_row, name=semantic_area,
+                                                                    insertion_time=Now(), username=ag, ns_id=mode)
+                                            for username in new_users:
+                                                if username != 'Robot_user':
+                                                    user = User.objects.get(username=username, ns_id='Robot')
+                                                    last_contains = Contains.objects.get(username=ag, ns_id=mode,id_report=report, language=report.language,
+                                                                            concept_url=concept_row, name=semantic_area)
+                                                    Contains.objects.create(id_report=report, language=report.language,
+                                                                            concept_url=concept_row, name=semantic_area,
+                                                                            insertion_time=last_contains.insertion_time, username=user, ns_id=mode)
 
-                                        concepts_created = True
+                                            concepts_created = True
 
                     concepts_to_ret = create_concepts_all_dataset(usecase, rep,concepts_annotated,report_key)
                     if use == 'colon':

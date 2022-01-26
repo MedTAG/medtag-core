@@ -1295,7 +1295,8 @@ def report_get_start_end(json_keys,json_keys_to_ann,report,language):
                 before_element = report_string.split(key)[0]
                 after_element = report_string.split(key)[1]
                 until_element_value = len(before_element) + len(key) + len(after_element.split(str(element_1))[0])
-                start_element = until_element_value + 1
+                # start_element = until_element_value + 1
+                start_element = until_element_value
                 end_element = start_element + len(str(element_1)) - 1
                 element = {'text': element, 'start': start_element, 'end': end_element}
                 json_dict['rep_string'][key] = element
