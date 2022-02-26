@@ -428,7 +428,7 @@ def delete_all_associations(user, report1,language,type,usecase,mode):
     """This method deletes all associations made by a user for a specific report and language."""
 
     json_response = {'message':'OK,deletion done.'}
-    ass = Linked.objects.filter(username=user, id_report=report1,language = language)
+    ass = Linked.objects.filter(username=user,ns_id = mode, id_report=report1,language = language)
     modifyconc = False
     for association in ass:
         concept = Concept.objects.get(concept_url = association.concept_url_id)
