@@ -1,0 +1,43 @@
+.links line {
+    stroke: #999;
+    stroke-opacity: 0.6;
+}
+
+.nodes circle {
+    stroke: #fff;
+    stroke-width: 1.5px;
+}
+
+text {
+    font-family: sans-serif;
+    font-size: 10px;
+}
+
+.d3-svg{
+    width: 100vw;
+    height: 100vh;
+    overflow: hidden;
+}
+
+.react-resizable{
+
+    overflow: hidden;
+}
+
+.MuiDialogTitle-root{
+    background-color: #EEEEEE;
+}
+
+.highlighted{
+    background: linear-gradient( to bottom, #13B9AD 0%, #13B9AD 100% );
+    color: #2f3138;
+    background-position: 0 100%;
+    background-repeat: repeat-x;
+    background-size: 4px 3px;
+}
+.d3-expand-button{
+    position: absolute;
+    right: 0px;
+    margin-right: 20px;
+    z-index: 1000000;
+}

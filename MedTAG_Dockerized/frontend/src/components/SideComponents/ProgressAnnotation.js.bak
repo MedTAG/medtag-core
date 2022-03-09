@@ -1,0 +1,277 @@
+import '../../App.css';
+import {AppContext} from '../../App';
+import React, {useState, useEffect, useContext, createContext} from "react";
+import './compStyle.css';
+import 'bootstrap/dist/css/bootstrap.min.css';
+import 'react-bootstrap';
+import 'bootstrap/dist/css/bootstrap.min.css';
+import 'react-bootstrap';
+import {Container,Row,Col} from "react-bootstrap";
+import Button from "react-bootstrap/Button";
+import '../General/first_row.css';
+import ProgressBar from 'react-bootstrap/ProgressBar'
+import {
+    CircularProgressbar,ProgressProvider,
+    CircularProgressbarWithChildren,
+    buildStyles
+} from "react-circular-progressbar";
+import "react-circular-progressbar/dist/styles.css";
+
+// import { easeQuadInOut } from "d3-ease";
+// import AnimatedProgressProvider from "./AnimatedProgressProvider";
+import ChangingProgressProvider from "./ChangingProgressProvider";
+
+import SelectMenu from "../SelectMenu/SelectMenu";
+
+import SideBar from "../General/SideBar";
+import ProgressiveComponent from "./ProgressiveComponent";
+import axios from "axios";
+import Spinner from "react-bootstrap/Spinner";
+import Form from "react-bootstrap/Form";
+import {backdropClasses} from "@mui/material";
+
+function ProgressAnnotation() {
+
+
+    const { showbar,username,usecaseList,usecase,annotation,usersList,language,batchNumber,institute,reports,languageList,instituteList } = useContext(AppContext);
+    const [Annotation,SetAnnotation] = annotation;
+    const [UseCaseList,SetUseCaseList] = usecaseList;
+    const [LanguageList,SetLanguageList] = languageList;
+    const [InstituteList,SetInstituteList] = instituteList;
+    const [Aux,SetAux] = useState(false)
+    const [ShowBar,SetShowBar] = showbar;
+    const [Username,SetUsername] = username;
+    const [Reports,SetReports] = reports;
+    const [SelectedMode,SetSelectedMode] = useState('')
+    // const [ShowStats,SetShowStats] = useState(new Array(usecaseList.length+1).fill(false))
+    const [StatsArray,SetStatsArray] = useState(false)
+    const [StatsArrayPubMed,SetStatsArrayPubMed] = useState(false)
+    const [StatsArrayPercent,SetStatsArrayPercent] = useState(false)
+    const [StatsArrayPercentPubMed,SetStatsArrayPercentPubMed] = useState(false)
+    const [Actions,SetActions] = useState(['labels','mentions','concepts','concept-mention'])
+    const [SelectedLang,SetSelectedLang] = useState('')
+    const [SelectedUse,SetSelectedUse] = useState('')
+    const [SelectedBatch,SetSelectedBatch] = useState('')
+    const [SelectedInstitute,SetSelectedInstitute] = useState('')
+    const [StatsAuto,SetStatsAuto] = useState(0)
+    const [ChosenStats,SetChosenStats] = useState('')
+    const [UsesExtraxcted,SetUsesExtracted] = useState([])
+    const [Language,SetLanguage] = language;
+    const [Institute,SetInstitute] = institute;
+    const [useCase,SetUseCase] = usecase
+    const [BatchNumber,SetBatchNumber] = batchNumber;
+    const [BatchList,SetBatchList] = useState([]);
+    const [IncremenetListVals,SetIncremenetListVals] = useState([]);
+    const [IncrementList,SetIncrementList] = useState([]);
+    const [Robot,SetRobot] = useState(false);
+    const [UsersList,SetUsersList] = usersList
+    const [MaxVal,SetMaxVal] = useState([]);
+    const [Colors,SetColors] = useState(['red','blue','green','orange']);
+
+    useEffect(()=>{
+        axios.get("http://examode.dei.unipd.it/exatag/get_usecase_inst_lang").then(response => {
+            SetUseCaseList(response.data['usecase']);
+            SetUsesExtracted(response.data['usecase']);
+            SetLanguageList(response.data['language']);
+            SetInstituteList(response.data['institute']);
+
+        })
+            .catch(function(error){
+                console.log('error: ',error)
+            })
+
+
+
+    },[])
+
+    useEffect(()=>{
+        if(SelectedLang === ''){
+            SetSelectedLang(Language)
+        }
+    },[Language])
+
+    useEffect(()=>{
+        if(SelectedMode === ''){
+            SetSelectedMode(Annotation)
+        }
+    },[Annotation])
+
+    useEffect(()=>{
+        if(SelectedInstitute === ''){
+            SetSelectedInstitute(Institute)
+        }
+    },[Institute])
+
+    useEffect(()=>{
+        if(SelectedUse === ''){
+            SelectedUse(useCase)
+        }
+    },[Institute])
+
+
+    useEffect(()=>{
+        if(SelectedLang !== '' && SelectedUse !== '' && SelectedInstitute !== '' && SelectedBatch !== ''){
+            axios.get('http://examode.dei.unipd.it/exatag/check_auto_presence_for_configuration',{params:{batch:SelectedBatch,usecase:SelectedUse,institute:SelectedInstitute,language:SelectedLang,username:'all'}})
+                .then(response=>{
+                    if(response.data['count']>0){
+                        SetRobot(true)
+                    }
+                    else{
+                        SetRobot(false)
+                    }
+                })
+
+            axios.get('http://examode.dei.unipd.it/exatag/get_reports_count',{params:{institute:SelectedInstitute,language:SelectedLang,batch:SelectedBatch,usecase:SelectedUse}}).then(response=>{
+                SetMaxVal(response.data['count'])
+            })
+        }
+    },[SelectedBatch,SelectedInstitute,SelectedLang,SelectedUse])
+
+    useEffect(()=>{
+        if(IncrementList.length>0){
+            axios.get('http://examode.dei.unipd.it/exatag/get_progressive_values',{params:{institute:SelectedInstitute,language:SelectedLang,batch:SelectedBatch,usecase:SelectedUse,mode:SelectedMode,list:IncrementList.toString()}}).then(response=>{
+                SetIncremenetListVals(response.data['list_val'])
+            })
+        }
+    },[IncrementList])
+
+
+
+    function handleChangeLangSelected(option){
+        SetIncrementList([])
+        SetIncremenetListVals([])
+        SetSelectedLang(option.target.value)
+    }
+    function handleChangeInstSelected(option){
+        SetIncrementList([])
+        SetIncremenetListVals([])
+        SetSelectedInstitute(option.target.value)
+    }
+    function handleChangeUseSelected(option){
+        SetIncrementList([])
+        SetIncremenetListVals([])
+        SetSelectedUse(option.target.value)
+    }
+    function handleChangeBatchSelected(option){
+        SetIncrementList([])
+        SetIncremenetListVals([])
+        console.log('selected_lang',SelectedLang)
+        SetSelectedInstitute(option.target.value)
+    }
+    function handleChangeModeSelected(option){
+        SetIncrementList([])
+        SetIncremenetListVals([])
+        console.log('selected_lang',SelectedLang)
+        SetSelectedMode(option.target.value)
+    }
+
+    function handleChangeIncrSelected(option){
+        if(IncrementList.length < 5){
+            SetIncrementList([...IncrementList,option.target.value])
+
+        }
+    }
+
+    return (
+        <div className="App">
+            <div>
+                <Container fluid>
+                    {ShowBar && <SideBar />}
+                    {(InstituteList.length >= 0 && LanguageList.length >=0 && UseCaseList.length >= 0) && <div><SelectMenu />
+                        <hr/></div>}
+
+
+                    <div style={{'text-align':'center', 'margin-bottom':'3%'}}><h2>ANNOTATION PROGRESS</h2></div>
+                    {SelectedUse !== ''  &&
+                    <><div>Select the usecase</div>
+                        <Row><Col md={4}></Col>
+                            <Col md={4}><Form.Control style={{'text-align':'center'}} value={SelectedUse} as="select" onChange={(option)=>handleChangeUseSelected(option)} placeholder="Select a usecase...">
+                                {/*<option value="">Choose an institute</option>*/}
+                                {UseCaseList.map((use)=>
+                                    <option value={use}>{use}</option>
+                                )}
+                            </Form.Control>
+                            </Col><Col md={4}></Col></Row><hr/></>}
+                    {SelectedLang !== ''  &&
+                    <><div>Select the language</div>
+                        <Row><Col md={4}></Col>
+                            <Col md={4}><Form.Control style={{'text-align':'center'}} value={SelectedLang} as="select" onChange={(option)=>handleChangeLangSelected(option)} placeholder="Select a language...">
+                                {/*<option value="">Choose a language</option>*/}
+                                {LanguageList.map((language)=>
+                                    <option value={language}>{language}</option>
+                                )}
+                            </Form.Control>
+                            </Col><Col md={4}></Col></Row><hr/></>}
+                    {SelectedInstitute !== ''  &&
+                    <><div>Select the institute</div>
+                        <Row><Col md={4}></Col>
+                            <Col md={4}><Form.Control style={{'text-align':'center'}} value={SelectedInstitute} as="select" onChange={(option)=>handleChangeInstSelected(option)} placeholder="Select a language...">
+                                {/*<option value="">Choose an institute</option>*/}
+                                {InstituteList.map((institute)=>
+                                    <option value={institute}>{institute}</option>
+                                )}
+                            </Form.Control>
+                            </Col><Col md={4}></Col></Row><hr/></>}
+
+                    {SelectedInstitute !== ''  &&
+                    <><div>Select the annotation mode</div>
+                        <Row><Col md={4}></Col>
+                            <Col md={4}><Form.Control style={{'text-align':'center'}} value={SelectedInstitute} as="select" onChange={(option)=>handleChangeInstSelected(option)} placeholder="Select a language...">
+                                {/*<option value="">Choose an institute</option>*/}
+                                {InstituteList.map((institute)=>
+                                    <option value={institute}>{institute}</option>
+                                )}
+                            </Form.Control>
+                            </Col><Col md={4}></Col></Row><hr/></>}
+
+                    {SelectedBatch !== ''  && BatchList.length > 0 &&
+                    <><div>Select the batch of the reports you want to check the statistics of</div>
+                        <Row><Col md={4}></Col>
+                            <Col md={4}><Form.Control style={{'text-align':'center'}} value={SelectedBatch} as="select" onChange={(option)=>handleChangeBatchSelected(option)} placeholder="Select a batch...">
+                                {/*<option value="">Choose an institute</option>*/}
+                                {BatchList.map((batch)=>
+                                    <option value={batch}>{batch}</option>
+                                )}
+                            </Form.Control>
+                            </Col><Col md={4}></Col></Row><hr/></>}
+                    {SelectedMode !== '' &&
+                    <><div>Select the annotation mode of the reports you want to check the statistics of</div>
+                        <Row><Col md={4}></Col>
+                            <Col md={4}><Form.Control style={{'text-align':'center'}} value={SelectedMode} as="select" onChange={(option)=>handleChangeModeSelected(option)} placeholder="Select a batch...">
+                                <option value="Human">Manual</option>
+                                {Robot && <option value="Robot">Automatic</option>}
+                            </Form.Control>
+                            </Col><Col md={4}></Col></Row><hr/></>}
+                    {<><div>Select the minimum of annotations (at most 5 choices)</div>
+                        <Row><Col md={4}></Col>
+                            <Col md={4}><Form.Control style={{'text-align':'center'}} value={SelectedMode} as="select" onChange={(option)=>handleChangeIncrSelected(option)} placeholder="Select a batch...">
+                                {UsersList.map((val,ind)=><option value={ind}>{ind}</option>)}
+                            </Form.Control>
+                            </Col><Col md={4}></Col></Row><hr/></>}
+                    <div>Minimum annotations (max 5 choices): <b>{IncrementList.join(', ')}</b></div>
+                    <div>
+                        {IncremenetListVals.length > 0 && <ProgressBar max={MaxVal}>
+                            {IncremenetListVals.map((val,ind)=><>
+                                <ProgressBar striped variant="success" style={{backgroundColor: Colors[ind]}} now={val['now']} label={`${val['display']}`}  key={ind} />
+                            </>)}
+
+
+                        </ProgressBar>}
+
+                    </div>
+
+
+                </Container>
+
+
+            </div>
+
+        </div>
+
+
+
+    );
+}
+
+
+export default ProgressAnnotation;

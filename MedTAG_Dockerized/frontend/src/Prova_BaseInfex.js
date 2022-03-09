@@ -41,7 +41,7 @@ export const LabelContext = createContext('')
 export const ConceptContext = createContext('')
 // export const PassageContext = createContext('')
 
-function Prova_aseIndex() {
+function Prova_BaseIndex() {
     const { makereq,selectedLang,fieldsToAnn,report_type,usersListAnnotations,loadingChangeGT,showannotations,batchNumber,usersList,updateSingle,userchosen,showautoannotation,showmember,loadingLabels,annotation,loadingConcepts,loadingMentions,loadingAssociations,loadingReport,loadingReportList,loadingColors,clickedCheck,conceptOption,removedConcept,fields,checks,start,showbar,index,linkingConcepts,showSnackMention,mentionSingleWord,color,allMentions,mentionsList,mentionToAdd,associations,conceptModal,disButton,save,highlightMention,selectedconcepts,usecaseList,userLabels,labelsList,insertionTimes,tokens,report,reports,concepts,reached,finalcount,semanticArea,radio,changeConceots,labelsToInsert,showSnack,showSnackMessage,showOptions,username,action,reportString,outcomes,institute,language,usecase,updateMenu,languageList,instituteList } = useContext(AppContext);
     const [RemovedConcept,SetRemovedConcept] = removedConcept;
     const [SelectedLang,SetSelectedLang] = selectedLang
@@ -180,7 +180,6 @@ function Prova_aseIndex() {
     }
 
     useEffect(()=>{
-        console.log('r',Index)
         if(Institute !== '' && Language !== '' && useCase !== '' && Annotation !== '' && Reports.length > 0 && Index !== false && Action !== 'none'){
             console.log('r',Reports)
             console.log('r',Index)
@@ -361,7 +360,7 @@ function Prova_aseIndex() {
             // console.log('entro aggiorno indice',Index)
             // console.log('entro aggiorno azione',Action)
             // console.log('entro aggiorno reports',Reports.length)
-
+            console.log('prova')
 
 
             var json_arr = {}
@@ -674,4 +673,4 @@ function Prova_aseIndex() {
 }
 
 
-export default Prova_aseIndex;
+export default Prova_BaseIndex;

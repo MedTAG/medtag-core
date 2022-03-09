@@ -291,7 +291,7 @@ function ChangeMemberGT(props){
         // console.log('CONCEPTS',ShowAutoAnn)
         // console.log('CONCEPTS',ShowMemberGt)
 
-        if(ClickBottomMenu){
+        if(ClickBottomMenu === true){
             SetLoadingChangeGT(true)
             // if(MakeReq && ChangeButton){
             axios.get("http://0.0.0.0:8000/report_start_end", {params: {ns_id:ns_id,report_id: Reports[Index].id_report.toString()}}).then(response => {

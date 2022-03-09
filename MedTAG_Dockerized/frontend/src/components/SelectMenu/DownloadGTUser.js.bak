@@ -4,6 +4,8 @@ import {confirmable, createConfirmation} from 'react-confirm';
 import Modal from "react-bootstrap/Modal";
 import Button from "react-bootstrap/Button";
 import Form from "react-bootstrap/Form";
+import Spinner from "react-bootstrap/Spinner";
+
 import {
     faLink,
     faEye,
@@ -64,6 +66,7 @@ function DownloadGTUser(props){
     const [EXAPresenceLabels,SetEXAPresenceLabels] = useState(false)
     const [AutoPresence,SetAutoPresence] = useState(false)
     const [MedTAGPresence,SetMedTAGPresence] = useState(false)
+    const [Downloading,SetDownloading] = useState(false)
 
     useEffect(()=>{
 
@@ -167,20 +170,24 @@ function DownloadGTUser(props){
         // console.log(Ins)
         // console.log(Lang)
         SetShowError(false)
+        SetDownloading(true)
         SetBiocError(false)
         SetShowNotDownload(false)
         SetShowFormat(false)
         if((Format === '' || Act === '' || Use === '' || Anno === '') && token !== 'all' ){
             SetShowFormat(true)
+            SetDownloading(false)
         }
         else if((Format === 'biocxml' || Format === 'biocjson') && token !== 'all' && (Act === 'labels' || Act === 'concepts')){
             SetBiocError(true)
+            SetDownloading(false)
         }
         else if(Format !== '' || token === 'all') {
             axios.get('http://127.0.0.1:8000/get_gt_list',{params:{reptype:Rep,token:token,action:Act,inst:Ins,lang:Lang,use:Use,annotation_mode:Anno}})
                 .then(response => {
                     if (response.data['ground_truths'] === 0) {
                         SetShowNotDownload(true)
+                        SetDownloading(false)
                     } else {
 
                         if (token === 'conf') {
@@ -204,10 +211,10 @@ function DownloadGTUser(props){
                                     if (Format === 'json' && Act !== '') {
                                         if(Act === 'concept-mention'){
                                             FileDownload(JSON.stringify(response.data), 'linking_json_ground_truth.json');
-
+                                            SetDownloading(false)
                                         }else{
                                             FileDownload(JSON.stringify(response.data), Act.toString() + '_json_ground_truth.json');
-
+                                            SetDownloading(false)
                                         }
                                         // SetShowNotDownload(false)
                                         // SetShowFormat(false)
@@ -222,10 +229,11 @@ function DownloadGTUser(props){
                                     } else if (Format === 'csv' && Act !== '') {
                                         if(Act === 'concept-mention'){
                                             FileDownload((response.data), 'linking_csv_ground_truth.csv');
+                                            SetDownloading(false)
                                         }
                                         else{
                                             FileDownload((response.data), Act.toString() + '_csv_ground_truth.csv');
-
+                                            SetDownloading(false)
                                         }
                                         // SetShowNotDownload(false)
                                         // SetShowFormat(false)
@@ -240,10 +248,12 @@ function DownloadGTUser(props){
                                     } else if (Format === 'biocxml' && Act !== '') {
                                         if(Act === 'concept-mention') {
                                             FileDownload((response.data), 'linking_bioc_ground_truth.xml');
+                                            SetDownloading(false)
                                         }
                                         else{
-                                            FileDownload((response.data), 'mentions_bioc_ground_truth.xml');
 
+                                            FileDownload((response.data), 'mentions_bioc_ground_truth.xml');
+                                            SetDownloading(false)
                                         }
                                         // SetShowNotDownload(false)
                                         // SetShowFormat(false)
@@ -600,9 +610,9 @@ function DownloadGTUser(props){
                 {/*    Download All (JSON)*/}
                 {/*</Button>*/}
 
-                <Button  onClick={(e)=>onSave(e,'conf')} variant="primary" >
+                {Downloading === false ? <Button  onClick={(e)=>onSave(e,'conf')} variant="primary" >
                     Download
-                </Button>
+                </Button>: <div className='spinnerDiv'><Spinner animation="border" role="status"/></div>}
             </Modal.Footer>
 
 

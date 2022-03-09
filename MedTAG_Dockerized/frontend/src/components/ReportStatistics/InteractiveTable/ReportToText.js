@@ -45,7 +45,7 @@ function ReportToText(props) {
         if(Reports.length > 0){
 
             if(newInd >= 0){
-                axios.get("http://0.0.0.0:8000/report_start_end", {params: {report_id: Reports[newInd].id_report.toString()}}).then(response => {SetFinalCount(response.data['final_count']);
+                axios.get("http://0.0.0.0:8000/report_start_end", {params: {language:SelectedLang,report_id: Reports[newInd].id_report.toString()}}).then(response => {SetFinalCount(response.data['final_count']);
                     setReportsString(response.data['rep_string']); SetFinalCountReached(false);
                 })
                 axios.get("http://0.0.0.0:8000/get_fields",{params:{report:props.id_report}}).then(response => {SetFields(response.data['fields']);SetFieldsToAnn(response.data['fields_to_ann']);})
