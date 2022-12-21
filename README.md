@@ -73,13 +73,15 @@ If you already have both [docker](https://docs.docker.com/engine/reference/comma
 
 4. Download or clone the [medtag-core](https://github.com/MedTAG/medtag-core) repository.
 
-5. Open the [MedTAG_Dockerized](https://github.com/MedTAG/medtag-core/tree/main/MedTAG_Dockerized) project folder and, on a new terminal session, type ```docker-compose up```. After running the latter command the installation of MedTAG dependencies is performed and the following output will be generated:
+5. Open MedTAG_Dockerized/baseurl.txt file and put the baseURL of the server where MedTAG is deployed. If the server hosting MedTAG has the baseURL http://example.com/server/example/, specify this URL in place of the http://0.0.0.0:8000/ provided by default.
+
+6. Open the [MedTAG_Dockerized](https://github.com/MedTAG/medtag-core/tree/main/MedTAG_Dockerized) project folder and, on a new terminal session, type ```docker-compose up```. After running the latter command the installation of MedTAG dependencies is performed and the following output will be generated:
 
    ![installation_process_output](./img/screenshots/installation_process_output.png)
 
    **NOTE**: In Unix-like systems `docker-compose` should be run  without using `sudo` in a directory owned by the user.
 
-6. MedTAG installation has completed and you can access it on your browser at http://0.0.0.0:8000/.
+7. MedTAG installation has completed and you can access it on your browser at http://0.0.0.0:8000/.
 
 **NOTE**: If you want to shut down MedTAG, open a new terminal window and navigate to the project folder. Finally type `docker-compose down`
 
