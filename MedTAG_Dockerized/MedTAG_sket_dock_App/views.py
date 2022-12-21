@@ -21,15 +21,22 @@ from django.db import connection
 from django.http import HttpResponse
 
 
-# ExaMode Ground Truth views here.
 def index(request):
 
     """Home page for app (and project)"""
 
     username = request.session.get('username', False)
     profile = request.session.get('profile', False)
-    if(username):
-        context = {'username': username,'profile':profile}
+    baseurl = ''
+    workpath = os.path.dirname(os.path.abspath(__file__))  # Returns the Path your .py file is in
+    with open((os.path.join(workpath,'../baseurl.txt')),'r',encoding='utf-8') as f:
+        baseurl = f.read()
+        if not baseurl.endswith('/'):
+            baseurl = baseurl +'/'
+    if(username and baseurl != ''):
+        context = {'username': username,'profile':profile, 'baseurl':baseurl}
+    # if(username):
+    #     context = {'username': username,'profile':profile}
         return render(request, 'MedTAG_sket_dock_App/index.html', context)
     else:
         return redirect('MedTAG_sket_dock_App:login')
