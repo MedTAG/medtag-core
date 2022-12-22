@@ -37,7 +37,7 @@ import {Language} from "@material-ui/icons";
 // axios.defaults.xsrfHeaderName = "X-CSRFTOKEN";
 
 function LinkedList(props){
-    const { language, showmember,selectedLang,action,highlightMention,showautoannotation,loadingColors,finalcount, color, allMentions,tokens, reports, index, mentionSingleWord, associations } = useContext(AppContext);
+    const { language, showmember,selectedLang,action,reload,highlightMention,showautoannotation,loadingColors,finalcount, color, allMentions,tokens, reports, index, mentionSingleWord, associations } = useContext(AppContext);
     const [AllMentions, SetAllMentions] = allMentions;
     const [WordMention, SetWordMention] = mentionSingleWord;
     const [LoadingMentionsColor, SetLoadingMentionsColor] = loadingColors;
@@ -51,64 +51,110 @@ function LinkedList(props){
     const [ShowAutoAnn,SetShowAutoAnn] = showautoannotation
     const [SelectedLang,SetSelectedLang] = selectedLang
     const [Language,SetLanguage] = language;
+    const [ReloadMentions,SetReloadMentions] = reload
 
 
 
     //const [Saved,SetSaved] = useState(false)
 
-
     useEffect(()=>{
-        if(SelectedLang === Language && WordMention.length === 0){
-            if(!ShowInfoLinking) {
+        // console.log('MENTISHOW',ShowInfoMentions)
+        SetReloadMentions(false)
+        if(SelectedLang === Language && WordMention.length === 0) {
+            // console.log('entro')
+            // console.log('count1', FinalCount)
+            // console.log('count1', Children.length)
+            // console.log('count1',mentions_to_show)
+            if (ShowInfoLinking === false) {
                 if (Children.length === FinalCount) {
-                    console.log('mentionshow', AllMentions)
                     if (AllMentions.length === 0) {
-                        console.log('MENTIONS EMPTY')
+                        console.log('EMPTY MENTIONS')
                         Children.map(child => {
-                            // console.log('TOKEN')
+                            console.log('TOKEN empty')
                             child.setAttribute('class', 'token') //Added!!
                             child.style.color = 'black'                        //Added!!
                         })
-
                     }
 
-                    var bottone_linked = (document.getElementsByClassName('butt_linked'))
+                    var bottone_mention = (document.getElementsByClassName('butt_linked'))
                     if (AllMentions.length > 0) {
                         Children.map(child => {
+                            console.log('TOKEN')
                             child.setAttribute('class', 'token') //Added!!
                             child.style.color = 'black'
+                            //Added!!
+                        })
+                        console.log('PASSO DI QUA, MENTIONS',AllMentions)
+                        // console.log('PASSO COLORO')
+                        var range_overlapping = []
+                        AllMentions.map((m,i)=>{
+                            var start = m.start
+                            var stop = m.stop
+                            var found = false
+                            range_overlapping.map((o,i)=>{
+                                // console.log('m1 found',o[0],o[1],start,stop)
+                                // console.log('m1 found',start<=o[1])
+                                // console.log('m1 found',o[0]<= stop)
+                                // console.log('m1 found',(stop<= o[1]))
+                                // console.log('m1 found',(o[0]<=start && start<=o[1]))
+                                // console.log('m1 found',(o[0]<= stop && stop<= o[1]))
+                                if (((o[0]<=start && start<=o[1]) || (o[0]<= stop && stop<= o[1]))){
+                                    o[0] = Math.min(o[0],start)
+                                    o[1] = Math.max(o[1],stop)
+                                    found = true
+                                }
+                            })
+                            if (found === false){
+
+                                range_overlapping.push([start,stop])
+                                // console.log('m1',start,stop)
+                                // console.log('m1',range_overlapping)
+
+                            }
 
                         })
-                        //console.log('PASSO DI QUA, MENTIONS',AllMentions)
-                        // console.log('PASSO COLORO')
+                        console.log('rangeover',range_overlapping)
+
+
                         AllMentions.map((mention, index) => {
-                            // console.log('MENTION', mention)
+                            console.log('mm',mention)
                             var array = fromMentionToArray(mention.mention_text, mention.start)
                             //console.log(array)
                             var words_array = []
+                            // var index_color = index
                             var index_color = index
-                            if (Color[index] === undefined) {
-                                index_color = index - Color.length
+
+                            range_overlapping.map((o,i)=>{
+                                if (((o[0]<=mention.start && mention.start<=o[1]) || (o[0]<= mention.stop && mention.stop<= o[1]))){
+                                    index_color = i
+                                }
+                            })
+                            console.log('m1',mention.mention_text,index)
+
+                            if (Color[index_color] === undefined) {
+                                index_color = index_color - Color.length
                             }
-                            bottone_linked[index].style.color = Color[index_color]
+
+                            // if (Color[index] === undefined) {
+                            //     index_color = index - Color.length
+                            // }
+                            bottone_mention[index].style.color = Color[index_color]
 
                             Children.map(child => {
-                                // if(child.getAttribute('class') !== 'notSelected') {
-                                //     child.setAttribute('class', 'token') //Added!!
-                                // }
+
                                 array.map((word, ind) => {
                                     if (child.id.toString() === word.startToken.toString()) {
 
-                                        // console.log('PASSO COLORO 1')
                                         words_array.push(child)
-                                        child.setAttribute('class', 'notSelectedMention')
 
+                                        // supporto overlapping
+                                        child.setAttribute('class', 'notSelectedMention')
+                                        // console.log('PASSO COLORO qua',child)
 
                                         child.style.color = Color[index_color]
 
-
                                         if (child.style.fontWeight === 'bold') {
-                                            bottone_linked[index].style.fontWeight = 'bold'
+                                            bottone_mention[index].style.fontWeight = 'bold'
                                         }
 
                                     }
@@ -117,34 +163,113 @@ function LinkedList(props){
 
                         })
                     }
-                    else{ //ADDED
-                        Children.map(child => {
-                            child.setAttribute('class', 'token') //Added!!
-                            child.color = 'black'
-                        })
-                    }
 
                 }
-
-
             }//Added
-
-            else{
-                Children.map(child=>{
-                    child.setAttribute('class','notSelected')
+            else {
+                Children.map(child => {
+                    child.setAttribute('class', 'notSelected')
                 })
                 SetWordMention([])
             }
-            if(ShowAutoAnn === true || ShowMemberGt === true){
-                Children.map(child=>{
-                    child.setAttribute('class','notSelected')
+            if (ShowAutoAnn === true || ShowMemberGt === true) {
+                Children.map(child => {
+                    child.setAttribute('class', 'notSelected')
                 })
             }
 
             SetLoadingMentionsColor(false)
         }
-
-    },[Action,AllMentions,Color,ShowInfoLinking,SelectedLang,Children]) //COLOR AGGIUNTO,children
+        SetReloadMentions(false)
+    },[Action,AllMentions,Color,ShowInfoLinking,SelectedLang,FinalCount,Children,ReloadMentions]) //COLOR AGGIUNTO,children
+    // useEffect(()=>{
+    //     if(SelectedLang === Language && WordMention.length === 0){
+    //         if(!ShowInfoLinking) {
+    //             if (Children.length === FinalCount) {
+    //                 console.log('mentionshow', AllMentions)
+    //                 if (AllMentions.length === 0) {
+    //                     console.log('MENTIONS EMPTY')
+    //                     Children.map(child => {
+    //                         // console.log('TOKEN')
+    //                         child.setAttribute('class', 'token') //Added!!
+    //                         child.style.color = 'black'                        //Added!!
+    //                     })
+    //
+    //                 }
+    //
+    //                 var bottone_linked = (document.getElementsByClassName('butt_linked'))
+    //                 if (AllMentions.length > 0) {
+    //                     Children.map(child => {
+    //                         child.setAttribute('class', 'token') //Added!!
+    //                         child.style.color = 'black'
+    //
+    //                     })
+    //                     //console.log('PASSO DI QUA, MENTIONS',AllMentions)
+    //                     // console.log('PASSO COLORO')
+    //                     AllMentions.map((mention, index) => {
+    //                         // console.log('MENTION', mention)
+    //                         var array = fromMentionToArray(mention.mention_text, mention.start)
+    //                         //console.log(array)
+    //                         var words_array = []
+    //                         var index_color = index
+    //                         if (Color[index] === undefined) {
+    //                             index_color = index - Color.length
+    //                         }
+    //                         bottone_linked[index].style.color = Color[index_color]
+    //
+    //                         Children.map(child => {
+    //                             // if(child.getAttribute('class') !== 'notSelected') {
+    //                             //     child.setAttribute('class', 'token') //Added!!
+    //                             // }
+    //                             array.map((word, ind) => {
+    //                                 if (child.id.toString() === word.startToken.toString()) {
+    //
+    //                                     // console.log('PASSO COLORO 1')
+    //                                     words_array.push(child)
+    //                                     child.setAttribute('class', 'notSelectedMention')
+    //
+    //
+    //                                     child.style.color = Color[index_color]
+    //
+    //
+    //                                     if (child.style.fontWeight === 'bold') {
+    //                                         bottone_linked[index].style.fontWeight = 'bold'
+    //                                     }
+    //
+    //                                 }
+    //                             })
+    //                         })
+    //
+    //                     })
+    //                 }
+    //                 else{ //ADDED
+    //                     Children.map(child => {
+    //                         child.setAttribute('class', 'token') //Added!!
+    //                         child.color = 'black'
+    //                     })
+    //                 }
+    //
+    //             }
+    //
+    //
+    //         }//Added
+    //
+    //         else{
+    //             Children.map(child=>{
+    //                 child.setAttribute('class','notSelected')
+    //             })
+    //             SetWordMention([])
+    //         }
+    //         if(ShowAutoAnn === true || ShowMemberGt === true){
+    //             Children.map(child=>{
+    //                 child.setAttribute('class','notSelected')
+    //             })
+    //         }
+    //
+    //         SetLoadingMentionsColor(false)
+    //     }
+    //
+    // },[Action,AllMentions,Color,ShowInfoLinking,SelectedLang,Children]) //COLOR AGGIUNTO,children
 
 
     useEffect(()=>{
@@ -252,7 +377,7 @@ function LinkedList(props){
                     {/*{ShowMajorityGt === true && <div><i>The ground-truth based on majority vote is <b>READ ONLY</b></i></div>}*/}
                     {/*{ShowMemberGt === true && <div><i>The ground-truth of other team members are <b>READ ONLY</b></i></div>}*/}
                     <form id = "linked-form" className="linked-form">
-                        </form>
+                    </form>
                     <div>
                         Info about linking: &nbsp;&nbsp;<button className='butt_info' onClick={(e)=>changeInfoLinking(e)}><FontAwesomeIcon  color='blue' icon={faInfoCircle} /></button>
                     </div>
@@ -275,7 +400,7 @@ function LinkedList(props){
                                             Read the report on your left.
                                         </li>
                                         <li><span className="fa-li"><FontAwesomeIcon icon={faList}/></span> On your right the list of mentions is displayed (if any). You can also select new mentions if you want:
-                                        the elements preceded by the <FontAwesomeIcon icon={faPencilAlt}/> identify the clickable text portions. Click on the words that compose your mention and add the mention to the list.
+                                            the elements preceded by the <FontAwesomeIcon icon={faPencilAlt}/> identify the clickable text portions. Click on the words that compose your mention and add the mention to the list.
                                         </li>
                                         <li><span className="fa-li"><FontAwesomeIcon icon={faProjectDiagram}/></span>Click on LINK: a draggable window is displayed.
                                         </li>
@@ -307,75 +432,75 @@ function LinkedList(props){
         <div>
 
             {AllMentions.length > 0 && <div>
-            <Row>
-                <Col md={7} className='right'><div><h5>Associations List &nbsp;&nbsp;
-                    <OverlayTrigger
-                        key='bottom'
-                        placement='bottom'
-                        overlay={
-                            <Tooltip id={`tooltip-bottom'`}>
-                                Quick tutorial
-                            </Tooltip>
-                        }
-                    >
-                        <button className='butt_info' onClick={(e)=>changeInfoLinking(e)}><FontAwesomeIcon color='blue' icon={faInfoCircle} /></button></OverlayTrigger></h5></div></Col>
-                <Col md={5} className='right'> <button id='select_all_butt' className='select_all_butt' onClick={()=>handleSelectAll()} >Highlight all</button>
-                </Col>
+                <Row>
+                    <Col md={7} className='right'><div><h5>Associations List &nbsp;&nbsp;
+                        <OverlayTrigger
+                            key='bottom'
+                            placement='bottom'
+                            overlay={
+                                <Tooltip id={`tooltip-bottom'`}>
+                                    Quick tutorial
+                                </Tooltip>
+                            }
+                        >
+                            <button className='butt_info' onClick={(e)=>changeInfoLinking(e)}><FontAwesomeIcon color='blue' icon={faInfoCircle} /></button></OverlayTrigger></h5></div></Col>
+                    <Col md={5} className='right'> <button id='select_all_butt' className='select_all_butt' onClick={()=>handleSelectAll()} >Highlight all</button>
+                    </Col>
 
-            </Row>
+                </Row>
 
-            {ShowInfoLinking && <Zoom in={ShowInfoLinking}>
-                <div className='quick_tutorial'>
-                    <h5>Linking: quick tutorial</h5>
-                    <div>
-                        You can link the mentions you found with one (or more) concepts.
+                {ShowInfoLinking && <Zoom in={ShowInfoLinking}>
+                    <div className='quick_tutorial'>
+                        <h5>Linking: quick tutorial</h5>
                         <div>
-                            <ul className="fa-ul">
-                                <li><span className="fa-li"><FontAwesomeIcon icon={faGlasses}/></span>
-                                    Read the report on your left.
-                                </li>
-                                <li><span className="fa-li"><FontAwesomeIcon icon={faList}/></span> On your right the list of mentions is displayed. You can also select new mentions if you want:
-                                    the elements preceded by <FontAwesomeIcon icon={faPencilAlt}/> identify the clickable text portions. Click on the words that compose your mention and add the mention to the list.
-                                </li>
-                                <li><span className="fa-li"><FontAwesomeIcon icon={faProjectDiagram}/></span>Click on <i>Link</i>: a draggable window is displayed.
-                                </li>
-                                <li><span className="fa-li"><FontAwesomeIcon icon={faPlusCircle}/></span>Choose a semantic area and then a concept. Add the linked concept
-                                    clicking on "Add". The concept will be automatically displayed under its mention. Click on the concept to have some information about it.
-                                </li>
-                                <li><span className="fa-li"><FontAwesomeIcon icon={faTimesCircle}/></span>If you want to delete a linked concept click on the <FontAwesomeIcon icon={faTimesCircle}/> next to the concept.
-                                </li>
-                                <li><span className="fa-li"><FontAwesomeIcon icon={faTimesCircle}/></span>If you want to delete a mention (and its concepts) press to the <FontAwesomeIcon icon={faTimes}/> next to LINK button.
-                                </li>
-                                <li><span className="fa-li"><FontAwesomeIcon icon={faTimesCircle}/></span>If you want to delete all the linked concepts click on the <span style={{'color':'red'}}>CLEAR</span> button.
-                                </li>
-                                <li><span className="fa-li"><FontAwesomeIcon icon={faExclamationTriangle}/></span>Be aware that the concepts you link (or remove) are automatically added (or removed) to the list of concepts
-                                    viewable in Concepts section. The removal of the mention will affect not only the Concepts list but also the Mentions list of Mentions section.
-                                </li>
-                                <li><span className="fa-li"><FontAwesomeIcon icon={faSave}/></span>Your changes will be saved clicking on <span style={{'color':'green'}}>SAVE</span> button, changing actions or
-                                    going to the previous or next report.
-                                </li>
-                            </ul>
+                            You can link the mentions you found with one (or more) concepts.
+                            <div>
+                                <ul className="fa-ul">
+                                    <li><span className="fa-li"><FontAwesomeIcon icon={faGlasses}/></span>
+                                        Read the report on your left.
+                                    </li>
+                                    <li><span className="fa-li"><FontAwesomeIcon icon={faList}/></span> On your right the list of mentions is displayed. You can also select new mentions if you want:
+                                        the elements preceded by <FontAwesomeIcon icon={faPencilAlt}/> identify the clickable text portions. Click on the words that compose your mention and add the mention to the list.
+                                    </li>
+                                    <li><span className="fa-li"><FontAwesomeIcon icon={faProjectDiagram}/></span>Click on <i>Link</i>: a draggable window is displayed.
+                                    </li>
+                                    <li><span className="fa-li"><FontAwesomeIcon icon={faPlusCircle}/></span>Choose a semantic area and then a concept. Add the linked concept
+                                        clicking on "Add". The concept will be automatically displayed under its mention. Click on the concept to have some information about it.
+                                    </li>
+                                    <li><span className="fa-li"><FontAwesomeIcon icon={faTimesCircle}/></span>If you want to delete a linked concept click on the <FontAwesomeIcon icon={faTimesCircle}/> next to the concept.
+                                    </li>
+                                    <li><span className="fa-li"><FontAwesomeIcon icon={faTimesCircle}/></span>If you want to delete a mention (and its concepts) press to the <FontAwesomeIcon icon={faTimes}/> next to LINK button.
+                                    </li>
+                                    <li><span className="fa-li"><FontAwesomeIcon icon={faTimesCircle}/></span>If you want to delete all the linked concepts click on the <span style={{'color':'red'}}>CLEAR</span> button.
+                                    </li>
+                                    <li><span className="fa-li"><FontAwesomeIcon icon={faExclamationTriangle}/></span>Be aware that the concepts you link (or remove) are automatically added (or removed) to the list of concepts
+                                        viewable in Concepts section. The removal of the mention will affect not only the Concepts list but also the Mentions list of Mentions section.
+                                    </li>
+                                    <li><span className="fa-li"><FontAwesomeIcon icon={faSave}/></span>Your changes will be saved clicking on <span style={{'color':'green'}}>SAVE</span> button, changing actions or
+                                        going to the previous or next report.
+                                    </li>
+                                </ul>
+                            </div>
                         </div>
-                    </div>
-                </div></Zoom>
+                    </div></Zoom>
 
                 }
                 {ShowInfoLinking && <form id = "linked-form" className="linked-form" />}
 
-            {!ShowInfoLinking && <div className="linked-list" id ="linked-list">
+                {!ShowInfoLinking && <div className="linked-list" id ="linked-list">
 
-                {WordMention.length >0 && <div><AddMention mention_to_add ={WordMention}/><hr/></div>}
+                    {WordMention.length >0 && <div><AddMention mention_to_add ={WordMention}/><hr/></div>}
 
-                <form id = "linked-form" className="linked-form">
-                    {AllMentions.length>0 && AllMentions.map((mention,index) => <div className='linkedElement'>
-                        <Association id = {index} mention={mention} text={mention['mention_text']} start={mention['start']}
-                                     stop={mention['stop']} />
+                    <form id = "linked-form" className="linked-form">
+                        {AllMentions.length>0 && AllMentions.map((mention,index) => <div className='linkedElement'>
+                            <Association id = {index} mention={mention} text={mention['mention_text']} start={mention['start']}
+                                         stop={mention['stop']} />
 
 
-                    </div>)}
-                </form>
+                        </div>)}
+                    </form>
+                </div>}
             </div>}
-        </div>}
 
         </div>
 

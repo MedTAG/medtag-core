@@ -76,12 +76,12 @@ function SelectMenu(props){
     useEffect(()=>{
         if(Use !== '' && Inst !== '') {
             if(Inst === 'PUBMED'){
-                axios.get('http://127.0.0.1:8000/get_PUBMED_batch_list', {params: {usecase: Use}}).then(response => {
+                axios.get('http://0.0.0.0:8000/get_PUBMED_batch_list', {params: {usecase: Use}}).then(response => {
                     SetBatchList(response.data['batch_list']);
                 })
             }
             else{
-                axios.get('http://127.0.0.1:8000/get_batch_list', {params: {usecase: Use}}).then(response => {
+                axios.get('http://0.0.0.0:8000/get_batch_list', {params: {usecase: Use}}).then(response => {
                     SetBatchList(response.data['batch_list']);
                 })
             }
@@ -103,7 +103,7 @@ function SelectMenu(props){
     function handleChangeLanguage(e){
         SetLang(e.target.value)
         // SetLanguage(e.target.value)
-        axios.post("http://127.0.0.1:8000/new_credentials", {
+        axios.post("http://0.0.0.0:8000/new_credentials", {
             usecase: UseCase, language: e.target.value, institute: Institute, annotation: Annotation,report_type: ReportType,batch:BatchNumber
         })
             .then(function (response) {
@@ -138,14 +138,14 @@ function SelectMenu(props){
         // SetUse(e.target.value)
         var opt_batches = []
         if(i === 'pubmed'){
-            axios.get('http://127.0.0.1:8000/get_PUBMED_batch_list', {params: {usecase: UseCase}}).then(response => {
+            axios.get('http://0.0.0.0:8000/get_PUBMED_batch_list', {params: {usecase: UseCase}}).then(response => {
                 SetBatchList(response.data['batch_list']);
                 opt_batches = response.data['batch_list']
                 var b = 1
                 if (opt_batches.length > 0){
                     b = opt_batches[0]
                 }
-                axios.post("http://127.0.0.1:8000/new_credentials", {
+                axios.post("http://0.0.0.0:8000/new_credentials", {
                     usecase: UseCase, language: Language, institute: e.target.value, annotation: Annotation,report_type: i,batch:b
                 })
                     .then(function (response) {
@@ -165,14 +165,14 @@ function SelectMenu(props){
             })
         }
         else{
-            axios.get('http://127.0.0.1:8000/get_batch_list', {params: {usecase: UseCase}}).then(response => {
+            axios.get('http://0.0.0.0:8000/get_batch_list', {params: {usecase: UseCase}}).then(response => {
                 SetBatchList(response.data['batch_list']);
                 opt_batches = response.data['batch_list']
                 var b = 1
                 if (opt_batches.length > 0){
                     b = opt_batches[0]
                 }
-                axios.post("http://127.0.0.1:8000/new_credentials", {
+                axios.post("http://0.0.0.0:8000/new_credentials", {
                     usecase: UseCase, language: Language, institute: e.target.value, annotation: Annotation,report_type: i,batch:b
                 })
                     .then(function (response) {
@@ -199,14 +199,14 @@ function SelectMenu(props){
         SetUse(e.target.value)
         var opt_batches = []
         if(ReportType === 'pubmed'){
-            axios.get('http://127.0.0.1:8000/get_PUBMED_batch_list', {params: {usecase: e.target.value}}).then(response => {
+            axios.get('http://0.0.0.0:8000/get_PUBMED_batch_list', {params: {usecase: e.target.value}}).then(response => {
                 SetBatchList(response.data['batch_list']);
                 opt_batches = response.data['batch_list']
                 var b = 1
                 if (opt_batches.length > 0){
                     b = opt_batches[0]
                 }
-                axios.post("http://127.0.0.1:8000/new_credentials", {
+                axios.post("http://0.0.0.0:8000/new_credentials", {
                     usecase: e.target.value, language: Language, institute: Institute, annotation: Annotation,report_type: ReportType,batch:b
                 })
                     .then(function (response) {
@@ -223,14 +223,14 @@ function SelectMenu(props){
             })
         }
         else{
-            axios.get('http://127.0.0.1:8000/get_batch_list', {params: {usecase: e.target.value}}).then(response => {
+            axios.get('http://0.0.0.0:8000/get_batch_list', {params: {usecase: e.target.value}}).then(response => {
                 SetBatchList(response.data['batch_list']);
                 opt_batches = response.data['batch_list']
                 var b = 1
                 if (opt_batches.length > 0){
                     b = opt_batches[0]
                 }
-                axios.post("http://127.0.0.1:8000/new_credentials", {
+                axios.post("http://0.0.0.0:8000/new_credentials", {
                     usecase: e.target.value, language: Language, institute: Institute, annotation: Annotation,report_type: ReportType,batch:b
                 })
                     .then(function (response) {
@@ -251,7 +251,7 @@ function SelectMenu(props){
 
     function handleChangeBatch(e){
         SetBatch(e.target.value)
-        axios.post("http://127.0.0.1:8000/new_credentials", {
+        axios.post("http://0.0.0.0:8000/new_credentials", {
             usecase: UseCase, language: Language, institute: Institute, annotation: Annotation,report_type: ReportType,batch:e.target.value
         })
             .then(function (response) {
@@ -332,7 +332,7 @@ function SelectMenu(props){
 
                 </Col>
                 <Col md={3} style={{'text-align':'right'}}>
-                    <span className='userInfo'><span > {Username} </span><FontAwesomeIcon icon={faUser} size='2x'/> <a  href="http://127.0.0.1:8000/logout" className="badge badge-secondary" >Logout <FontAwesomeIcon icon={faSignOutAlt}/></a></span>
+                    <span className='userInfo'><span > {Username} </span><FontAwesomeIcon icon={faUser} size='2x'/> <a  href="http://0.0.0.0:8000/logout" className="badge badge-secondary" >Logout <FontAwesomeIcon icon={faSignOutAlt}/></a></span>
 
                 </Col>
 

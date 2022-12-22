@@ -42,7 +42,7 @@ function LinkDialogNew(props){
     // const [ConceptChosen, SetConceptChosen] = useState('');
     const [Enable, SetEnable] = useState(false);
 
-   // const [Enable_Area, SetEnable_Area] = useState(true)
+    // const [Enable_Area, SetEnable_Area] = useState(true)
     const [options_concepts,Setoptions_concepts] = useState([])
     const [Options_area, SetOptions_area] = useState([])
     const [Action, SetAction] = action;
@@ -201,7 +201,7 @@ function LinkDialogNew(props){
             SetShow(false)
             SetExist(false)
         }
-        else{
+        else {
             SetExist(true)
 
         }
@@ -277,61 +277,119 @@ function LinkDialogNew(props){
         }
     },[ConceptChosen])
 
+
+    useEffect(() => {
+
+        window.addEventListener('keydown', keyPress);
+        // Remove event listeners on cleanup
+        return () => {
+            window.removeEventListener('keydown', keyPress);
+        };
+    }, [ConceptChosen])
+
+    function keyPress(e){
+        // if(token === 'left'){
+        if(e.keyCode === 27){
+            console.log('close')
+            // console.log('destra',TokenNextPrev[0])
+            handleClose()
+            // onSubDx(e)
+        }
+
+        // }
+        // else if(token === 'right'){
+        if(e.keyCode === 13){
+            console.log('save')
+
+            // console.log('destra2',TokenNextPrev[1])
+            // onSubSx(e)
+            if(ConceptChosen !== ''){
+                onAddAssociation()
+                SetShow(false)
+            }
+
+        }
+        // }
+
+    }
+
+    useEffect(() => {
+        window.addEventListener('keydown', keyPressClose);
+        // Remove event listeners on cleanup
+        return () => {
+            window.removeEventListener('keydown', keyPress);
+        };
+    }, [])
+
+    function keyPressClose(e){
+        // if(token === 'left'){
+        if(e.keyCode === 27){
+            // console.log('destra',TokenNextPrev[0])
+            handleClose()
+            // onSubDx(e)
+        }
+
+
+
+    }
+
+
+
     return(
 
         <div>
             <Draggable>
                 <Modal onHide={handleClose} dialogAs={DraggableModalDialog} show={Show}
 
-            >
-                <Modal.Header closeButton className='headModal'>
-                    <h5><span>New Association for: </span><span style={{'color':'royalblue'}}>{props.mention.mention_text}</span></h5>
-                </Modal.Header>
-                <Modal.Body>
-                    {Exist && <div style={{'font-size':'18px','color':'red'}}><FontAwesomeIcon icon={faTimesCircle}/> This association already exists <FontAwesomeIcon icon={faTimesCircle}/></div>}
+                >
+                    <Modal.Header closeButton className='headModal'>
+                        <h5><span>New Association for: </span><span style={{'color':'royalblue'}}>{props.mention.mention_text}</span></h5>
+                    </Modal.Header>
+                    <Modal.Body>
+                        {Exist && <div style={{'font-size':'18px','color':'red'}}><FontAwesomeIcon icon={faTimesCircle}/> This association already exists <FontAwesomeIcon icon={faTimesCircle}/></div>}
 
-                    <div style={{'width':'100%'}}>
-                        <div><span>Please, select the </span><span style={{'font-weight':'bold'}}>semantic area</span>:</div>
-                        <span>
+                        <div style={{'width':'100%'}}>
+                            <div><span>Please, select the </span><span style={{'font-weight':'bold'}}>semantic area</span>:</div>
+                            <span>
                         {Area !== '' && <Select styles={styles}
-                            onChange={(option)=>handleChange_area(option)}
-                            className='selection'
-                            options={Options_area}
-                            defaultValue={Options_area.slice(-1)[0]}
+                                                onChange={(option)=>handleChange_area(option)}
+                                                className='selection'
+                                                options={Options_area}
+                                                defaultValue={Options_area.slice(-1)[0]}
 
                         />}
                         </span>
-                        <span>
+                            <span>
                         {All === false && <div>
                             <span> Select a </span><span style={{'font-weight':'bold'}}>concept</span>:
                             <Select styles={styles}
-                                className='selection'
-                                onChange={(option)=>handleChange_concept(option)}
-                                options={options_concepts}
+                                    className='selection'
+                                    onChange={(option)=>handleChange_concept(option)}
+                                    options={options_concepts}
 
                             /></div>}
 
-                        {All === true && <div>
-                            <span> Select a </span><span style={{'font-weight':'bold'}}>concept</span>:
-                            <Select styles={styles}
-                                options={grouped}
-                                onChange={(option)=>handleChange_concept(option)}
-                                formatGroupLabel={formatGroupLabel}
-                            />
-                            </div>}
+                                {All === true && <div>
+                                    <span> Select a </span><span style={{'font-weight':'bold'}}>concept</span>:
+                                    <Select styles={styles}
+                                            options={grouped}
+                                            onChange={(option)=>handleChange_concept(option)}
+                                            formatGroupLabel={formatGroupLabel}
+                                    />
+                                </div>}
                     </span>
-                    </div>
+                        </div>
 
-                </Modal.Body>
-                <Modal.Footer>
-                    <Button variant="secondary" onClick={handleClose} >
-                        Close
-                    </Button>
-                    <Button disabled={!Enable} id='addbottone1' onClick={(e)=>onAddAssociation(e)} variant="primary" >
-                        Add
-                    </Button>
-                </Modal.Footer>
-            </Modal>
+                    </Modal.Body>
+                    <Modal.Footer>
+                        <Button variant="secondary" onClick={handleClose} >
+                            Close
+                        </Button>
+                        <Button disabled={!Enable} id='addbottone1' onClick={(e)=>onAddAssociation(e)} variant="primary" >
+                            Add
+                        </Button>
+                    </Modal.Footer>
+                </Modal>
             </Draggable>
         </div>
 

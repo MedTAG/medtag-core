@@ -236,7 +236,7 @@ function Configure() {
 
         axios({
             method: "post",
-            url: "http://0.0.0.0:8000/check_input_files",
+            url: "check_input_files",
             data: formData,
             headers: { "Content-Type": "multipart/form-data" },
         })
@@ -623,7 +623,7 @@ function Configure() {
 
             axios({
                 method: "post",
-                url: "http://0.0.0.0:8000/configure_db",
+                url: "configure_db",
                 data: FormToSend,
                 headers: { "Content-Type": "multipart/form-data" },
             })
@@ -632,7 +632,7 @@ function Configure() {
                     if(response.data['message'] !== undefined){
                         SetLoadingResponse(false)
                         SetMessage('MedTAG has been correctly configured.')
-                        axios.get("http://0.0.0.0:8000/get_usecase_inst_lang").then(response => {
+                        axios.get("get_usecase_inst_lang").then(response => {
                             var arr = []
                             response.data['usecase'].map(use=>{
                                 if(use.toLowerCase() === 'colon' || use.toLowerCase() === 'lung' || use.toLowerCase().includes('uterine') || use.toLowerCase().includes('cervix')){
@@ -674,7 +674,7 @@ function Configure() {
 
     function onSaveExample(e,token){
         e.preventDefault()
-        axios.get('http://0.0.0.0:8000/download_examples', {params:{token:token}})
+        axios.get('download_examples', {params:{token:token}})
                 .then(function (response) {
 
                     if(token === 'reports'){
@@ -778,7 +778,7 @@ function Configure() {
 
     useEffect(()=>{
         if(Message !== ''){
-            axios.get('http://0.0.0.0:8000/get_post_fields_for_auto').then(function(response){
+            axios.get('get_post_fields_for_auto').then(function(response){
                 SetFieldsUseCasesToExtract(response.data['total_fields'])
                 var empty = true
                 Object.keys(response.data['total_fields']).map(key=>{
@@ -796,7 +796,7 @@ function Configure() {
             }).catch(function(error){
                 console.log('error: ',error)
             })
-            axios.get("http://0.0.0.0:8000/pubmed_missing_auto").then(response => {
+            axios.get("pubmed_missing_auto").then(response => {
                 SetPubMedMissingAuto(response.data);
 
             }).catch(function (error){console.log(error)})
@@ -814,7 +814,7 @@ function Configure() {
         }
         axios({
             method: "post",
-            url: "http://0.0.0.0:8000/get_keys_and_uses_from_csv",
+            url: "get_keys_and_uses_from_csv",
             data: formData,
             headers: { "Content-Type": "multipart/form-data" },
         })
@@ -841,7 +841,7 @@ function Configure() {
         }
         axios({
             method: "post",
-            url: "http://0.0.0.0:8000/get_keys_and_uses_from_csv",
+            url: "get_keys_and_uses_from_csv",
             data: formData,
             headers: { "Content-Type": "multipart/form-data" },
         })
@@ -953,7 +953,7 @@ function Configure() {
     //             selected_obj[el].push('abstract')
     //             selected_obj[el].push('title')
     //         })
-    //         axios.post('http://0.0.0.0:8000/create_auto_annotations',{
+    //         axios.post('create_auto_annotations',{
     //                 usecase:UsesInserted,
     //                 selected:selected_obj,
     //                 report_type:key
@@ -988,7 +988,7 @@ function Configure() {
     //                 }
     //             })
     //         })
-    //         axios.post('http://0.0.0.0:8000/create_auto_annotations',{
+    //         axios.post('create_auto_annotations',{
     //                 usecase:UsesInserted,
     //                 selected:selected_obj,
     //                 report_type:key
@@ -1028,7 +1028,7 @@ function Configure() {
             {(Username !== Admin && Username !== 'Test') ?
                 <div><h1>FORBIDDEN</h1>
                     <div>
-                        <a href="http://0.0.0.0:8000/index">
+                        <a href="index">
                             Back
                         </a>
                     </div>
@@ -1058,7 +1058,7 @@ function Configure() {
             {/*                            <Col md={3}></Col>*/}
             {/*                            <Col md={2}>*/}
             {/*                                <>*/}
-            {/*                                    <span><a href="http://0.0.0.0:8000/logout"><Button variant = 'primary'>Login</Button></a></span>*/}
+            {/*                                    <span><a href="logout"><Button variant = 'primary'>Login</Button></a></span>*/}
             {/*                                </>*/}
             {/*                            </Col>*/}
             {/*                            <Col md={1}></Col>*/}
@@ -1118,7 +1118,7 @@ function Configure() {
             {/*                            </> : <div className='spinnerDiv'><Spinner animation="border" role="status"/></div>}*/}
             {/*                            <hr/>*/}
             {/*                            <div style={{'text-align':'center','margin-top':'2%'}}>*/}
-            {/*                                <div><a href="http://0.0.0.0:8000/logout"><Button variant = 'primary'>Login</Button></a></div>*/}
+            {/*                                <div><a href="logout"><Button variant = 'primary'>Login</Button></a></div>*/}
             {/*                            </div>*/}
 
 
@@ -1126,12 +1126,12 @@ function Configure() {
             {/*                            </div>}*/}
 
             {/*                        </div> : <div style={{'text-align':'center','margin-top':'2%'}}>*/}
-            {/*                        <div><a href="http://0.0.0.0:8000/logout"><Button variant = 'primary'>Login</Button></a></div>*/}
+            {/*                        <div><a href="logout"><Button variant = 'primary'>Login</Button></a></div>*/}
             {/*                    </div>}*/}
             {/*                    /!*{AutoAnnoCompleted === true && <div>All the reports have been correctly automatically annotated.<hr/></div>}*!/*/}
             {/*                    /!*{AutoAnnoCompleted === false && <div><b>An error occurred during automatic annotation.</b> Please contact us, or try to automatically annotate in <i>Configure -> Update Configuration -> Get Automatic annotations</i>.<hr/></div>}*!/*/}
             {/*                    /!*{(UsesInserted.length === 0 || AutoAnnoCompleted !== 0) && <><div>Log in with your credentials</div><div style={{'text-align':'center'}}>*!/*/}
-            {/*                    /!*    <span><a href="http://0.0.0.0:8000/logout"><Button variant = 'primary'>Login</Button></a></span>*!/*/}
+            {/*                    /!*    <span><a href="logout"><Button variant = 'primary'>Login</Button></a></span>*!/*/}
             {/*                    /!*    </div></>}*!/*/}
 
 
@@ -1168,7 +1168,7 @@ function Configure() {
 
             {/*            </div>*/}
             {/*            <div style={{'text-align':'center'}}>*/}
-            {/*                <span><a href="http://0.0.0.0:8000/logout"><Button variant = 'primary'>Login</Button></a></span>*/}
+            {/*                <span><a href="logout"><Button variant = 'primary'>Login</Button></a></span>*/}
             {/*            </div>*/}
             {/*        </Container>*/}
             {/*        }*/}

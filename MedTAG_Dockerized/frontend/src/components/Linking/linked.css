@@ -16,6 +16,15 @@
 
     background-color: white;
 }
+
+.blocked{
+    font-weight: bold;
+}
+.normal{
+    font-weight: normal;
+}
+
+
 .button_l{
     margin: 0px;
     border: 0px;

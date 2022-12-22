@@ -132,13 +132,14 @@ function App() {
     const [LoadingChangeGT,SetLoadingChangeGT] = useState(false)
     const [SelectedLang,SetSelectedLang] = useState('')
     const [UsersListAnnotations,SetUsersListAnnotations] = useState([])
+    const [ReloadMentions,SetReloadMentions] = useState(false)
 
     useEffect(()=>{
         if(ShowBar){
             SetShowBar(false)
         }
         SetLoadingMenu(true)
-        axios.get("http://127.0.0.1:8000/get_usecase_inst_lang").then(response => {
+        axios.get("http://0.0.0.0:8000/get_usecase_inst_lang").then(response => {
             console.log('usecaselist',response.data['usecase'])
             console.log('languagelist',response.data['language'])
             console.log('institutelist',response.data['institute'])
@@ -149,7 +150,7 @@ function App() {
         })
         //SetLoadingMenu(false)
 
-        axios.get("http://127.0.0.1:8000/get_admin").then(response => {
+        axios.get("http://0.0.0.0:8000/get_admin").then(response => {
             SetAdmin(response.data['admin'])
 
 
@@ -164,7 +165,7 @@ function App() {
         window.scrollTo(0,0)
 
 
-        axios.get("http://127.0.0.1:8000/get_users_list")
+        axios.get("http://0.0.0.0:8000/get_users_list")
             .then(response => {
                 if(response.data.length>0){
                     // console.log(response.data)
@@ -182,7 +183,7 @@ function App() {
 
     useEffect(()=>{
         // console.log('prima entrata in parametri')
-        axios.get("http://127.0.0.1:8000/get_session_params").then(response => {
+        axios.get("http://0.0.0.0:8000/get_session_params").then(response => {
             SetInstitute(response.data['institute']);
             SetLanguage(response.data['language']);
             SetUseCase(response.data['usecase']);
@@ -209,7 +210,7 @@ function App() {
 
     return (
         <div className="App">
-            <AppContext.Provider value={{makereq:[MakeReq,SetMakeReq],selectedLang:[SelectedLang,SetSelectedLang],loadingChangeGT:[LoadingChangeGT,SetLoadingChangeGT],updateSingle:[UpdateSingleReport,SetUpdateSingleReport],batchNumber:[BatchNumber,SetBatchNumber],usersList:[UsersList,SetUsersList],usersListAnnotations:[UsersListAnnotations,SetUsersListAnnotations],tablerows:[Rows,SetRows],report_type:[ReportType,SetReportType],showmajoritygt:[ShowMajorityGroundTruth,SetShowMajorityGroundTruth],
+            <AppContext.Provider value={{reload:[ReloadMentions,SetReloadMentions],makereq:[MakeReq,SetMakeReq],selectedLang:[SelectedLang,SetSelectedLang],loadingChangeGT:[LoadingChangeGT,SetLoadingChangeGT],updateSingle:[UpdateSingleReport,SetUpdateSingleReport],batchNumber:[BatchNumber,SetBatchNumber],usersList:[UsersList,SetUsersList],usersListAnnotations:[UsersListAnnotations,SetUsersListAnnotations],tablerows:[Rows,SetRows],report_type:[ReportType,SetReportType],showmajoritygt:[ShowMajorityGroundTruth,SetShowMajorityGroundTruth],
                 showmajoritymodal:[ShowMajorityModal,SetShowMajorityModal],userchosen:[UserChosen,SetUserChosen],showmember:[ShowMemberGt,SetShowMemberGt],showmajority:[ShowMajorityGt,SetShowMajorityGt],showautoannotation:[ShowAutoAnn,SetShowAutoAnn],showreporttext:[showReportText,SetshowReportText],showannotations:[ShowAnnotationsStats,SetShowAnnotationsStats],annotation:[Annotation,SetAnnotation],profile:[Profile,SetProfile],clickedCheck:[ClickedCheck, SetClickedCheck],loadingLabels:[LoadingLabels, SetLoadingLabels],loadingMentions:[LoadingMentions, SetLoadingMentions],loadingColors:[LoadingMentionsColor, SetLoadingMentionsColor],loadingAssociations:[LoadingAssociations, SetLoadingAssociations],loadingConcepts:[LoadingConcepts, SetLoadingConcepts],loadingReport:[LoadingReport, SetLoadingReport],loadingReportList:[LoadingReportList, SetLoadingReportList],
                 conceptOption:[selectedOption, setSelectedOption],removedConcept:[RemovedConcept,SetRemovedConcept],indexList:[AnnotatedIndexList,SetAnnotatedIndexList],reportArray:[SelectOptions,SetSelectOptions],orderVar:[OrderVar,SetOrderVar],fields:[Fields,SetFields],fieldsToAnn:[FieldsToAnn,SetFieldsToAnn],
                 admin:[Admin, SetAdmin],showSnackMessage:[SnackMessage,SetSnackMessage],showSnack:[ShowSnack, SetShowSnack], labelsToInsert:[LabToInsert,SetLabToInsert],start:[Start,SetStart],changeConceots:[change,setChange],username:[Username,SetUsername],showOptions:[ShowModal,SetShowModal],language:[Language,SetLanguage],institute:[Institute, SetInstitute], usecase:[useCase,SetUseCase],outcomes:[Outcomes,SetOutcomes],semanticArea:[SemanticArea,SetSemanticArea],concepts:[Concepts,SetConcepts],reportString:[reportsString,setReportsString],radio:[RadioChecked, SetRadioChecked],finalcount:[FinalCount,SetFinalCount],reached:[FinalCountReached,SetFinalCountReached],

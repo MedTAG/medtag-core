@@ -58,7 +58,7 @@ function OptionsModal(props){
 
     useEffect(()=>{
         if(Use !== '' && Rep !== '' && Lang !== '' && Ins !== '' && Batch !== ''){
-            axios.get('http://0.0.0.0:8000/check_auto_presence_for_configuration',{params:{batch:Batch,report_type:Rep,usecase:Use,institute:Ins,language:Lang}})
+            axios.get('check_auto_presence_for_configuration',{params:{batch:Batch,report_type:Rep,usecase:Use,institute:Ins,language:Lang}})
                 .then(response=>{
                     if(response.data['count']>0){
                         var arr = []
@@ -81,7 +81,7 @@ function OptionsModal(props){
         if(Use !== ''){
             var opt = []
             if(Rep === 'reports'){
-                axios.get('http://0.0.0.0:8000/get_batch_list',{params:{usecase:Use}}).then(response=>{
+                axios.get('get_batch_list',{params:{usecase:Use}}).then(response=>{
                     SetBatchList(response.data['batch_list'])
                     if(response.data['batch_list'].length ===1){
                         SetBatch(1)
@@ -93,7 +93,7 @@ function OptionsModal(props){
                 Setoptions_batch(opt)
             }
             else{
-                axios.get('http://0.0.0.0:8000/get_PUBMED_batch_list',{params:{usecase:Use}}).then(response=>{
+                axios.get('get_PUBMED_batch_list',{params:{usecase:Use}}).then(response=>{
                     SetBatchList(response.data['batch_list'])
                     if(response.data['batch_list'].length ===1){
                         SetBatch(1)
@@ -131,7 +131,7 @@ function OptionsModal(props){
             })
             Setoptions_institute(options_institute)
             Setoptions_language(options_language)
-            axios.get('http://0.0.0.0:8000/check_PUBMED_reports').then(function(response){
+            axios.get('check_PUBMED_reports').then(function(response){
                 if(response.data['count'] > 0){
                     SetPubMedPresence(true)
                     options_rep.push({value: 'pubmed', label: 'PubMed articles'})
@@ -143,7 +143,7 @@ function OptionsModal(props){
                 console.log('error: ',error)
             })
             // ADDED 21/10/21
-            axios.get('http://0.0.0.0:8000/check_medtag_reports').then(function(response){
+            axios.get('check_medtag_reports').then(function(response){
                 if(response.data['count'] > 0){
                     SetMedTAGPresence(true)
                     options_rep.push({value: 'reports', label: 'MedTAG reports'})
@@ -159,7 +159,7 @@ function OptionsModal(props){
             SetOptions_Reptype(options_rep)
 
         }
-        axios.get('http://0.0.0.0:8000/get_post_fields_for_auto').then(function(response){
+        axios.get('get_post_fields_for_auto').then(function(response){
             SetFieldsUseCasesToExtract(response.data['total_fields'])
             SetFieldsAlreadyExtracted(response.data['extract_fields'])
 
@@ -175,7 +175,7 @@ function OptionsModal(props){
             SetIns('PUBMED')
             SetLang('english')
 
-            axios.get("http://0.0.0.0:8000/pubmed_missing_auto").then(response => {
+            axios.get("pubmed_missing_auto").then(response => {
                 (response.data['usecase'].map(uc=>{
                     options_usecases.push({value: uc, label: uc})
 
@@ -204,7 +204,7 @@ function OptionsModal(props){
         }
         else { //Salvo solo se tutti e tre i campi sono stati riempiti
             var count = 0
-            axios.get('http://0.0.0.0:8000/get_reports', {
+            axios.get('get_reports', {
                 params: {
                     institute: Ins,
                     usec: Use,
@@ -219,7 +219,7 @@ function OptionsModal(props){
                 }
                 else if(count >0) {
 
-                    axios.post("http://0.0.0.0:8000/new_credentials", {
+                    axios.post("new_credentials", {
                         usecase: Use, language: Lang, institute: Ins, annotation: Anno,report_type: Rep,batch:Batch
                     })
                         .then(function (response) {

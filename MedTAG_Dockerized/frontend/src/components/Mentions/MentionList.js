@@ -31,9 +31,10 @@ import Tooltip from "react-bootstrap/Tooltip";
 // axios.defaults.xsrfHeaderName = "X-CSRFTOKEN";
 
 function MentionList(props){
-    const { language, mentionsList,color,showmember,selectedLang,showautoannotation,showmajority,loadingColors,finalcount, highlightMention, action,reports, index, mentionSingleWord, allMentions, tokens } = useContext(AppContext);
+    const { language, mentionsList,color,reload,showmember,selectedLang,showautoannotation,showmajority,loadingColors,finalcount, highlightMention, action,reports, index, mentionSingleWord, allMentions, tokens } = useContext(AppContext);
     //const { mentionsList } = useContext(MentionContext);
     const [Children,SetChildren] = tokens;
+    const [ReloadMentions,SetReloadMentions] = reload;
     const [FinalCount, SetFinalCount] = finalcount;
     const [LoadingMentionsColor, SetLoadingMentionsColor] = loadingColors;
     const [mentions_to_show,SetMentions_to_show] = mentionsList;
@@ -49,13 +50,15 @@ function MentionList(props){
     const [Saved,SetSaved] = useState(false)
     const [HighlightMention, SetHighlightMention] = highlightMention;
     //const [Highlight, SetHighlight] = useState('Highlight all');
+
     useEffect(()=>{
         // console.log('MENTISHOW',ShowInfoMentions)
+        SetReloadMentions(false)
         if(SelectedLang === Language && WordMention.length === 0) {
-            console.log('entro')
-            console.log('count1', FinalCount)
-            console.log('count1', Children.length)
-            console.log('count1',mentions_to_show)
+            // console.log('entro')
+            // console.log('count1', FinalCount)
+            // console.log('count1', Children.length)
+            // console.log('count1',mentions_to_show)
             if (ShowInfoMentions === false) {
                 if (Children.length === FinalCount) {
                     if (mentions_to_show.length === 0) {
@@ -75,16 +78,62 @@ function MentionList(props){
                             child.style.color = 'black'
                             //Added!!
                         })
-                        //console.log('PASSO DI QUA, MENTIONS',mentions_to_show)
-                        console.log('PASSO COLORO')
+                        console.log('PASSO DI QUA, MENTIONS',mentions_to_show)
+                        // console.log('PASSO COLORO')
+                        var range_overlapping = []
+                        mentions_to_show.map((m,i)=>{
+                            console.log('m1',m)
+                            console.log('m1',range_overlapping)
+
+                            var start = m.start
+                            var stop = m.stop
+                            var found = false
+                            range_overlapping.map((o,i)=>{
+                                // console.log('m1 found',o[0],o[1],start,stop)
+                                // console.log('m1 found',start<=o[1])
+                                // console.log('m1 found',o[0]<= stop)
+                                // console.log('m1 found',(stop<= o[1]))
+                                // console.log('m1 found',(o[0]<=start && start<=o[1]))
+                                // console.log('m1 found',(o[0]<= stop && stop<= o[1]))
+                                if (((o[0]<=start && start<=o[1]) || (o[0]<= stop && stop<= o[1]))){
+                                    o[0] = Math.min(o[0],start)
+                                    o[1] = Math.max(o[1],stop)
+                                    found = true
+                                }
+                            })
+                            if (found === false){
+
+                                range_overlapping.push([start,stop])
+                                // console.log('m1',start,stop)
+                                // console.log('m1',range_overlapping)
+
+                            }
+
+                        })
+                        console.log('rangeover',range_overlapping)
+
+
                         mentions_to_show.map((mention, index) => {
                             var array = fromMentionToArray(mention.mention_text, mention.start)
                             //console.log(array)
                             var words_array = []
+                            // var index_color = index
                             var index_color = index
-                            if (Color[index] === undefined) {
-                                index_color = index - Color.length
+
+                            range_overlapping.map((o,i)=>{
+                                if (((o[0]<=mention.start && mention.start<=o[1]) || (o[0]<= mention.stop && mention.stop<= o[1]))){
+                                    index_color = i
+                                }
+                            })
+                            console.log('m1',mention.text,index)
+
+                            if (Color[index_color] === undefined) {
+                                index_color = index_color - Color.length
                             }
+
+                            // if (Color[index] === undefined) {
+                            //     index_color = index - Color.length
+                            // }
                             bottone_mention[index].style.color = Color[index_color]
 
                             Children.map(child => {
@@ -93,7 +142,8 @@ function MentionList(props){
                                     if (child.id.toString() === word.startToken.toString()) {
 
                                         words_array.push(child)
-                                        // child.setAttribute('class', 'notSelected')
+
+                                        // supporto overlapping
                                         child.setAttribute('class', 'notSelectedMention')
                                         console.log('PASSO COLORO qua',child)
 
@@ -126,7 +176,7 @@ function MentionList(props){
 
             SetLoadingMentionsColor(false)
         }
-    },[Action,mentions_to_show,Color,ShowInfoMentions,SelectedLang,FinalCount,Children]) //COLOR AGGIUNTO,children
+    },[Action,mentions_to_show,Color,ShowInfoMentions,SelectedLang,FinalCount,Children,ReloadMentions]) //COLOR AGGIUNTO,children
 
 
 
@@ -175,10 +225,16 @@ function MentionList(props){
     }
 
     function handleSelectAll(){
+        Children.map(c=>{
+            c.classList.remove('normal')
+            c.classList.remove('blocked')
+        })
         var count_bold = 0
         var count_normal = 0
         var mentions = Array.from(document.getElementsByClassName('butt_mention'))
         mentions.map(but=>{
+            but.classList.remove('normal')
+            but.classList.remove('blocked')
             but.style.fontWeight === 'bold' ? count_bold = count_bold +1 : count_normal = count_normal +1
 
         })

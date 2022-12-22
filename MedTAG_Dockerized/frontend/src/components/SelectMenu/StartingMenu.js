@@ -94,7 +94,7 @@ function StartingMenu(props){
             Setoptions_language(options_language)
         }
 
-        axios.get('http://0.0.0.0:8000/check_PUBMED_reports').then(function(response){
+        axios.get('check_PUBMED_reports').then(function(response){
             if(response.data['count'] > 0){
                 SetPubMedPresence(true)
                 options_reps.push({value: 'pubmed', label: 'PubMED articles'})
@@ -108,7 +108,7 @@ function StartingMenu(props){
             console.log('error: ',error)
         })
         // ADDED 21/10/21
-        axios.get('http://0.0.0.0:8000/check_medtag_reports').then(function(response){
+        axios.get('check_medtag_reports').then(function(response){
             if(response.data['count'] > 0){
                 SetMedTAGPresence(true)
                 // options_reps.push({value: 'reports', label: 'MedTAG articles'})
@@ -128,7 +128,7 @@ function StartingMenu(props){
         var options_usecases = []
         var pub_options_usecases = []
 
-        axios.get("http://0.0.0.0:8000/pubmed_reports").then(response => {
+        axios.get("pubmed_reports").then(response => {
             (response.data['usecase'].map(uc=>{
                 pub_options_usecases.push({value: uc, label: uc})
 
@@ -136,7 +136,7 @@ function StartingMenu(props){
             SetPuboptions_usecases(pub_options_usecases)
         }).catch(function (error){console.log(error)})
 
-        axios.get("http://0.0.0.0:8000/medtag_reports").then(response => {
+        axios.get("medtag_reports").then(response => {
             (response.data['usecase'].map(uc=>{
                 options_usecases.push({value: uc, label: uc})
 
@@ -153,7 +153,7 @@ function StartingMenu(props){
             SetIns('PUBMED')
             SetLang('english')
 
-            // axios.get("http://0.0.0.0:8000/pubmed_reports").then(response => {
+            // axios.get("pubmed_reports").then(response => {
             //     (response.data['usecase'].map(uc=>{
             //         options_usecases.push({value: uc, label: uc})
             //
@@ -162,7 +162,7 @@ function StartingMenu(props){
             // }).catch(function (error){console.log(error)})
         }
         else if(Rep==='reports'){
-            // axios.get("http://0.0.0.0:8000/medtag_reports").then(response => {
+            // axios.get("medtag_reports").then(response => {
             //     (response.data['usecase'].map(uc=>{
             //         options_usecases.push({value: uc, label: uc})
             //
@@ -182,7 +182,7 @@ function StartingMenu(props){
             }
             else { //Salvo solo se tutti e tre i campi sono stati riempiti
                 var count = 0
-                axios.get('http://0.0.0.0:8000/get_reports', {
+                axios.get('get_reports', {
                     params: {
                         institute: Ins,
                         usec: Use,
@@ -202,7 +202,7 @@ function StartingMenu(props){
                         SetShowErrorReports(false)
 
 
-                        axios.post("http://0.0.0.0:8000/new_credentials", {
+                        axios.post("new_credentials", {
                             usecase: Use, language: Lang, institute: Ins, annotation: Anno,report_type: Rep,batch:Batch
                         })
                             .then(function (response) {
@@ -289,7 +289,7 @@ function StartingMenu(props){
     useEffect(()=>{
 
         if(Use !== '' && Ins !== '' && Lang !== '' && Batch !== ''){
-            axios.get('http://0.0.0.0:8000/check_auto_presence_for_configuration',{params:{batch:Batch,report_type:Rep,usecase:Use,institute:Ins,language:Lang}})
+            axios.get('check_auto_presence_for_configuration',{params:{batch:Batch,report_type:Rep,usecase:Use,institute:Ins,language:Lang}})
                 .then(response=>{
                     if(response.data['count']>0){
                         var arr = []
@@ -312,7 +312,7 @@ function StartingMenu(props){
     useEffect(()=>{
         if(Use !== ''){
             var opt = []
-            axios.get('http://0.0.0.0:8000/get_batch_list',{params:{usecase:Use}}).then(response=>{
+            axios.get('get_batch_list',{params:{usecase:Use}}).then(response=>{
                 SetBatchList(response.data['batch_list'])
                 if(response.data['batch_list'].length === 1){
                     SetBatch(1)
@@ -327,7 +327,7 @@ function StartingMenu(props){
             // ADDED 21/10/2021
             var opt = []
             if(Rep === 'pubmed'){
-                axios.get('http://0.0.0.0:8000/get_PUBMED_batch_list',{params:{usecase:Use}}).then(response=>{
+                axios.get('get_PUBMED_batch_list',{params:{usecase:Use}}).then(response=>{
 
                     SetBatchList(response.data['batch_list'])
                     if(response.data['batch_list'].length === 1){
@@ -357,7 +357,7 @@ function StartingMenu(props){
         <Row>
             <Col md={8}></Col>
             <Col md={4} style={{'text-align':'right'}}>
-                <span className='userInfo'><span > {Username} </span><FontAwesomeIcon icon={faUser} size='2x'/> <a href="http://0.0.0.0:8000/logout" className="badge badge-secondary" >Logout <FontAwesomeIcon icon={faSignOutAlt}/></a></span>
+                <span className='userInfo'><span > {Username} </span><FontAwesomeIcon icon={faUser} size='2x'/> <a href="logout" className="badge badge-secondary" >Logout <FontAwesomeIcon icon={faSignOutAlt}/></a></span>
             </Col>
         </Row>
         <div style={{'text-align':'center','margin-top':'20px'}}>

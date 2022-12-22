@@ -84,7 +84,7 @@ div{
     text-decoration: underline;
 
 }
-.notSelected,.notSelectedMention,.tokenOtherField{
+.notSelected,.tokenOtherField{
     text-decoration: none;
     background-color: white;
     color: black;
@@ -92,6 +92,26 @@ div{
     padding: 0px;
     border: 0px;
     cursor: default !important;
+
+}
+.notSelectedMention{
+    text-decoration: none;
+    background-color: white;
+    color: black;
+    margin: 0px;
+    padding: 0px;
+    border: 0px;
+    cursor: pointer !important;
+
+}
+.notSelectedMention:hover{
+    text-decoration: underline;
+    background-color: white;
+    color: black;
+    margin: 0px;
+    padding: 0px;
+    border: 0px;
+    cursor: pointer !important;
 
 }
 

@@ -5,6 +5,7 @@ import {Container,Row,Col} from "react-bootstrap";
 import './report.css';
 import Token from "./Token";
 import {AppContext} from "../../App";
+import Token_overlapping from "./Token_overlapping";
 // axios.defaults.xsrfCookieName = "csrftoken";
 // axios.defaults.xsrfHeaderName = "X-CSRFTOKEN";
 
@@ -50,7 +51,7 @@ function TokenList(props){
 
         <div>
             {Words.map((word,index)=>
-                <span className="tokenList"><Token key = {word.startToken} action = {props.action} words = {Words} start_token={word.startToken} stop_token={word.stopToken} word={word.word} index={index} activate = {ActiveWords}/> </span>
+                <span className="tokenList"><Token_overlapping key = {word.startToken} action = {props.action} words = {Words} start_token={word.startToken} stop_token={word.stopToken} word={word.word} index={index} activate = {ActiveWords}/> </span>
             )}
         </div>
     );

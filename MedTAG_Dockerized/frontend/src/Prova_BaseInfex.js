@@ -150,7 +150,7 @@ function Prova_BaseIndex() {
 
     // useEffect(()=>{
     //     if(useCase !== '' && Language !== '' && BatchNumber !== ''){
-    //         axios.post('http://0.0.0.0:8000/new_credentials',{
+    //         axios.post('new_credentials',{
     //             usecase: useCase, language: Language, institute: Institute, annotation: Annotation,report_type: ReportType,batch:BatchNumber
     //         }).then(response=>{SetUpdateMenu(true)}).catch(error=>{
     //             console.log('error', error)
@@ -163,12 +163,12 @@ function Prova_BaseIndex() {
         var ordered = []
         var texts = []
         mentions.map((item,i)=>{
-            texts.push(item.mention_text)
+            texts.push(item.start)
         })
         texts.sort()
         texts.map((start,ind)=>{
             mentions.map((ment,ind1)=>{
-                if(start === ment.mention_text){
+                if(start === ment.start){
                     if(ordered.indexOf(ment) === -1){
                         ordered.push(ment)
 
@@ -183,7 +183,7 @@ function Prova_BaseIndex() {
         if(Institute !== '' && Language !== '' && useCase !== '' && Annotation !== '' && Reports.length > 0 && Index !== false && Action !== 'none'){
             console.log('r',Reports)
             console.log('r',Index)
-            axios.get("http://0.0.0.0:8000/get_annotators_users_list",{params:{action:Action,id_report:Reports[Index].id_report.toString(),language:Reports[Index].language}})
+            axios.get("get_annotators_users_list",{params:{action:Action,id_report:Reports[Index].id_report.toString(),language:Reports[Index].language}})
                 .then(response => {
                     // if(response.data.length>0){
                     // console.log(response.data)
@@ -207,21 +207,21 @@ function Prova_BaseIndex() {
 
         if((useCase !== '' && Language !== '' && Institute !== '' && Annotation !== '' && ReportType !== '' && BatchNumber !== '')) {
 
-            axios.get("http://0.0.0.0:8000/get_fields").then(response => {
+            axios.get("get_fields").then(response => {
                 SetFields(response.data['fields']);
                 SetFieldsToAnn(response.data['fields_to_ann']);
             })
-            axios.get("http://0.0.0.0:8000/annotationlabel/all_labels").then(response => {
+            axios.get("annotationlabel/all_labels").then(response => {
                 setLabels(response.data['labels'])
             })
-            axios.get("http://0.0.0.0:8000/get_semantic_area").then(response => SetSemanticArea(response.data['area']))
-            axios.get("http://0.0.0.0:8000/conc_view").then(response => {
+            axios.get("get_semantic_area").then(response => SetSemanticArea(response.data['area']))
+            axios.get("conc_view").then(response => {
                 SetConcepts(response.data['concepts'])
             })
 
             csrf_token = document.getElementById('csrf_token').value;
 
-            axios.get("http://0.0.0.0:8000/get_last_gt", {params: {configure: 'configure'}}
+            axios.get("get_last_gt", {params: {configure: 'configure'}}
             ).then(response => {
 
                 SetGroundTruth(response.data['groundtruth']);
@@ -251,7 +251,7 @@ function Prova_BaseIndex() {
 
     useEffect(()=>{
         if(ClickedCheck === false && Index !== false && action !== 'none' && LabToInsert.length > 0){
-            axios.get('http://0.0.0.0:8000/check_gt_existence',{params:{id_report:Reports[Index].id_report,language: Reports[Index].language,action:Action}}).then(response=>{
+            axios.get('check_gt_existence',{params:{id_report:Reports[Index].id_report,language: Reports[Index].language,action:Action}}).then(response=>{
                 if(response.data['count'] === 0){
                     SetClickedCheck(true)
                 }
@@ -293,7 +293,7 @@ function Prova_BaseIndex() {
             SetLabToInsert([])
             SetAllMentions([])
             SetMentions_to_show([])
-            axios.get("http://0.0.0.0:8000/get_last_gt",{params: {configure:'configure'}}).then(response => {SetGroundTruth(response.data['groundtruth']); SetupGroundTruth(prev => !prev)})
+            axios.get("get_last_gt",{params: {configure:'configure'}}).then(response => {SetGroundTruth(response.data['groundtruth']); SetupGroundTruth(prev => !prev)})
         }
 
     },[UpdateMenu])
@@ -320,7 +320,7 @@ function Prova_BaseIndex() {
             }
 
 
-            axios.get("http://0.0.0.0:8000/get_reports", {params: {configure: 'configure'}}).then(response => {
+            axios.get("get_reports", {params: {configure: 'configure'}}).then(response => {
                 setReports(response.data['report']);
                 setIndex(response.data['index'])
                 if(response.data['report'].length === 0){
@@ -368,7 +368,7 @@ function Prova_BaseIndex() {
                 json_arr[val] = []
             })
             setSelectedConcepts(json_arr)
-            axios.get("http://0.0.0.0:8000/report_start_end", {params: {report_id: Report.id_report.toString()}}).then(response => {SetFinalCount(response.data['final_count']);
+            axios.get("report_start_end", {params: {report_id: Report.id_report.toString()}}).then(response => {SetFinalCount(response.data['final_count']);
                 setReportsString(response.data['rep_string']); SetFinalCountReached(false);SetLoadingReport(false);
                 // );
             })
@@ -396,20 +396,20 @@ function Prova_BaseIndex() {
             if (Action === 'labels') {
                 // SetLoadingLabels(true)
 
-                axios.get("http://0.0.0.0:8000/annotationlabel/user_labels", {params: {language:Language,report_id: Reports[Index].id_report.toString()}}).then(response => {SetMakeReq(false);setLabels_to_show(response.data[Action.toString()]);
+                axios.get("annotationlabel/user_labels", {params: {language:Language,report_id: Reports[Index].id_report.toString()}}).then(response => {SetMakeReq(false);setLabels_to_show(response.data[Action.toString()]);
                     // SetLoadingLabels(false);
                 })
 
             }
             else if (Action === 'concepts'){
                 SetLoadingConcepts(true)
-                axios.get("http://0.0.0.0:8000/contains", {params: {language:Language,report_id: Reports[Index].id_report.toString()}}).then(response => {SetMakeReq(false);setSelectedConcepts(response.data);SetLoadingConcepts(false)})
+                axios.get("contains", {params: {language:Language,report_id: Reports[Index].id_report.toString()}}).then(response => {SetMakeReq(false);setSelectedConcepts(response.data);SetLoadingConcepts(false)})
 
             }
             else if (Action === 'mentions'){
                 SetHighlightMention(false)
                 SetLoadingMentions(true)
-                axios.get("http://0.0.0.0:8000/mention_insertion", {params: {language:Language,report_id: Reports[Index].id_report.toString()}}).then(response => {
+                axios.get("mention_insertion", {params: {language:Language,report_id: Reports[Index].id_report.toString()}}).then(response => {
                     var mentions = (response.data[Action.toString()])
                     SetMakeReq(false);
                     var ordered = order_array(mentions)
@@ -423,8 +423,8 @@ function Prova_BaseIndex() {
             else if (Action === 'concept-mention' ){
                 SetHighlightMention(false)
                 SetLoadingAssociations(true)
-                axios.get("http://0.0.0.0:8000/insert_link/linked", {params: {language:Language,report_id: Reports[Index].id_report.toString()}}).then(response => {SetAssociations_to_show(response.data['associations']);SetMakeReq(false);})
-                axios.get("http://0.0.0.0:8000/insert_link/mentions", {params: {language:Language,report_id: Reports[Index].id_report.toString()}}).then(response => {
+                axios.get("insert_link/linked", {params: {language:Language,report_id: Reports[Index].id_report.toString()}}).then(response => {SetAssociations_to_show(response.data['associations']);SetMakeReq(false);})
+                axios.get("insert_link/mentions", {params: {language:Language,report_id: Reports[Index].id_report.toString()}}).then(response => {
                     var mentions = (response.data['mentions1']);
                     var ordered = order_array(mentions)
                     SetMakeReq(false);
@@ -515,7 +515,7 @@ function Prova_BaseIndex() {
     },[Start,LoadingReport,LoadingReportList])
 
     function sendUser(val){
-        axios.post('http://0.0.0.0:8000/update_user_chosen',{user_chosen:val}).then(response=>{
+        axios.post('update_user_chosen',{user_chosen:val}).then(response=>{
             console.log(response.data)
         }).catch(error=>console.log(error))
     }
@@ -531,17 +531,9 @@ function Prova_BaseIndex() {
                     {/*<div style={{'float':'left','padding':'10px','padding-left':'250px'}}><button className='menuButton' onClick={(e)=>handleBar(e)}><FontAwesomeIcon icon={faBars} size='2x' /></button></div>*/}
                     <Container fluid>
                         {ShowBar && <SideBar />}
-                        {ShowSnackMention && <SnackBarMention message = {SnackMessage} />}
-                        {ShowSnack && <SnackBar message = {SnackMessage} />}
-                        {/*<div>{Institute}</div>*/}
-                        {/*<div>{useCase}</div>*/}
-                        {/*<div>{Language}</div>*/}
-                        {/*<div>{Annotation}</div>*/}
-                        {/*<div>{BatchNumber}</div>*/}
-                        {/*<div>{InstituteList.length}</div>*/}
-                        {/*<div>{UseCaseList.length}</div>*/}
-                        {/*<div>{LanguageList.length}</div>*/}
-                        {/*<div>{Reports.length}</div>*/}
+                        {/*{ShowSnackMention && <SnackBarMention message = {SnackMessage} />}*/}
+                        {/*{ShowSnack && <SnackBar message = {SnackMessage} />}*/}
+
                         {Institute !== '' && Annotation !== '' && Language !== '' && useCase !== '' && BatchNumber !== '' && InstituteList.length >= 0 && LanguageList.length >=0 && UseCaseList.length >= 0 && Reports.length >= 0 && <div><SelectMenu />
                             <div><hr/></div></div>
 

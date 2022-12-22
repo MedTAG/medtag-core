@@ -30,7 +30,9 @@ def index(request):
     baseurl = ''
     workpath = os.path.dirname(os.path.abspath(__file__))  # Returns the Path your .py file is in
     with open((os.path.join(workpath,'../baseurl.txt')),'r',encoding='utf-8') as f:
-        baseurl = f.read()
+        baseurl = f.readline()
+        baseurl = baseurl.replace('\n','').strip()
+        print(baseurl)
         if not baseurl.endswith('/'):
             baseurl = baseurl +'/'
     if(username and baseurl != ''):

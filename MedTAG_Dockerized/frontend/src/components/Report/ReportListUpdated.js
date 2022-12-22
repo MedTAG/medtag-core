@@ -87,7 +87,7 @@ function ReportListUpdated(props) {
     useEffect(()=>{
         var new_arr = []
         if(ShowAnnotationsStats === true || ShowMajorityModal === true){
-            axios.get('http://0.0.0.0:8000/get_post_fields_for_auto').then(response=>{
+            axios.get('get_post_fields_for_auto').then(response=>{
                 Object.keys(response.data['extract_fields']).map(val=>{
 
 
@@ -142,7 +142,7 @@ function ReportListUpdated(props) {
             // console.log('AUTOANN',Report)
             if((ShowAutoAnn || ShowMemberGt)){
                 console.log('AXIOS')
-                axios.get('http://0.0.0.0:8000/get_insertion_time_record',
+                axios.get('get_insertion_time_record',
                     {params:{ns_id:ns_id,username:username_to_call,rep:Reports[Index]['id_report'],language:SelectedLang,action:Action}})
                     .then(response=>{
                         if(response.data['date'] !== ''){
@@ -194,7 +194,7 @@ function ReportListUpdated(props) {
     function ticketFunc(event){
         SetShowErrorSnack(true)
         event.preventDefault()
-        axios.post('http://0.0.0.0:8000/signals_malfunctions',{
+        axios.post('signals_malfunctions',{
             report_id_hashed: ReportString.report_id_hashed.text,report_id: ReportString.report_id.text, target_diagnosis: ReportString.target_diagnosis.text, internalid: ReportString.internalid.text, raw_diagnoses:ReportString.raw_diagnoses.text
         }).then(function (response) {
             SetShowErrorSnack(true)
@@ -210,7 +210,7 @@ function ReportListUpdated(props) {
     useEffect(()=>{
 
         if(ReportString !== undefined && ShowAnnotationsStats === false && ShowMajorityModal === false && showReportText === false){
-            axios.get('http://0.0.0.0:8000/get_report_translations',{params:{id_report:Reports[Index].id_report}}).then(response=>{
+            axios.get('get_report_translations',{params:{id_report:Reports[Index].id_report}}).then(response=>{
                 SetReportTranslation(response.data['languages'])
                 // console.log('respp',response.data['languages'])
             })
@@ -222,14 +222,14 @@ function ReportListUpdated(props) {
 
         if(rep !== Language){
             // SetLoadingReport(true)
-            axios.get("http://0.0.0.0:8000/report_start_end", {params: {language:rep,report_id: Reports[Index].id_report.toString()}}).then(response => {
+            axios.get("report_start_end", {params: {language:rep,report_id: Reports[Index].id_report.toString()}}).then(response => {
                 SetTranslation(response.data['rep_string']); SetFinalCount(response.data['final_count']);SetFinalCountReached(false);SetSelectedLang(rep)
                 // SetLoadingReport(false)
             })
         }
         else{
 
-            axios.get("http://0.0.0.0:8000/report_start_end", {params: {language:Language,report_id: Reports[Index].id_report.toString()}}).then(response => {
+            axios.get("report_start_end", {params: {language:Language,report_id: Reports[Index].id_report.toString()}}).then(response => {
                 SetFinalCount(response.data['final_count']);SetFinalCountReached(false);SetTranslation(false);SetSelectedLang(rep)
                 // SetLoadingReport(false)
             })

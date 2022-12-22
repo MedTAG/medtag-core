@@ -68,7 +68,7 @@ function ReportForModal(props) {
     useEffect(()=>{
         if(SelectedUse !== '' && SelectedInstitute !== '' && SelectedLang !== ''){
             setReportsString('')
-            axios.get("http://0.0.0.0:8000/get_reports", {params: {all: 'all',usec:SelectedUse,lang:SelectedLang,institute:SelectedInstitute}}).then(response => {
+            axios.get("get_reports", {params: {all: 'all',usec:SelectedUse,lang:SelectedLang,institute:SelectedInstitute}}).then(response => {
                 SetReports(response.data['report']);})
         }
 
@@ -80,7 +80,7 @@ function ReportForModal(props) {
         SetMentions_to_show([])
 
 
-        axios.get("http://0.0.0.0:8000/check_presence_exa_conc_lab", {params: {id_report:props.id_report,language:props.language}})
+        axios.get("check_presence_exa_conc_lab", {params: {id_report:props.id_report,language:props.language}})
             .then(response => {
             if(response.data['labels'] === true){
                 SetEXAPresenceLabels(true)
@@ -111,10 +111,10 @@ function ReportForModal(props) {
             SetLoadingReport(true)
 
             if(newInd >= 0){
-                axios.get("http://0.0.0.0:8000/report_start_end", {params: {language:SelectedLang,report_id: Reports[newInd].id_report.toString()}}).then(response => {SetFinalCount(response.data['final_count']);
+                axios.get("report_start_end", {params: {language:SelectedLang,report_id: Reports[newInd].id_report.toString()}}).then(response => {SetFinalCount(response.data['final_count']);
                     setReportsString(response.data['rep_string']); SetFinalCountReached(false);
                 })
-                axios.get("http://0.0.0.0:8000/get_fields",{params:{report:props.id_report}}).then(response => {SetFields(response.data['fields']);SetFieldsToAnn(response.data['fields_to_ann']);SetLoadingReport(false)})
+                axios.get("get_fields",{params:{report:props.id_report}}).then(response => {SetFields(response.data['fields']);SetFieldsToAnn(response.data['fields_to_ann']);SetLoadingReport(false)})
 
             }
 

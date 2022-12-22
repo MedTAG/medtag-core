@@ -51,7 +51,7 @@ function Tutorial() {
     useEffect(()=>{
         // console.log('SHOWBAR',ShowBar)
 
-        axios.get("http://127.0.0.1:8000/get_usecase_inst_lang").then(response => {
+        axios.get("http://0.0.0.0:8000/get_usecase_inst_lang").then(response => {
             SetUseCaseList(response.data['usecase']);
             SetLanguageList(response.data['language']);
             SetInstituteList(response.data['institute']);
@@ -81,7 +81,7 @@ function Tutorial() {
                         <div style={{'text-align':'center'}}><h2>TUTORIAL</h2>
                         <h6>In this section we explain in details how MedTAG works, its main components and how you can create your own ground-truths.</h6>
                         {/*<div>In the video below Gianmaria Silvello introduces you ExaTAG and its features. </div>*/}
-                        {/*<video style={{'margin-top':'20px'}} width="60%"  controls src="http://127.0.0.1:8000/static/videos/MedTAG_tutorial_brief.mp4" />*/}
+                        {/*<video style={{'margin-top':'20px'}} width="60%"  controls src="http://0.0.0.0:8000/static/videos/MedTAG_tutorial_brief.mp4" />*/}
                         <hr/>
                         </div>
                         <div>
@@ -92,7 +92,7 @@ function Tutorial() {
                         <hr/>
                             <div>The first time you try MedTAG, you run in TEST mode. The database is populated with a sample of data which allow you to try the application and to understand how the annotations work. In order to change the configuration, and populate the database with your data, you can open the side menu clicking on <FontAwesomeIcon icon={faBars}/> and select <i>Configuration</i>. Then, a list of instructions is displayed: follow them and at the end you can start annotating your own reports.
                                 <div><span style = {{'font-weight':'bold'}}>NOTE: </span><span>You can change configuration only if you are the admin of MedTAG. If you are not, the <i>Configure</i> option will not be present in the side menu.</span></div>
-                                <div>If you are interested in how to configure MedTAG, please, <a href='http://127.0.0.1:8000/infoAboutConfiguration'>click here</a>.</div>
+                                <div>If you are interested in how to configure MedTAG, please, <a href='http://0.0.0.0:8000/infoAboutConfiguration'>click here</a>.</div>
                             </div>
 
                         <hr/>
@@ -252,7 +252,7 @@ function Tutorial() {
                             <div>
                                 <h5>PubMed integration</h5>
                                 <div>You can upload one or more sets of PubMed articles, the only information about articles we ask you to provide is the PubMed ID associated to the article and the use case you decide to associate to it. Associating a use case to a PubMed article allows you to rely on the set of labels and concepts of that use case during the annotation process.
-                                If you are interested in how to create the files with PubMed ids click <a href='http://127.0.0.1:8000/infoAboutConfiguration'>here</a></div>
+                                If you are interested in how to create the files with PubMed ids click <a href='http://0.0.0.0:8000/infoAboutConfiguration'>here</a></div>
                             </div><hr/>
                             <div>
                                 <h5>Annotation mode</h5>
@@ -260,7 +260,7 @@ function Tutorial() {
                                <ul>
                                    <li><b>MANUAL ANNOTATION</b>: You can annotate the reports the administrator uploaded and find the labels, concepts, mentions and concept-mention associations (linking) creating your own ground-truths. </li>
                                    <li><b>AUTOMATIC ANNOTATION</b>: Automatic annotation is based on an algorithm which automatically annotate the reports. The algorithm assigns a set of labels, mentions, concept-mention associations and concepts to the reports your administrator uploaded (or to PubMed reports). you can check the algorithm's ground-truth of a report in every moment.
-                                       <div>If you are the administrator bare in mind that Automatic annotation is available for: <b>colon, uterine cervix, lung</b> use cases and for <b>english</b> reports (and PubMed articles). Automatic annotation works with labels and concepts belonging to <a href='https://www.examode.eu/'>EXAMODE</a> we provide; this process can take a lot of time depending on how many reports you want to annotate and how powerful your machine is. If you want to automatically annotate your reports or get some more information click <a href='http://127.0.0.1:8000/infoAboutConfiguration'>here</a></div>
+                                       <div>If you are the administrator bare in mind that Automatic annotation is available for: <b>colon, uterine cervix, lung</b> use cases and for <b>english</b> reports (and PubMed articles). Automatic annotation works with labels and concepts belonging to <a href='https://www.examode.eu/'>EXAMODE</a> we provide; this process can take a lot of time depending on how many reports you want to annotate and how powerful your machine is. If you want to automatically annotate your reports or get some more information click <a href='http://0.0.0.0:8000/infoAboutConfiguration'>here</a></div>
                                    </li>
                                </ul> </div>
                             </div><hr/>

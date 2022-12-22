@@ -24,10 +24,11 @@ import Mention from "./Mention";
 function AddMention(props){
     const [Text, SetText] = useState('')
 
-    const { tokens,disButton, language,mentionsList, reports, index,  mentionSingleWord,highlightMention, action, mentionToAdd, allMentions } = useContext(AppContext);
+    const { tokens,disButton, reload,language,mentionsList, reports, index,  mentionSingleWord,highlightMention, action, mentionToAdd, allMentions } = useContext(AppContext);
     const [mentions_to_show, SetMentions_to_show] = mentionsList;
     const [AllMentions, SetAllMentions] = allMentions
     const [Action, SetAction] = action;
+    const [ReloadMentions,SetReloadMentions] = reload;
     const [Reports, SetReports] = reports;
     const [Index, SetIndex] = index;
     const [Language, SetLanguage] = language;
@@ -45,13 +46,13 @@ function AddMention(props){
         var texts = []
         var starts = []
         mentions.map((item,i)=>{
-            texts.push(item.mention_text)
+            texts.push(item.start)
         })
         texts.sort()
         // console.log('testi',texts)
         texts.map((start,ind)=>{
             mentions.map((ment,ind1)=>{
-                if(start === ment.mention_text){
+                if(start === ment.start){
                     if(ordered.indexOf(ment) === -1){
                         ordered.push(ment)
 
@@ -65,11 +66,35 @@ function AddMention(props){
 
 
     const handleClick=(event,mention)=> {
-        console.log('mentions_cur',mention)
+        // console.log('mentions_cur',mention)
         SetWordMention([])
+        Children.map((c, i) => {
+            c.style.fontWeight = ''
+        })
+        if(Action === 'mentions'){
+            var bottone_mention = Array.from(document.getElementsByClassName('butt_mention'))
+
+        }
+        else if(Action === 'concept-mention'){
+            var bottone_mention = Array.from(document.getElementsByClassName('butt_linked'))
+
+        }
+        bottone_mention.map(b=>{
+            b.classList.remove('blocked')
+            b.classList.remove('normal')
+        })
+
+
+        Children.map(c => {
+            c.classList.remove('blocked')
+            c.classList.remove('normal')
+            c.className = 'token'
+
+        })
         SetMentionToAdd('')
         if (Action === 'mentions') {
             SetDisable_Buttons(false)
+            var bottone_mention = Array.from(document.getElementsByClassName('butt_mention'))
 
             var bool = false // controllo se nelle mention to show c'è già ciò che voglio inserire
             mentions_to_show.map(ment => {
@@ -81,69 +106,116 @@ function AddMention(props){
             })
             if (bool === true) {
                 alert('this mention has been already inserted in the list!')
+
+                SetReloadMentions(true)
             } else {
                 var mentions = mentions_to_show
                 // console.log('mentions_current',mentions)
                 mentions.push(mention)
                 // console.log('mentions_current',mentions)
-
-                var ordered = order_array(mentions)
-                console.log('mentions_current',ordered)
-
-                // SetMentions_to_show([...mentions_to_show, mention])
-                SetMentions_to_show(ordered)
-            }
-        } else if (Action === 'concept-mention') {
-            SetDisable_Buttons(false)
-            // var mentions = AllMentions
-            // mentions.push(mention)
-            // var ordered = order_array(mentions)
-            // SetAllMentions(ordered)
-            //SetAllMentions([...AllMentions, mention])
-
-            // console.log(JSON.stringify(mention))
-            var ment = JSON.stringify(mention)
-            var ment_to_add = document.getElementsByName('mention_to_add')
-            var array_to_ret = []
-            array_to_ret.push(MentionToAdd)
-            //array_to_ret.push(JSON.stringify(mention))
-            //SetAllMentions([...AllMentions, mention])
-            axios.post("http://0.0.0.0:8000/insert_link/insert_mention", {
-
-                mentions: array_to_ret,language:Language,
-                report_id: Reports[Index].id_report.toString()
-
-            })
-                .then(function (response) {
-                    var mentions = AllMentions
-                    mentions.push(mention)
-                    var ordered = order_array(mentions)
-                    SetAllMentions(ordered)
-                    // SetAllMentions([...AllMentions, mention])
-                    //alert('OK')
-                    // console.log(response);
+                bottone_mention.map((b, i) => {
+                    b.classList.remove('blocked')
+                    b.classList.remove('normal')
                 })
-                .catch(function (error) {
-                    //alert('ATTENTION')
-                    console.log(error);
-                });
+                Children.map(c => {
+                    c.classList.remove('blocked')
+                    c.classList.remove('normal')
+                    // c.className = 'token'
+                })
+
+            }
+            var ordered = order_array(mentions)
+            // console.log('mentions_current',ordered)
+
+            // SetMentions_to_show([...mentions_to_show, mention])
+            SetMentions_to_show(ordered)
+        } else if (Action === 'concept-mention') {
+            var bottone_mention = Array.from(document.getElementsByClassName('butt_linked'))
+            SetDisable_Buttons(false)
+            var bool = false
+            AllMentions.map(ment => {
+                // console.log('mentions_current',ment.start)
+                // console.log('mentions_current',mention.start)
+                if ((ment.start === mention.start) && (ment.stop === mention.stop)) {
+                    bool = true
+                }
+            })
+            if (bool === true) {
+                alert('this mention has been already inserted in the list!')
+
+                SetReloadMentions(true)
+            } else {
+                var mentions = AllMentions
+                // console.log('mentions_current',mentions)
+                mentions.push(mention)
+                // console.log('mentions_current',mentions)
+                bottone_mention.map((b, i) => {
+                    b.classList.remove('blocked')
+                    b.classList.remove('normal')
+                })
+                Children.map(c => {
+                    c.classList.remove('blocked')
+                    c.classList.remove('normal')
+                    // c.className = 'token'
+                })
+
+                // var mentions = AllMentions
+                // mentions.push(mention)
+                // var ordered = order_array(mentions)
+                // SetAllMentions(ordered)
+                //SetAllMentions([...AllMentions, mention])
+
+                // console.log(JSON.stringify(mention))
+                // var ment = JSON.stringify(mention)
+                // var ment_to_add = document.getElementsByName('mention_to_add')
+                var array_to_ret = []
+                array_to_ret.push(MentionToAdd)
+                //array_to_ret.push(JSON.stringify(mention))
+                //SetAllMentions([...AllMentions, mention])
+                axios.post("insert_link/insert_mention", {
+
+                    mentions: array_to_ret, language: Language,
+                    report_id: Reports[Index].id_report.toString()
+
+                })
+                    .then(function (response) {
+                        var mentions = AllMentions
+                        mentions.push(mention)
+                        var ordered = order_array(mentions)
+                        SetAllMentions(ordered)
+
+                        // SetAllMentions([...AllMentions, mention])
+                        //alert('OK')
+                        // console.log(response);
+                    })
+                    .catch(function (error) {
+                        //alert('ATTENTION')
+                        console.log(error);
+                    });
 
 
-
-
+            }
+            Children.forEach(function (child) {
+                child.setAttribute('class', 'token')
+            });
+            SetHighlightMention(false)
+            // document.getElementById('select_all_butt').style.fontWeight = ''
+            // document.getElementById('select_all_butt').style.textDecoration = ''
         }
-        Children.forEach(function (child) {
-            child.setAttribute('class', 'token')
-        });
-        SetHighlightMention(false)
-        // document.getElementById('select_all_butt').style.fontWeight = ''
-        // document.getElementById('select_all_butt').style.textDecoration = ''
     }
 
     const handleDelete = (event,mention)=>{
         // console.log('delete')
         // console.log('delete',Children)
-
+        var bottone_mention = Array.from(document.getElementsByClassName('butt_mention'))
+        bottone_mention.map((b,i)=>{
+            b.classList.remove('blocked')
+            b.classList.remove('normal')
+        })
+        Children.map(c=>{
+            c.classList.remove('blocked')
+            c.classList.remove('normal')
+        })
         SetWordMention([])
         SetMentionToAdd('')
         Children.forEach(function(child) {
@@ -155,6 +227,7 @@ function AddMention(props){
 
 
         });
+        SetReloadMentions(true)
 
     }
 
@@ -169,11 +242,14 @@ function AddMention(props){
 
             WordMention.map(mention =>{
                 //props.mention_to_add.map(mention =>{
-                console.log('mnt',mention)
+                // console.log('mnt',mention)
 
                 if(text === ''){
+
                     start  = mention.startToken
                     text = mention.word
+
+
                 }
                 else{
                     start = start < mention.startToken ? start : mention.startToken
@@ -188,7 +264,7 @@ function AddMention(props){
 
         SetText(text)
         SetMentionToAdd({'mention_text':text,'start':start,'stop':stop})
-        console.log('txt',{'mention_text':text,'start':start,'stop':stop})
+        // console.log('txt',{'mention_text':text,'start':start,'stop':stop})
 
     },[WordMention])
 
@@ -218,5 +294,6 @@ function AddMention(props){
 
 
 }
+
 
 export default AddMention

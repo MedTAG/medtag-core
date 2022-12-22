@@ -76,12 +76,12 @@ function ChangeMemberGT(props){
         var ordered = []
         var texts = []
         mentions.map((item,i)=>{
-            texts.push(item.mention_text)
+            texts.push(item.start)
         })
         texts.sort()
         texts.map((start,ind)=>{
             mentions.map((ment,ind1)=>{
-                if(start === ment.mention_text){
+                if(start === ment.start){
                     if(ordered.indexOf(ment) === -1){
                         ordered.push(ment)
 
@@ -111,7 +111,7 @@ function ChangeMemberGT(props){
         but2.current.className = 'btn btn-outline-primary btn-sm'
         but3.current.className = 'btn btn-outline-primary btn-sm'
 
-        // axios.get("http://0.0.0.0:8000/get_users_list")
+        // axios.get("get_users_list")
         //     .then(response => {
         //         if(response.data.length>0){
         //             console.log(response.data)
@@ -121,7 +121,7 @@ function ChangeMemberGT(props){
         //         console.log(error)
         //     })
 
-        axios.get("http://0.0.0.0:8000/check_auto_presence_for_configuration",
+        axios.get("check_auto_presence_for_configuration",
             {params: {batch:BatchNumber,usecase:UseCase,institute:Institute,language:Language,report_type:ReportType}})
             .then(response => {
                 if(response.data['count'] > 0){
@@ -294,14 +294,14 @@ function ChangeMemberGT(props){
         if(ClickBottomMenu === true){
             SetLoadingChangeGT(true)
             // if(MakeReq && ChangeButton){
-            axios.get("http://0.0.0.0:8000/report_start_end", {params: {ns_id:ns_id,report_id: Reports[Index].id_report.toString()}}).then(response => {
+            axios.get("report_start_end", {params: {ns_id:ns_id,report_id: Reports[Index].id_report.toString()}}).then(response => {
                 SetFinalCount(response.data['final_count']);SetFinalCountReached(false);SetChangeButton(true)
             })
-            axios.get("http://0.0.0.0:8000/get_fields",{params:{ns_id:ns_id}}).then(response => {SetFields(response.data['fields']);SetFieldsToAnn(response.data['fields_to_ann']);})
+            axios.get("get_fields",{params:{ns_id:ns_id}}).then(response => {SetFields(response.data['fields']);SetFieldsToAnn(response.data['fields_to_ann']);})
 
             if(Action === 'labels' ){
-                axios.get("http://0.0.0.0:8000/annotationlabel/all_labels",{params:{ns_id:ns_id}}).then(response => {setLabels(response.data['labels'])})
-                axios.get("http://0.0.0.0:8000/annotationlabel/user_labels", {params: {language:Language,ns_id:ns_id,username:username_to_call,report_id: Reports[Index].id_report.toString()}}).then(response => {
+                axios.get("annotationlabel/all_labels",{params:{ns_id:ns_id}}).then(response => {setLabels(response.data['labels'])})
+                axios.get("annotationlabel/user_labels", {params: {language:Language,ns_id:ns_id,username:username_to_call,report_id: Reports[Index].id_report.toString()}}).then(response => {
                     setLabels_to_show(response.data[Action.toString()]);
                     SetLoadingChangeGT(false);console.log('load false 1');SetMakeReq(false);console.log('falso');
 
@@ -309,9 +309,9 @@ function ChangeMemberGT(props){
             }
             else if(Action === 'concepts' ){
                 // console.log('CONCEPTS')
-                axios.get("http://0.0.0.0:8000/get_semantic_area",{params: {ns_id:ns_id}}).then(response => SetSemanticArea(response.data['area']))
-                axios.get("http://0.0.0.0:8000/conc_view",{params: {ns_id:ns_id}}).then(response => {SetConcepts(response.data['concepts'])})
-                axios.get("http://0.0.0.0:8000/contains", {params: {language:Language,ns_id:ns_id,username:username_to_call,report_id: Reports[Index].id_report.toString()}}).then(response => {setSelectedConcepts(response.data);SetLoadingChangeGT(false);console.log('load false 2');})
+                axios.get("get_semantic_area",{params: {ns_id:ns_id}}).then(response => SetSemanticArea(response.data['area']))
+                axios.get("conc_view",{params: {ns_id:ns_id}}).then(response => {SetConcepts(response.data['concepts'])})
+                axios.get("contains", {params: {language:Language,ns_id:ns_id,username:username_to_call,report_id: Reports[Index].id_report.toString()}}).then(response => {setSelectedConcepts(response.data);SetLoadingChangeGT(false);console.log('load false 2');})
                 SetMakeReq(false)
             }
             console.log('click setto 1')
@@ -347,14 +347,14 @@ function ChangeMemberGT(props){
     //         SetLoadingChangeGT(true)
     //         console.log('load true')
     //         // if(MakeReq && ChangeButton){
-    //         axios.get("http://0.0.0.0:8000/report_start_end", {params: {ns_id:ns_id,report_id: Reports[Index].id_report.toString()}}).then(response => {
+    //         axios.get("report_start_end", {params: {ns_id:ns_id,report_id: Reports[Index].id_report.toString()}}).then(response => {
     //             SetFinalCount(response.data['final_count']);SetFinalCountReached(false);SetChangeButton(true)
     //         })
-    //         axios.get("http://0.0.0.0:8000/get_fields",{params:{ns_id:ns_id}}).then(response => {SetFields(response.data['fields']);SetFieldsToAnn(response.data['fields_to_ann']);})
+    //         axios.get("get_fields",{params:{ns_id:ns_id}}).then(response => {SetFields(response.data['fields']);SetFieldsToAnn(response.data['fields_to_ann']);})
     //
     //         if(Action === 'labels' ){
-    //             axios.get("http://0.0.0.0:8000/annotationlabel/all_labels",{params:{ns_id:ns_id}}).then(response => {setLabels(response.data['labels'])})
-    //             axios.get("http://0.0.0.0:8000/annotationlabel/user_labels", {params: {language:Language,ns_id:ns_id,username:username_to_call,report_id: Reports[Index].id_report.toString()}}).then(response => {
+    //             axios.get("annotationlabel/all_labels",{params:{ns_id:ns_id}}).then(response => {setLabels(response.data['labels'])})
+    //             axios.get("annotationlabel/user_labels", {params: {language:Language,ns_id:ns_id,username:username_to_call,report_id: Reports[Index].id_report.toString()}}).then(response => {
     //                 setLabels_to_show(response.data[Action.toString()]);
     //                 SetLoadingChangeGT(false);console.log('load false 1');SetMakeReq(false);console.log('falso');
     //
@@ -362,9 +362,9 @@ function ChangeMemberGT(props){
     //         }
     //         else if(Action === 'concepts' ){
     //             // console.log('CONCEPTS')
-    //             axios.get("http://0.0.0.0:8000/get_semantic_area",{params: {ns_id:ns_id}}).then(response => SetSemanticArea(response.data['area']))
-    //             axios.get("http://0.0.0.0:8000/conc_view",{params: {ns_id:ns_id}}).then(response => {SetConcepts(response.data['concepts'])})
-    //             axios.get("http://0.0.0.0:8000/contains", {params: {language:Language,ns_id:ns_id,username:username_to_call,report_id: Reports[Index].id_report.toString()}}).then(response => {setSelectedConcepts(response.data);SetLoadingChangeGT(false);console.log('load false 2');})
+    //             axios.get("get_semantic_area",{params: {ns_id:ns_id}}).then(response => SetSemanticArea(response.data['area']))
+    //             axios.get("conc_view",{params: {ns_id:ns_id}}).then(response => {SetConcepts(response.data['concepts'])})
+    //             axios.get("contains", {params: {language:Language,ns_id:ns_id,username:username_to_call,report_id: Reports[Index].id_report.toString()}}).then(response => {setSelectedConcepts(response.data);SetLoadingChangeGT(false);console.log('load false 2');})
     //             SetMakeReq(false)
     //         }
     //         SetClickBottomMenu(false)
@@ -410,7 +410,7 @@ function ChangeMemberGT(props){
             if(Action === 'mentions' ){
                 SetLoadingChangeGT(true)
                 SetLoadingChangeGT(false);console.log('load true 1');
-                axios.get("http://0.0.0.0:8000/mention_insertion", {params: {language:Language,username:username,ns_id:mode,report_id: Reports[Index].id_report.toString()}}).then(response => {
+                axios.get("mention_insertion", {params: {language:Language,username:username,ns_id:mode,report_id: Reports[Index].id_report.toString()}}).then(response => {
                     var mentions = (response.data[Action.toString()])
                     // SetLoadingChangeGT(false);
                     SetLoadingChangeGT(false);console.log('load false 3');
@@ -427,10 +427,10 @@ function ChangeMemberGT(props){
 
             else if(Action === 'concept-mention' ){
                 SetLoadingChangeGT(true)
-                axios.get("http://0.0.0.0:8000/insert_link/linked", {params: {language:Language,username:username,ns_id:mode,report_id: Reports[Index].id_report.toString()}}).then(response => {
+                axios.get("insert_link/linked", {params: {language:Language,username:username,ns_id:mode,report_id: Reports[Index].id_report.toString()}}).then(response => {
                     SetAssociations_to_show(response.data['associations']);SetLoadingChangeGT(false);SetMakeReq(false)
                 })
-                axios.get("http://0.0.0.0:8000/insert_link/mentions", {params: {language:Language,username:username,ns_id:mode,report_id: Reports[Index].id_report.toString()}}).then(response => {
+                axios.get("insert_link/mentions", {params: {language:Language,username:username,ns_id:mode,report_id: Reports[Index].id_report.toString()}}).then(response => {
                     var mentions = (response.data['mentions1']);
                     var ordered = order_array(mentions)
                     console.log('ordered2',ordered)
@@ -467,7 +467,7 @@ function ChangeMemberGT(props){
     //         if(Action === 'mentions' ){
     //             console.log('ordered1')
     //
-    //             axios.get("http://0.0.0.0:8000/mention_insertion", {params: {language:Language,username:username,ns_id:mode,report_id: Reports[Index].id_report.toString()}}).then(response => {
+    //             axios.get("mention_insertion", {params: {language:Language,username:username,ns_id:mode,report_id: Reports[Index].id_report.toString()}}).then(response => {
     //                 var mentions = (response.data[Action.toString()])
     //                 SetLoadingChangeGT(false)
     //                 var ordered = order_array(mentions)
@@ -479,10 +479,10 @@ function ChangeMemberGT(props){
     //         }
     //
     //         else if(Action === 'concept-mention' ){
-    //             axios.get("http://0.0.0.0:8000/insert_link/linked", {params: {language:Language,username:username,ns_id:mode,report_id: Reports[Index].id_report.toString()}}).then(response => {
+    //             axios.get("insert_link/linked", {params: {language:Language,username:username,ns_id:mode,report_id: Reports[Index].id_report.toString()}}).then(response => {
     //                 SetAssociations_to_show(response.data['associations']);SetLoadingChangeGT(false);SetMakeReq(false)
     //             })
-    //             axios.get("http://0.0.0.0:8000/insert_link/mentions", {params: {language:Language,username:username,ns_id:mode,report_id: Reports[Index].id_report.toString()}}).then(response => {
+    //             axios.get("insert_link/mentions", {params: {language:Language,username:username,ns_id:mode,report_id: Reports[Index].id_report.toString()}}).then(response => {
     //                 var mentions = (response.data['mentions1']);
     //                 var ordered = order_array(mentions)
     //                 console.log('ordered2',ordered)
@@ -511,7 +511,7 @@ function ChangeMemberGT(props){
             var data_to_ret = {'mentions': mentions_to_show}
             // console.log('mentions: ' ,mentions_to_show)
 
-            axios.post('http://0.0.0.0:8000/mention_insertion/insert', {
+            axios.post('mention_insertion/insert', {
                 mentions: data_to_ret['mentions'],language:Language,
                 report_id: Reports[Index].id_report
             })
@@ -528,7 +528,7 @@ function ChangeMemberGT(props){
         }else if (token.startsWith('labels')) {
             //const data = new FormData(document.getElementById("annotation-form"));
             // console.log('labtoinsert',LabToInsert)
-            axios.post('http://0.0.0.0:8000/annotationlabel/insert', {
+            axios.post('annotationlabel/insert', {
                 //labels: data.getAll('labels'),
                 labels: LabToInsert,language:Language,
                 report_id: Reports[Index].id_report,
@@ -556,7 +556,7 @@ function ChangeMemberGT(props){
 
             data_to_ret = {'linked': associations_to_show}
             if (data_to_ret['linked'].length >= 0) {
-                axios.post('http://0.0.0.0:8000/insert_link/insert', {
+                axios.post('insert_link/insert', {
                     linked: data_to_ret['linked'],language:Language,
                     report_id: Reports[Index].id_report
                 })
@@ -586,7 +586,7 @@ function ChangeMemberGT(props){
 
             // console.log(concepts_list);
 
-            axios.post('http://0.0.0.0:8000/contains/update', {
+            axios.post('contains/update', {
                     concepts_list: concepts_list,language:Language,
                     report_id: Reports[Index].id_report,
                 },

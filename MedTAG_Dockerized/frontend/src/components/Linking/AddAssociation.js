@@ -66,11 +66,13 @@ function AddAssociation(props){
         SetAssociations_to_show(ass)
     }
 
+
+
     return(
 
     <div className="association" >
-        {ShowSnack && <SnackBar message={'This action will remove the concept also in the list of concepts. Go to Concepts and add it ' +
-        'again if you want'}/>}
+        {/*{ShowSnack && <SnackBar message={'This action will remove the concept also in the list of concepts. Go to Concepts and add it ' +*/}
+        {/*'again if you want'}/>}*/}
 
             <li>
                 <Row>

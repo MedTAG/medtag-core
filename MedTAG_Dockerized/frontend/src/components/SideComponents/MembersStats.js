@@ -87,14 +87,14 @@ function MembersStats() {
 
     useEffect(()=>{
         // console.log('entro qua')
-        axios.get('http://0.0.0.0:8000/get_users_list').then(response=>{
+        axios.get('get_users_list').then(response=>{
             var opt = []
             response.data.map((val,i)=>{
                 opt.push({value:val,label:val})
             })
             SetOptions_users(opt)
         })
-        axios.get("http://0.0.0.0:8000/get_usecase_inst_lang").then(response => {
+        axios.get("get_usecase_inst_lang").then(response => {
             SetUseCaseList(response.data['usecase']);
             SetUsesExtracted(response.data['usecase']);
             SetLanguageList(response.data['language']);
@@ -107,7 +107,7 @@ function MembersStats() {
 
 
 
-        // axios.get("http://0.0.0.0:8000/get_stats_array_per_usecase").then(response => {
+        // axios.get("get_stats_array_per_usecase").then(response => {
         //     // console.log('stats: ',response.data['array_stats'])
         //     SetStatsArray(response.data['array_stats'])
         //
@@ -119,7 +119,7 @@ function MembersStats() {
         var username = window.username
         // console.log('username', username)
         SetUsername(username)
-        axios.get('http://0.0.0.0:8000/get_presence_robot_user').then(function(response){
+        axios.get('get_presence_robot_user').then(function(response){
             if(response.data['auto_annotation_count'] > 0){
                 SetStatsAuto(true)
             }
@@ -132,7 +132,7 @@ function MembersStats() {
         }).catch(function(error){
             console.log('error: ',error)
         })
-        axios.get('http://0.0.0.0:8000/get_batch_list').then(response=>SetBatchList(response.data['batch_list']))
+        axios.get('get_batch_list').then(response=>SetBatchList(response.data['batch_list']))
 
     },[])
 
@@ -143,7 +143,7 @@ function MembersStats() {
             SetShowSelectUser(false)
             // if (ChosenStats === 'Robot'){
             //     var uses = []
-            //     axios.get('http://0.0.0.0:8000/get_post_fields_for_auto').then(function(response){
+            //     axios.get('get_post_fields_for_auto').then(function(response){
             //
             //         Object.keys(response.data['extract_fields']).map(elem=>{
             //             if(response.data['extract_fields'][elem].length > 0){
@@ -159,7 +159,7 @@ function MembersStats() {
             // else{
             //     SetUsesExtracted(UseCaseList)
             // }
-            axios.get("http://0.0.0.0:8000/get_stats_array_per_usecase",{params:{mode:ChosenStats,member:Member,language:SelectedLang,institute:SelectedInstitute}}).then(response => {
+            axios.get("get_stats_array_per_usecase",{params:{mode:ChosenStats,member:Member,language:SelectedLang,institute:SelectedInstitute}}).then(response => {
                 SetStatsArrayPercent(response.data['medtag']['percent'])
                 SetStatsArray(response.data['medtag']['original'])
                 SetStatsArrayPercentPubMed(response.data['pubmed']['percent'])
@@ -226,7 +226,7 @@ function MembersStats() {
             {(Username !== Admin && Username !== 'Test') ?
                 <div><h1>FORBIDDEN</h1>
                     <div>
-                        <a href="http://0.0.0.0:8000/index">
+                        <a href="index">
                             Back
                         </a>
                     </div>
