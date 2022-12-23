@@ -1,4 +1,4 @@
-# MedTAG version 1.0.5
+# MedTAG version 1.0.6
 ![medTAG_logo_462x132](./img/screenshots/medTAG_logo_462x132.png)
 
 MedTAG: An open-source biomedical annotation tool for diagnostic reports.
@@ -286,7 +286,25 @@ The datasets considered for the benchmark experiments consist of a sample of one
 
 ### Source code
 
-The benchmark experiments have been conducted using the Python Web automation library [Selenium](https://www.selenium.dev/). The full source code of the automated agents implemented is available inside the folder [automated_agents_selenium](https://github.com/MedTAG/medtag-core/tree/main/benchmark/automated_agents_selenium). 
+The benchmark experiments have been conducted using the Python Web automation library [Selenium](https://www.selenium.dev/). The full source code of the automated agents implemented is available inside the folder [automated_agents_selenium](https://github.com/MedTAG/medtag-core/tree/main/benchmark/automated_agents_selenium).
+
+# Citation
+If you use MedTAG for your research work, please consider citing our paper:
+
+  ```bibtex
+@article{GiachelleMedTAG2021,
+  author    = {Fabio Giachelle and
+               Ornella Irrera and
+               Gianmaria Silvello},
+  title     = {MedTAG: a portable and customizable annotation tool for biomedical
+               documents},
+  journal   = {{BMC} Medical Informatics Decis. Mak.},
+  volume    = {21},
+  number    = {1},
+  pages     = {352},
+  year      = {2021}
+}
+```
 
 # Credits
 
