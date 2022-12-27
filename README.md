@@ -32,6 +32,7 @@ MedTAG provides the following functionalities:
 - support for multi-label annotation
 - support for document-level annotations
 - multilingual support
+- support for overlapping mentions
 - support for ontologies/concepts to use for the annotation process
 - support for schema configuration, so that users can easily import data (i.e., reports, labels and concepts), as CSV files, and choose which report fields to annotate.
 - support for automatic annotation of all the annotation types for reports belonging to three use cases: colon, uterine cervix and lung. Automatic annotation is available for english reports 
@@ -44,6 +45,8 @@ MedTAG provides the following functionalities:
 
 - support for the upload and visualization of other team members' ground-truths
   ![upload](./img/screenshots/upload_800.png)
+
+**NOTE**: MedTAG does not support discontinuous annotations.
 
 ## Files
 
@@ -99,7 +102,8 @@ If you already have both [docker](https://docs.docker.com/engine/reference/comma
 
 ## Test Mode
 
-The following procedure describe how to start using MedTAG in _Test Mode_, which allows you to try MedTAG with the pre-loaded dataset of reports. If you want to load and work with your own reports, you have to proceed with the following steps anyway and then jump to the _Customize MedTAG_ section.
+The following procedure describe how to start using MedTAG in _Test Mode_, which allows you to try MedTAG with the pre-loaded dataset of reports. If you want to load and work with your own reports, you have to proceed with the following steps anyway and then jump to the _Customize MedTAG_ section. In addition, in  _Test Mode_ only the Test user is enabled, and not other member can be added.
+
 
 1. Open a new browser window and go to: http://0.0.0.0:8000/, you will see the MedTAG web interface.
 
@@ -123,7 +127,11 @@ The following procedure describe how to start using MedTAG in _Test Mode_, which
 
 ![initial_test_conf](./img/screenshots/new_start_580.png)
 
+      
+
 ## Customize MedTAG
+
+When you customize MedTAG for the first time, the Test user, and all the documents, concepts and labels we provided for testing MedTAG are removed from the database and replaced with the documents, concepts, labels you uploaded.
 
 In order to customize MedTAG with your own data, you need to provide three CSV files (i.e, *reports_file*, *concepts_file*, *labels_file*). Please, **make sure to use a comma as separator** for your CSV files. Furthermore, **make sure to escape values that contains commas**.
 
