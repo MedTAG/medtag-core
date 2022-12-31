@@ -729,6 +729,7 @@ def create_majority_csv(users,reports,action,mode):
                 # val['total_gt'] = val['total_gt'] - 1
             row.append(rep.id_report)
             row.append(rep.language)
+            row.append(rep.batch)
             row.append(rep.institute)
             row.append(rep.name_id)
             if action == 'labels':

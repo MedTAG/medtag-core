@@ -96,9 +96,10 @@ def generate_bioc(json_keys,json_keys_to_ann,username,action,language,usecase,in
                 anno = Annotate.objects.filter(username=username, id_report=report,ns_id = ns_cur, language=report.language)
                 document = BioCDocument()
                 document.id = str(report.id_report)
-                document.put_infon('usecase', report.name_id)
-                document.put_infon('language', report.language)
-                document.put_infon('institute', report.institute)
+                document.put_infon('usecase', str(report.name_id))
+                document.put_infon('language', str(report.language))
+                document.put_infon('institute', str(report.institute))
+                document.put_infon('batch', str(report.batch))
 
                 annotations = []
                 count = 0
@@ -206,9 +207,10 @@ def generate_bioc(json_keys,json_keys_to_ann,username,action,language,usecase,in
                 anno = Linked.objects.filter(username=username,ns_id = ns,id_report = report,language = report.language)
                 document = BioCDocument()
                 document.id = str(report.id_report)
-                document.put_infon('usecase', report.name_id)
-                document.put_infon('language', report.language)
-                document.put_infon('institute', report.institute)
+                document.put_infon('usecase', str(report.name_id))
+                document.put_infon('language', str(report.language))
+                document.put_infon('institute', str(report.institute))
+                document.put_infon('batch', str(report.batch))
 
                 annotations = []
                 count = 0
@@ -504,14 +506,14 @@ def create_json_to_download(report_type,action,username,use,annotation_mode = No
 
         if annotation_mode != 'both':
             cursor.execute(
-                "SELECT DISTINCT r.id_report,r.language,r.institute FROM report AS r INNER JOIN ground_truth_log_file AS g ON r.id_report = g.id_report AND g.language = r.language WHERE gt_type = %s AND r.name = %s AND g.ns_id = %s AND r.language = COALESCE(%s, r.language) AND r.institute = COALESCE(%s,r.institute) AND institute != %s AND r.batch = COALESCE(%s,r.batch) AND username = %s",
+                "SELECT DISTINCT r.id_report,r.language,r.institute,r.batch FROM report AS r INNER JOIN ground_truth_log_file AS g ON r.id_report = g.id_report AND g.language = r.language WHERE gt_type = %s AND r.name = %s AND g.ns_id = %s AND r.language = COALESCE(%s, r.language) AND r.institute = COALESCE(%s,r.institute) AND institute != %s AND r.batch = COALESCE(%s,r.batch) AND username = %s",
                 [str(action), str(use), str(annotation_mode), lang, inst, 'PUBMED', batch, username])
             if annotation_mode == 'Robot':
                 # cursor.execute(
                 #     "SELECT DISTINCT r.id_report,r.language,r.institute FROM report AS r INNER JOIN ground_truth_log_file AS g ON r.id_report = g.id_report AND g.language = r.language inner join ground_truth_log_file as gg on gg.id_report = g.id_report and gg.language = g.language and gg.gt_type = g.gt_type and gg.ns_id = g.ns_id WHERE gg.insertion_time != g.insertion_time and g.gt_type = %s AND r.name = %s AND g.ns_id = %s AND r.language = COALESCE(%s, r.language) AND r.institute = COALESCE(%s,r.institute) AND institute != %s and g.username != %s and gg.username = %s AND r.batch = COALESCE(%s,r.batch)",
                 #     [str(action), str(use), str(annotation_mode),lang,inst, 'PUBMED', 'Robot_user', 'Robot_user',batch])
                 cursor.execute(
-                    "SELECT DISTINCT r.id_report,r.language,r.institute FROM report AS r INNER JOIN ground_truth_log_file AS g ON r.id_report = g.id_report AND g.language = r.language WHERE g.gt_type = %s AND r.name = %s AND g.ns_id = %s AND r.language = COALESCE(%s, r.language) AND r.institute = COALESCE(%s,r.institute) AND institute != %s and g.username != %s  AND r.batch = COALESCE(%s,r.batch) AND username = %s",
+                    "SELECT DISTINCT r.id_report,r.language,r.institute,r.batch FROM report AS r INNER JOIN ground_truth_log_file AS g ON r.id_report = g.id_report AND g.language = r.language WHERE g.gt_type = %s AND r.name = %s AND g.ns_id = %s AND r.language = COALESCE(%s, r.language) AND r.institute = COALESCE(%s,r.institute) AND institute != %s and g.username != %s  AND r.batch = COALESCE(%s,r.batch) AND username = %s",
                     [str(action), str(use), str(annotation_mode), lang, inst, 'PUBMED', 'Robot_user',
                      batch, username])
 
@@ -526,6 +528,7 @@ def create_json_to_download(report_type,action,username,use,annotation_mode = No
             json_val['id_report'] = el[0]
             json_val['language'] = el[1]
             json_val['institute'] = el[2]
+            json_val['batch'] = el[3]
             if action == 'labels':
                 cursor.execute(
                     "SELECT r.id_report,r.language,r.institute,g.ns_id,g.label FROM associate AS g INNER JOIN report AS r ON r.id_report = g.id_report AND r.language = g.language WHERE r.name = %s AND g.username = %s AND g.ns_id = %s  AND r.language = COALESCE(%s, r.language) AND r.institute = COALESCE(%s,r.institute) AND institute != %s AND r.id_report = %s AND r.language = %s AND r.institute = %s AND r.batch = COALESCE(%s,r.batch)",
@@ -683,22 +686,22 @@ def download_majority_gt(chosen_users,report_list,action,mode,format,response = 
     elif format == 'csv':
         row_list = []
         if action == 'labels':
-            row_list.append([ 'annotation_mode','action', 'id_report', 'language', 'institute', 'usecase', 'label','total_human_annotations','total_robot_annotations'])
+            row_list.append([ 'annotation_mode','action', 'id_report', 'language','batch', 'institute', 'usecase', 'label','total_human_annotations','total_robot_annotations'])
 
         elif action == 'mentions':
             row_list.append(
-                    ['annotation_mode','action', 'id_report', 'language', 'institute', 'usecase', 'start', 'stop',
+                    ['annotation_mode','action', 'id_report', 'language','batch', 'institute', 'usecase', 'start', 'stop',
                      'mention_text','mention_annotators','total_human_annotations','total_robot_annotations'])
 
         elif action == 'concept-mention':
             row_list.append(
-                ['annotation_mode','action', 'id_report', 'language', 'institute', 'usecase', 'start', 'stop',
+                ['annotation_mode','action', 'id_report', 'language','batch', 'institute', 'usecase', 'start', 'stop',
                  'mention_text','concept_name', 'concept_url', 'area','total_human_annotations','total_robot_annotations'])
 
 
         elif action == 'concepts':
             row_list.append(
-                ['annotation_mode','action', 'id_report', 'language', 'institute', 'usecase', 'concept_url',
+                ['annotation_mode','action', 'id_report', 'language','batch', 'institute', 'usecase', 'concept_url',
                  'concept_name', 'area','total_human_annotations','total_robot_annotations'])
 
         try:
@@ -772,9 +775,10 @@ def download_majority_gt(chosen_users,report_list,action,mode,format,response = 
                     json_dict = report_get_start_end(json_keys, json_keys_to_ann, report.id_report, report.language)
                     document = BioCDocument()
                     document.id = str(report.id_report)
-                    document.put_infon('usecase', report.name_id)
-                    document.put_infon('language', report.language)
-                    document.put_infon('institute', report.institute)
+                    document.put_infon('usecase', str(report.name_id))
+                    document.put_infon('language', str(report.language))
+                    document.put_infon('institute', str(report.institute))
+                    document.put_infon('batch', str(report.batch))
                     gt_dict = create_majority_vote_gt(action, chosen_users, mode, report)
 
                     annotations = []
@@ -862,8 +866,9 @@ def download_majority_gt(chosen_users,report_list,action,mode,format,response = 
                     document = BioCDocument()
                     document.id = str(report.id_report)
                     document.put_infon('usecase', report.name_id)
-                    document.put_infon('language', report.language)
-                    document.put_infon('institute', report.institute)
+                    document.put_infon('language', str(report.language))
+                    document.put_infon('institute', str(report.institute))
+                    document.put_infon('batch', str(report.batch))
                     gt_dict = create_majority_vote_gt(action, chosen_users, mode, report)
                     annotations = []
                     count = 0
@@ -966,7 +971,7 @@ def download_report_gt(report_list,action,mode=None,format = None,response = Non
         json_resp['ground_truth_list'] = []
         for report in report_list:
             rep = Report.objects.get(id_report = report['id_report'],language = report['language'])
-
+            batch = rep.batch
             ns_id_human = NameSpace.objects.get(ns_id = 'Human')
             gt_human = GroundTruthLogFile.objects.filter(id_report = rep,language = rep.language,gt_type=action,ns_id = ns_id_human)
 
@@ -989,6 +994,7 @@ def download_report_gt(report_list,action,mode=None,format = None,response = Non
             for el in gt:
                 if el.username_id != 'Robot_user':
                     gt_j = el.gt_json
+                    gt_j['batch'] = batch
                     if mode != 'both':
                         del gt_j['mode']
                     json_resp['ground_truth_list'].append(el.gt_json)
@@ -998,21 +1004,21 @@ def download_report_gt(report_list,action,mode=None,format = None,response = Non
     elif format == 'csv':
         row_list = []
         if action == 'labels':
-            row_list.append(['username', 'user_type', 'id_report', 'language', 'institute', 'usecase', 'label'])
+            row_list.append(['username', 'user_type', 'id_report', 'language','batch', 'institute', 'usecase', 'label'])
 
         elif action == 'mentions':
             row_list.append(
-                    ['username', 'user_type', 'id_report', 'language', 'institute', 'usecase', 'start', 'stop',
+                    ['username', 'user_type', 'id_report', 'language','batch', 'institute', 'usecase', 'start', 'stop',
                      'mention_text'])
         elif action == 'concept-mention':
             row_list.append(
-                    ['username', 'user_type', 'id_report', 'language', 'institute', 'usecase', 'start', 'stop',
+                    ['username', 'user_type', 'id_report', 'language','batch', 'institute', 'usecase', 'start', 'stop',
                      'mention_text',
                      'concept_name', 'concept_url', 'area'])
 
         elif action == 'concepts':
             row_list.append(
-                    ['username', 'user_type', 'id_report', 'language', 'institute', 'usecase', 'concept_url',
+                    ['username', 'user_type', 'id_report', 'language','batch', 'institute', 'usecase', 'concept_url',
                      'concept_name', 'area'])
 
         try:
@@ -1113,6 +1119,7 @@ def download_report_gt(report_list,action,mode=None,format = None,response = Non
                             "SELECT a.username,a.ns_id,r.id_report,r.language,r.batch,r.institute,r.name,a.start,a.stop,m.mention_text,c.name,c.concept_url,a.name FROM report AS r INNER JOIN linked AS a ON r.id_report = a.id_report AND r.language = a.language INNER JOIN concept as c ON a.concept_url = c.concept_url INNER JOIN mention AS m ON m.id_report = a.id_report AND m.language = a.language AND a.start = m.start AND a.stop = m.stop WHERE r.id_report = %s AND r.language = %s AND ns_id = %s and a.insertion_time not in %s",
                             [str(report['id_report']), str(report['language']), 'Robot',tuple(ins_arr)])
                         reports_robot_linking = cursor.fetchall()
+                    reports = []
                     if mode == 'both':
                         reports = chain(reports_human_linking,reports_robot_linking)
                     elif mode == 'Human':
@@ -1187,6 +1194,8 @@ def download_report_gt(report_list,action,mode=None,format = None,response = Non
                             "SELECT a.username,a.ns_id,r.id_report,r.language,r.institute,r.name,a.start,a.stop,m.mention_text FROM report AS r INNER JOIN annotate AS a ON r.id_report = a.id_report AND r.language = a.language INNER JOIN mention AS m ON m.id_report = a.id_report AND m.language = a.language AND a.start = m.start AND a.stop = m.stop WHERE r.id_report = %s AND r.language = %s  AND ns_id = %s and a.insertion_time not in %s",
                             [str(rep['id_report']), str(rep['language']), 'Robot', tuple(ins_arr)])
                         reports_robot_mentions = cursor.fetchall()
+
+                    reports = []
                     if mode == 'both':
                         reports = list(chain(reports_human_mentions, reports_robot_mentions))
                     elif mode == 'Human':
@@ -1229,15 +1238,17 @@ def download_report_gt(report_list,action,mode=None,format = None,response = Non
 
                     document = BioCDocument()
                     document.id = str(report.id_report)
-                    document.put_infon('usecase', report.name_id)
-                    document.put_infon('language', report.language)
-                    document.put_infon('institute', report.institute)
+                    document.put_infon('usecase', str(report.name_id))
+                    document.put_infon('language', str(report.language))
+                    document.put_infon('institute', str(report.institute))
+                    document.put_infon('batch', str(report.batch))
 
                     document1 = BioCDocument()
                     document1.id = str(report.id_report)
-                    document1.put_infon('usecase', report.name_id)
-                    document1.put_infon('language', report.language)
-                    document1.put_infon('institute', report.institute)
+                    document1.put_infon('usecase', str(report.name_id))
+                    document1.put_infon('language', str(report.language))
+                    document1.put_infon('institute', str(report.institute))
+                    document1.put_infon('batch', str(report.batch))
 
                     annotations = []
                     count = 0
@@ -1260,34 +1271,34 @@ def download_report_gt(report_list,action,mode=None,format = None,response = Non
                         couple = (annotation, mention.start, mention.stop)
                         annotations.append(couple)
 
-                    seen = []
-                    for key in json_keys_to_ann:
-                        passage = BioCPassage()
-                        passage.put_infon('section', key)
-                        check = False
+                        seen = []
+                        for key in json_keys_to_ann:
+                            passage = BioCPassage()
+                            passage.put_infon('section', key)
+                            check = False
 
-                        keys = json_dict['rep_string'].keys()
-                        if key in keys:
-                            if json_dict['rep_string'].get(key) != '':
-                                passage.text = json_dict['rep_string'][key]['text']
-                                start = str(json_dict['rep_string'][key]['start'])
-                                passage.offset = (start)
-                                for el in annotations:
-                                    if el not in seen:
+                            keys = json_dict['rep_string'].keys()
+                            if key in keys:
+                                if json_dict['rep_string'].get(key) != '':
+                                    passage.text = json_dict['rep_string'][key]['text']
+                                    start = str(json_dict['rep_string'][key]['start'])
+                                    passage.offset = (start)
+                                    for el in annotations:
+                                        if el not in seen:
 
-                                        if int(el[1]) >= int(json_dict['rep_string'][key]['start']) and int(
-                                                el[2]) <= int(json_dict['rep_string'][key]['end']):
-                                            check = True
-                                            passage.add_annotation(el[0])
-                                            seen.append(el)
-                                        # passage.add_annotation(el[0])
-                                if check:
-                                    document.add_passage(passage)
-                                    document1.add_passage(passage)
+                                            if int(el[1]) >= int(json_dict['rep_string'][key]['start']) and int(
+                                                    el[2]) <= int(json_dict['rep_string'][key]['end']):
+                                                check = True
+                                                passage.add_annotation(el[0])
+                                                seen.append(el)
+                                            # passage.add_annotation(el[0])
+                                    if check:
+                                        document.add_passage(passage)
+                                        document1.add_passage(passage)
                     collection.add_document(document)
                     for doc in collection:
                         print(doc.id)
-                    collection1.add_document(document)
+                    collection1.add_document(document1)
 
             elif action == 'concept-mention':
                 collection.put_infon('annotation_type', 'linking')
@@ -1320,6 +1331,7 @@ def download_report_gt(report_list,action,mode=None,format = None,response = Non
                             "SELECT a.username,a.ns_id,r.id_report,r.language,r.institute,r.name,a.start,a.stop,m.mention_text,c.name,c.concept_url,a.name FROM report AS r INNER JOIN linked AS a ON r.id_report = a.id_report AND r.language = a.language INNER JOIN concept as c ON a.concept_url = c.concept_url INNER JOIN mention AS m ON m.id_report = a.id_report AND m.language = a.language AND a.start = m.start AND a.stop = m.stop WHERE r.id_report = %s AND r.language = %s AND ns_id = %s and a.insertion_time not in %s",
                             [str(rep['id_report']), str(rep['language']), 'Robot', tuple(ins_arr)])
                         reports_robot_linking = cursor.fetchall()
+                    reports = []
                     if mode == 'both':
                         reports = list(chain(reports_human_linking, reports_robot_linking))
                     elif mode == 'Human':
@@ -1360,9 +1372,10 @@ def download_report_gt(report_list,action,mode=None,format = None,response = Non
 
                     document = BioCDocument()
                     document.id = str(report.id_report)
-                    document.put_infon('usecase', report.name_id)
-                    document.put_infon('language', report.language)
-                    document.put_infon('institute', report.institute)
+                    document.put_infon('usecase', str(report.name_id))
+                    document.put_infon('language', str(report.language))
+                    document.put_infon('institute', str(report.institute))
+                    document.put_infon('batch', str(report.batch))
 
                     annotations = []
                     count = 0
@@ -1391,33 +1404,33 @@ def download_report_gt(report_list,action,mode=None,format = None,response = Non
                         couple = (annotation, mention.start, mention.stop)
                         annotations.append(couple)
 
-                    seen = []
-                    for key in json_keys_to_ann:
-                        passage = BioCPassage()
-                        passage.put_infon('section', key)
-                        check = False
+                        seen = []
+                        for key in json_keys_to_ann:
+                            passage = BioCPassage()
+                            passage.put_infon('section', key)
+                            check = False
 
-                        keys = json_dict['rep_string'].keys()
-                        if key in keys:
-                            if json_dict['rep_string'].get(key) != '':
-                                # if json_dict['rep_string'].get(key) is not None and json_dict['rep_string'].get(key) != '':
-                                passage.text = json_dict['rep_string'][key]['text']
-                                start = str(json_dict['rep_string'][key]['start'])
-                                passage.offset = (start)
-                                for el in annotations:
-                                    if el not in seen:
-                                        # start1 = int(el[1])
-                                        # start2 = int(json_dict['rep_string'][key]['start'])
-                                        # stop1 = int(el[2])
-                                        # stop2 = int(json_dict['rep_string'][key]['end'])
-                                        if int(el[1]) >= int(json_dict['rep_string'][key]['start']) and int(
-                                                el[2]) <= int(json_dict['rep_string'][key]['end']):
-                                            check = True
-                                            passage.add_annotation(el[0])
-                                            seen.append(el)
-                                        # passage.add_annotation(el[0])
-                                if check:
-                                    document.add_passage(passage)
+                            keys = json_dict['rep_string'].keys()
+                            if key in keys:
+                                if json_dict['rep_string'].get(key) != '':
+                                    # if json_dict['rep_string'].get(key) is not None and json_dict['rep_string'].get(key) != '':
+                                    passage.text = json_dict['rep_string'][key]['text']
+                                    start = str(json_dict['rep_string'][key]['start'])
+                                    passage.offset = (start)
+                                    for el in annotations:
+                                        if el not in seen:
+                                            # start1 = int(el[1])
+                                            # start2 = int(json_dict['rep_string'][key]['start'])
+                                            # stop1 = int(el[2])
+                                            # stop2 = int(json_dict['rep_string'][key]['end'])
+                                            if int(el[1]) >= int(json_dict['rep_string'][key]['start']) and int(
+                                                    el[2]) <= int(json_dict['rep_string'][key]['end']):
+                                                check = True
+                                                passage.add_annotation(el[0])
+                                                seen.append(el)
+                                            # passage.add_annotation(el[0])
+                                    if check:
+                                        document.add_passage(passage)
 
                     collection.add_document(document)
                     for doc in collection:
