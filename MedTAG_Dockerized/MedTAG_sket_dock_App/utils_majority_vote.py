@@ -576,6 +576,7 @@ def create_majority_json(users,reports,action,mode):
         json_to_ret['id_report'] = report['id_report']
         json_to_ret['usecase'] = report['usecase']
         json_to_ret['language'] = report['language']
+        json_to_ret['batch'] = rep.batch
 
         if action == 'labels':
             json_to_ret['labels_list'] = []
